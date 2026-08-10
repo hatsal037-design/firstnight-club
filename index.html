@@ -171,6 +171,20 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
 .tg{font-size:11px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;
     padding:4px 9px;color:var(--ink)}
 .tg.p{border-color:#3d4a5c;color:#a9c4e0}
+.tg.m{border-color:var(--red);color:var(--red-lite);font-weight:600}
+/* 참여자 칩 편집기 */
+.chips2{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px;min-height:6px}
+.ch{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:var(--surface2);
+    border:1px solid #3d4a5c;color:#a9c4e0;border-radius:999px;padding:5px 10px}
+.ch.m{border-color:var(--red);color:var(--red-lite);font-weight:600}
+.ch b{cursor:pointer;font-weight:400;color:var(--sub);font-size:11px}
+.sug{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;background:var(--surface);
+     border:1px solid var(--red);border-radius:6px;overflow:hidden;box-shadow:0 8px 22px rgba(0,0,0,.5)}
+.si{display:flex;justify-content:space-between;align-items:center;padding:11px 13px;font-size:13.5px;
+    cursor:pointer;color:var(--red-lite);font-weight:600}
+.si span{font-size:10.5px;color:var(--sub);font-weight:400}
+.si:hover{background:var(--surface2)}
+.si.none{color:var(--sub);font-weight:400;cursor:default}
 
 .hero{margin:12px 14px 0;background:var(--surface);border:1px solid var(--red);
       border-radius:6px;box-shadow:4px 4px 0 rgba(232,50,60,.5);padding:17px 16px}
@@ -356,6 +370,7 @@ let favs  = [];                                // 즐겨찾기 — 이 기기에
 let picks = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');   // 로그인 전에는 이 기기, 로그인하면 서버
 let edits = JSON.parse(localStorage.getItem(RKEY)||'{}');   // 서버 이전 시절의 로컬 기록(백업용)
 let serverPast = [];        // 서버에 저장된 지난 모임 기록 — 시작할 때 불러온다
+let MEMBERS = [];           // 전체 회원 — @태그(uid)를 현재 닉네임으로 바꿔 보여줄 때 쓴다
 let myRsvp = null;          // 모집중 회차 참석 여부 'yes'|'no'|null
 let rsvpCnt = {yes:0,no:0};
 let cat='all', crew=0, q='', view='games', authTab='login';
@@ -382,6 +397,7 @@ async function bootSession(){
     }
   }catch(e){ /* 오프라인이면 그냥 비로그인으로 둔다 */ }
   try{ serverPast = await API.pastList(); }catch(e){}
+  try{ MEMBERS = await API.list(); }catch(e){}
   try{ if(openRound) await loadRsvpCnt(); }catch(e){}
   renderMe(); renderGames();
   if(view==='sched') renderSched();
@@ -411,7 +427,7 @@ function askNick(tab){
       <div class="t${isJoin?' on':''}" onclick="askNick('join')">가입하기</div>
     </div>
     <div class="fld"><label>닉네임</label>
-      <input id="nkIn" placeholder="예: 투넬" autocomplete="off"></div>
+      <input id="nkIn" placeholder="예: 투넬 (한글만)" autocomplete="off"></div>
     ${isJoin?`<div class="fld"><label>입금자명</label>
       <input id="pnIn" placeholder="계좌이체 때 찍히는 이름" autocomplete="off"></div>`:''}
     <div class="fld"><label>비밀번호</label>
@@ -456,11 +472,13 @@ async function doLogin(){
   try{ await afterAuth(await API.login(n,p)); }
   catch(e){ joinErr(e.message); }
 }
+const NICK_RE = /^[가-힣]{1,10}$/;   // 닉네임은 한글 1~10자만
 async function doJoin(){
   const n=document.getElementById('nkIn').value.trim();
   const pn=document.getElementById('pnIn').value.trim();
   const p=document.getElementById('pwIn').value, p2=document.getElementById('pw2In').value;
   if(!n)           return joinErr('닉네임을 적어주세요.');
+  if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자, 띄어쓰기·영문·숫자 불가).');
   if(!pn)          return joinErr('입금자명을 적어주세요. 참가비 대조에 씁니다.');
   if(p.length<4)   return joinErr('비밀번호는 4자 이상으로 해주세요.');
   if(p!==p2)       return joinErr('비밀번호 두 개가 서로 달라요.');
@@ -503,6 +521,7 @@ function myAccountSheet(){
 async function doRename(){
   const n=document.getElementById('rnIn').value.trim();
   if(!n) return joinErr('닉네임을 적어주세요.');
+  if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자).');
   if(ADMINS.includes(n) && !isAdmin()) return joinErr('그 닉네임은 관리자 전용이에요.');
   busy('변경 중');
   try{ acc = await API.rename(acc, n); renderMe(); closeM(); if(view==='me') renderMePage(); }
@@ -638,7 +657,7 @@ const fmt  = d => {const [y,m,dd]=d.split('-');return `${+m}/${+dd}`;};
 function renderSched(){
   const names = myNames();
   const past  = pastList().slice().sort((a,b)=>a.d.localeCompare(b.d));   // 오래된 것부터
-  const mineOf = p => (p.people||[]).some(x=>names.includes(x));
+  const mineOf = p => (p.people||[]).some(pIsMe);
 
   /* 지난 모임 — 내가 참석한 것만 자세히 보이고, 나머지는 날짜·장소만 흐리게.
      관리자는 전부 볼 수 있다. */
@@ -721,8 +740,7 @@ let schedScrolled = false;
 /* 지난 모임 자세히 보기 */
 function openPast(d){
   const p = pastList().find(x=>x.d===d); if(!p) return;
-  const names = myNames();
-  const mine = (p.people||[]).some(x=>names.includes(x));
+  const mine = (p.people||[]).some(pIsMe);
   if(!mine && !isAdmin()) return;
   document.getElementById('modal').innerHTML=`
     <h2>${fmt(p.d)} (${p.dow}) ${p.kind==='flash'?'번개':(p.r?p.r+'회차':'정모')}</h2>
@@ -732,7 +750,7 @@ function openPast(d){
       <div class="mrow"><div class="k">시간</div><div>${p.s} ~ ${p.e}</div></div>
       <div class="mrow"><div class="k">장소</div><div>${p.place}</div></div>
       ${p.fee?`<div class="mrow"><div class="k">참가비</div><div>${p.fee}</div></div>`:''}
-      ${p.people?.length?`<div class="mrow"><div class="k">참여자</div><div>${p.people.length}명 · ${p.people.join(', ')}</div></div>`:''}
+      ${p.people?.length?`<div class="mrow"><div class="k">참여자</div><div>${p.people.length}명 · ${p.people.map(pName).join(', ')}</div></div>`:''}
       ${p.after?`<div class="mrow"><div class="k">2차</div><div>${p.after}</div></div>`:''}
     </div>
     ${(p.played||[]).length?`<div style="font-size:11px;color:var(--sub);margin-top:14px">그날 한 게임</div>
@@ -861,6 +879,26 @@ async function togPick(n){
   else localStorage.setItem('botc_picks_anon', JSON.stringify(picks));
 }
 
+/* ══ 참여자 표기 ══
+   people 배열의 항목은 두 종류다.
+     "이름"        수기 기록 — 그대로 보여준다
+     { uid:"..." }  회원 태그 — 지금 닉네임을 찾아 보여준다. 닉변해도 따라간다 */
+function pName(x){
+  if(typeof x === 'string') return x;
+  const m = MEMBERS.find(m=>m.uid===x.uid);
+  return m ? m.nick : (x.label || '(탈퇴한 회원)');
+}
+function pIsMe(x){
+  if(!acc) return false;
+  if(typeof x === 'object') return x.uid === acc.uid;
+  return myNames().includes(x);
+}
+function pTag(x){
+  return typeof x === 'object'
+    ? `<span class="tg m">@${pName(x)}</span>`
+    : `<span class="tg p">${x}</span>`;
+}
+
 /* ══ 지난정모 ══ */
 function pastList(){
   /* 씨앗(past.js) → 로컬 편집(구버전 호환) → 서버 기록 순으로 겹쳐 쓴다. 서버가 최종. */
@@ -885,8 +923,12 @@ function editPast(d){
     <div class="fld"><label>회차 번호 (번개면 비워두세요)</label><input id="e_r" value="${cur.r||''}" placeholder="2"></div>
     <div class="fld"><label>장소</label><input id="e_place" value="${cur.place||''}" placeholder="그림동네창작센터 공유화실"></div>
     <div class="fld"><label>참가비</label><input id="e_fee" value="${cur.fee||''}" placeholder="12,000원"></div>
-    <div class="fld"><label>참여자 — 쉼표로 구분</label>
-      <input id="e_people" value="${(cur.people||[]).join(', ')}" placeholder="투넬, 치즈, 아치"></div>
+    <div class="fld"><label>참여자 — <b style="color:var(--red-lite)">@</b>를 붙이면 회원 태그(닉변해도 따라감), 그냥 쓰면 수기 기록</label>
+      <div class="chips2" id="pplChips"></div>
+      <div style="position:relative">
+        <input id="pplIn" placeholder="@닉네임 또는 이름 입력 후 엔터" autocomplete="off">
+        <div class="sug" id="pplSug" style="display:none"></div>
+      </div></div>
     <div class="fld"><label>그날 한 게임 — 눌러서 선택</label>
       <div class="gsel" id="gsel">${GAMES.filter(g=>g.have!==false).map(g=>
         `<span class="gs${sel.includes(g.n)?' on':''}" onclick="this.classList.toggle('on')" data-n="${g.n}">${g.n}</span>`).join('')}</div></div>
@@ -898,8 +940,64 @@ function editPast(d){
     </div>
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
+  initPplEditor(cur.people||[]);
 }
+
+/* ── 참여자 칩 편집기 ──
+   editPeople: ["수기이름", {uid:"...", label:"태그당시닉"}] 혼합 배열 */
+let editPeople = [];
+function initPplEditor(init){
+  editPeople = init.map(x => typeof x==='string' ? x : {uid:x.uid, label:x.label||pName(x)});
+  const inp = document.getElementById('pplIn');
+  inp.addEventListener('input', pplSuggest);
+  inp.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); pplCommit(); }
+    else if(e.key==='Backspace' && !inp.value && editPeople.length){ editPeople.pop(); renderPpl(); }
+  });
+  renderPpl();
+}
+function renderPpl(){
+  const box=document.getElementById('pplChips'); if(!box) return;
+  box.innerHTML = editPeople.map((x,i)=> typeof x==='string'
+    ? `<span class="ch">${x}<b onclick="editPeople.splice(${i},1);renderPpl()">✕</b></span>`
+    : `<span class="ch m">@${pName(x)}<b onclick="editPeople.splice(${i},1);renderPpl()">✕</b></span>`
+  ).join('');
+}
+function pplSuggest(){
+  const inp=document.getElementById('pplIn'), sug=document.getElementById('pplSug');
+  const v=inp.value.trim();
+  if(!v.startsWith('@')){ sug.style.display='none'; return; }
+  const q=v.slice(1);
+  const taken=new Set(editPeople.filter(x=>typeof x==='object').map(x=>x.uid));
+  const hits=MEMBERS.filter(m=>!taken.has(m.uid) && (!q || m.nick.includes(q))).slice(0,6);
+  sug.innerHTML = hits.length
+    ? hits.map(m=>`<div class="si" onclick="pplPick('${m.uid}')">@${m.nick}<span>${(m.joined||'').slice(2)}</span></div>`).join('')
+    : `<div class="si none">'${q}' 닉네임의 회원이 없어요</div>`;
+  sug.style.display='block';
+}
+function pplPick(uid){
+  const m=MEMBERS.find(m=>m.uid===uid); if(!m) return;
+  editPeople.push({uid, label:m.nick});
+  document.getElementById('pplIn').value='';
+  document.getElementById('pplSug').style.display='none';
+  renderPpl();
+}
+function pplCommit(){
+  const inp=document.getElementById('pplIn');
+  const v=inp.value.trim(); if(!v) return;
+  if(v.startsWith('@')){
+    // @입력 후 엔터 — 정확히 일치하는 회원이 있으면 태그, 없으면 무시
+    const m=MEMBERS.find(m=>m.nick===v.slice(1));
+    if(m) pplPick(m.uid);
+    return;
+  }
+  if(!editPeople.includes(v)) editPeople.push(v);
+  inp.value=''; document.getElementById('pplSug').style.display='none';
+  renderPpl();
+}
+
 function savePast(){
+  pplCommit();                       // 입력창에 쓰다 만 이름도 챙긴다
   const v=id=>document.getElementById(id).value.trim();
   const d=v('e_d');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ alert('날짜를 2026-08-08 형식으로 적어주세요'); return; }
@@ -908,7 +1006,7 @@ function savePast(){
     d, dow:v('e_dow'), s:v('e_s'), e:v('e_e'),
     r: rn?+rn:null, kind: rn?'round':'flash',
     place:v('e_place'), fee:v('e_fee'), after:v('e_after'), memo:v('e_memo'),
-    people: v('e_people').split(',').map(s=>s.trim()).filter(Boolean),
+    people: editPeople.slice(),
     played: [...document.querySelectorAll('#gsel .gs.on')].map(el=>el.dataset.n),
   };
   const rec = edits[d];
@@ -947,8 +1045,7 @@ function renderMePage(){
     return;
   }
   const list = pastList();
-  const names = myNames();
-  const mineRounds = list.filter(p=>(p.people||[]).some(x=>names.includes(x))).sort((a,b)=>a.d.localeCompare(b.d));
+  const mineRounds = list.filter(p=>(p.people||[]).some(pIsMe)).sort((a,b)=>a.d.localeCompare(b.d));
   const cnt = mineRounds.length;
   const first = mineRounds[0], last = mineRounds[cnt-1];
   const daysSince = first ? Math.floor((TODAY - new Date(first.d))/86400000) : null;
@@ -1019,7 +1116,8 @@ async function renderMembers(){
   catch(e){ body.innerHTML=`<div class="empty">회원을 못 불러왔어요.<br>${e.message}</div>`; return; }
 
   const list=pastList();
-  const cntOf = m => list.filter(p=>(p.people||[]).some(x=>[m.nick,...(m.aliases||[])].includes(x))).length;
+  const cntOf = m => list.filter(p=>(p.people||[]).some(x=>
+    (typeof x==='object' && x.uid===m.uid) || (typeof x==='string' && [m.nick,...(m.aliases||[])].includes(x)))).length;
   let agg='';
   if(openRound){
     try{
@@ -1084,6 +1182,7 @@ async function memSave(i){
   const n=document.getElementById('m_nick').value.trim();
   const p=document.getElementById('m_pay').value.trim();
   if(!n) return joinErr('닉네임을 적어주세요.');
+  if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자).');
   busy('저장 중');
   try{
     let cur = await API.get(m.uid);
