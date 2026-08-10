@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>첫밤 사망자 클럽</title>
+<meta name="theme-color" content="#17171c">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="첫밤클럽">
+<!-- 카톡·문자 링크 미리보기 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="첫밤 사망자 클럽">
+<meta property="og:description" content="게임 도감 · 정모 일정 — 맨날 첫 밤에 죽는 사람들의 마피아 모임">
+<meta property="og:image" content="https://hatsal037-design.github.io/firstnight-club/og.jpg">
+<meta property="og:url" content="https://hatsal037-design.github.io/firstnight-club/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Jua&display=swap" rel="stylesheet">
@@ -134,6 +147,17 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
        background:var(--surface2);border:1px solid var(--line);text-decoration:none;color:var(--ink);cursor:pointer}
 .rd .b.p{background:var(--red);border-color:var(--red);color:#fff}
 .monthlab{font-family:'Jua',sans-serif;font-size:13px;color:var(--sub);margin:16px 18px 8px}
+/* 참석 여부 */
+.rsvp{margin-top:12px;background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:12px 13px}
+.rsvp .rt{font-family:'Jua',sans-serif;font-size:13px;letter-spacing:-.5px}
+.rsvp .rc{font-size:11.5px;color:var(--sub);font-family:'Pretendard',sans-serif;margin-left:6px}
+.rsvp .rc b{color:var(--red-lite)}
+.rsvp .rb2{display:flex;gap:7px;margin-top:9px}
+.rbtn{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:6px;
+      padding:11px 0;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}
+.rbtn.yes.on{background:var(--red);border-color:var(--red);color:#fff}
+.rbtn.no.on{background:#2b3648;border-color:#3d4a5c;color:#a9c4e0}
+.rsvp .rn2{font-size:11px;color:var(--sub);margin-top:8px;line-height:1.5}
 .rd.past{opacity:.5}
 .rd.past.mine{opacity:1;border-color:#3d4a5c}
 .rd.past .dt{color:var(--sub)}
@@ -330,7 +354,10 @@ const ADMIN_HASH = '743e7841942f0114c9ca60aa5742af91fae437bac9161fb88b595f368f12
 let acc   = null;                              // 로그인한 계정 (서버에서 받아온 것)
 let favs  = [];                                // 즐겨찾기 — 이 기기에만 저장
 let picks = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');   // 로그인 전에는 이 기기, 로그인하면 서버
-let edits = JSON.parse(localStorage.getItem(RKEY)||'{}');
+let edits = JSON.parse(localStorage.getItem(RKEY)||'{}');   // 서버 이전 시절의 로컬 기록(백업용)
+let serverPast = [];        // 서버에 저장된 지난 모임 기록 — 시작할 때 불러온다
+let myRsvp = null;          // 모집중 회차 참석 여부 'yes'|'no'|null
+let rsvpCnt = {yes:0,no:0};
 let cat='all', crew=0, q='', view='games', authTab='login';
 
 const isAdmin = () => !!acc && acc.admin;
@@ -344,16 +371,25 @@ const upcoming  = ROUNDS.filter(r=>new Date(r.d) >= TODAY);
 /* ══ 세션 ══ */
 async function bootSession(){
   const uid = localStorage.getItem(SESS);
-  if(!uid) return;
   try{
-    acc = await API.get(uid);
+    if(uid) acc = await API.get(uid);
     if(acc){
       favs = JSON.parse(localStorage.getItem(FKEY())||'[]');
-      if(openRound) picks = await API.getMyPicks(openRound.d, acc.uid);
+      if(openRound){
+        picks = await API.getMyPicks(openRound.d, acc.uid);
+        myRsvp = await API.getMyRsvp(openRound.d, acc.uid);
+      }
     }
   }catch(e){ /* 오프라인이면 그냥 비로그인으로 둔다 */ }
+  try{ serverPast = await API.pastList(); }catch(e){}
+  try{ if(openRound) await loadRsvpCnt(); }catch(e){}
   renderMe(); renderGames();
   if(view==='sched') renderSched();
+  if(view==='me') renderMePage();
+}
+async function loadRsvpCnt(){
+  const rows = await API.allRsvp(openRound.d);
+  rsvpCnt = { yes: rows.filter(r=>r.v==='yes').length, no: rows.filter(r=>r.v==='no').length };
 }
 function renderMe(){
   document.getElementById('meBox').innerHTML = acc
@@ -404,6 +440,7 @@ async function afterAuth(a){
   favs = JSON.parse(localStorage.getItem(FKEY())||'[]');
   const anon = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');
   picks = openRound ? await API.getMyPicks(openRound.d, acc.uid) : [];
+  myRsvp = openRound ? await API.getMyRsvp(openRound.d, acc.uid) : null;
   if(anon.length && openRound){                    // 로그인 전에 골라둔 게 있으면 합쳐서 올린다
     picks = [...new Set([...picks, ...anon])];
     try{ await API.setPicks(openRound.d, acc.uid, picks); }catch(e){}
@@ -647,6 +684,7 @@ function renderSched(){
       ${r.note?`<div class="nt">${r.note}</div>`:''}
       ${r.st==='open'&&r.fee?`<div class="ad" style="margin-top:6px">참가비 ${r.fee}</div>`:''}
       ${r.st==='open'&&r.after?`<div class="ad">2차 · ${r.after} (자율)</div>`:''}
+      ${r.st==='open'?`<div class="rsvp" id="rsvpBox"></div>`:''}
       ${r.st==='open'?`<div class="picked" id="schedPicked" style="margin:11px 0 0;padding:11px 12px"></div>`:''}
       <div class="btns">
         <a class="b" href="${MAPN(r.mapq)}" target="_blank" rel="noopener">📍 지도</a>
@@ -667,7 +705,7 @@ function renderSched(){
          <button class="abtn ghost" onclick="exportPast()">📋 past.js 코드 복사</button>
        </div>` : '';
   document.getElementById('schedList').innerHTML = html;
-  renderPicked();
+  renderPicked(); renderRsvp();
 
   // 가장 가까운 앞으로의 일정이 화면 맨 위에 오도록
   if(!schedScrolled){
@@ -751,6 +789,29 @@ function googleCal(){
   return 'https://calendar.google.com/calendar/render?'+p.toString();
 }
 
+/* ══ 참석 여부 ══ */
+function renderRsvp(){
+  const box=document.getElementById('rsvpBox'); if(!box||!openRound) return;
+  const label = v => v==='yes'?'참석':'불참';
+  box.innerHTML = `
+    <div class="rt">🙋 이번 회차 참석하시나요? <span class="rc">${rsvpCnt.yes?`지금까지 <b>${rsvpCnt.yes}명</b> 참석`:''}</span></div>
+    <div class="rb2">
+      <button class="rbtn yes${myRsvp==='yes'?' on':''}" onclick="setRsvp('yes')">참석 ${rsvpCnt.yes||''}</button>
+      <button class="rbtn no${myRsvp==='no'?' on':''}" onclick="setRsvp('no')">불참 ${rsvpCnt.no||''}</button>
+    </div>
+    ${acc?'':'<div class="rn2">로그인하면 응답이 저장되고 모임장에게 전달돼요</div>'}`;
+}
+async function setRsvp(v){
+  if(!acc){ askNick('login'); return; }
+  const next = myRsvp===v ? null : v;    // 같은 버튼 다시 누르면 취소
+  myRsvp = next;
+  try{
+    await API.setRsvp(openRound.d, acc.uid, next);
+    await loadRsvpCnt();
+  }catch(e){}
+  renderRsvp();
+}
+
 /* ══ 할 게임 고르기 ══ */
 function openPick(){
   if(!openRound) return;
@@ -802,9 +863,12 @@ async function togPick(n){
 
 /* ══ 지난정모 ══ */
 function pastList(){
-  return PAST.map(p=>({...p, ...(edits[p.d]||{})}))
-             .concat(Object.entries(edits).filter(([d])=>!PAST.some(p=>p.d===d)).map(([,v])=>v))
-             .sort((a,b)=>b.d.localeCompare(a.d));
+  /* 씨앗(past.js) → 로컬 편집(구버전 호환) → 서버 기록 순으로 겹쳐 쓴다. 서버가 최종. */
+  const by = {};
+  PAST.forEach(p=>by[p.d]={...p});
+  Object.entries(edits).forEach(([d,v])=>by[d]={...(by[d]||{}),...v});
+  serverPast.forEach(p=>by[p.d]={...(by[p.d]||{}),...p});
+  return Object.values(by).sort((a,b)=>b.d.localeCompare(a.d));
 }
 function editPast(d){
   const cur = d ? pastList().find(p=>p.d===d)||{} : {};
@@ -847,13 +911,25 @@ function savePast(){
     people: v('e_people').split(',').map(s=>s.trim()).filter(Boolean),
     played: [...document.querySelectorAll('#gsel .gs.on')].map(el=>el.dataset.n),
   };
-  localStorage.setItem(RKEY,JSON.stringify(edits));
-  closeM(); schedScrolled=true; renderSched();
+  const rec = edits[d];
+  localStorage.setItem(RKEY,JSON.stringify(edits));   // 일단 로컬에 남겨 유실을 막는다
+  (async()=>{
+    try{
+      await API.pastSave(rec);
+      serverPast = await API.pastList();
+      delete edits[d]; localStorage.setItem(RKEY,JSON.stringify(edits));   // 서버 성공 후에만 로컬 정리
+    }
+    catch(e){ alert('서버 저장에 실패했어요. 이 기기에는 남아 있으니 네트워크 확인 후 다시 저장해주세요.'); }
+    closeM(); schedScrolled=true; renderSched();
+  })();
 }
 function delPast(d){
   if(!confirm('이 기록을 지울까요?')) return;
   delete edits[d]; localStorage.setItem(RKEY,JSON.stringify(edits));
-  closeM(); schedScrolled=true; renderSched();
+  (async()=>{
+    try{ await API.pastDelete(d); serverPast = await API.pastList(); }catch(e){}
+    closeM(); schedScrolled=true; renderSched();
+  })();
 }
 function exportPast(){
   const code='const PAST = '+JSON.stringify(pastList(),null,2)+';';

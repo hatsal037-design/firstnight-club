@@ -149,3 +149,31 @@ const API = {
     }).filter(Boolean);
   },
 };
+
+/* ── 지난 모임 기록 (서버) ──
+   botc:past:<날짜> = 기록 JSON. past.js 는 씨앗 데이터이고, 서버 기록이 같은 날짜면 덮어쓴다.
+   관리자가 앱에서 저장하면 그 자리에서 모두에게 보인다. */
+API.pastList = async function(){
+  const rows = await kvList('botc:past:');
+  return rows.map(([k,v])=>{ try { return JSON.parse(v); } catch(e){ return null; } }).filter(Boolean);
+};
+API.pastSave = async function(rec){
+  await kvPut(`botc:past:${rec.d}`, JSON.stringify(rec));
+};
+API.pastDelete = async function(d){
+  await kvDel(`botc:past:${d}`);
+};
+
+/* ── 참석 여부 (RSVP) ──
+   botc:a:<날짜>:<uid> = "yes" | "no"  (미응답은 키 없음) */
+API.setRsvp = async function(date, uid, v){
+  const key = `botc:a:${date}:${uid}`;
+  if(v) await kvPut(key, v); else await kvDel(key);
+};
+API.getMyRsvp = async function(date, uid){
+  return await kvGet(`botc:a:${date}:${uid}`);
+};
+API.allRsvp = async function(date){
+  const rows = await kvList(`botc:a:${date}:`);
+  return rows.map(([k,v])=>({ uid:k.split(':').pop(), v }));
+};

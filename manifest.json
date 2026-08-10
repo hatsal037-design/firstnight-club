@@ -1,0 +1,14 @@
+{
+  "name": "첫밤 사망자 클럽",
+  "short_name": "첫밤클럽",
+  "description": "게임 도감과 정모 일정 — 맨날 첫 밤에 죽는 사람들의 마피아 모임",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#17171c",
+  "theme_color": "#17171c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
