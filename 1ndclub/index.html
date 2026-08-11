@@ -49,6 +49,18 @@ header h1{font-family:'Do Hyeon',sans-serif;font-size:24px;letter-spacing:-.5px;
 header h1 .r{color:var(--red)}
 header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-family:'Pretendard',sans-serif}
 .me{flex:none;text-align:right;font-size:11px;color:var(--sub);line-height:1.5;cursor:pointer;padding-top:4px}
+.bell{position:relative;font-size:20px;cursor:pointer;line-height:1}
+.bell .dot{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;background:var(--red);
+  color:#fff;border-radius:999px;font-size:10px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;padding:0 4px;font-family:'Pretendard',sans-serif}
+.ntc{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:13px 14px;margin-bottom:9px}
+.ntc.unread{border-color:var(--red)}
+.ntc .nh{font-size:14.5px;display:flex;align-items:center;gap:7px}
+.ntc .nu{background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:3px;padding:2px 5px}
+.ntc .nb2{font-size:13px;color:#c8cdd6;margin-top:7px;line-height:1.65}
+.ntc .nm2{font-size:11px;color:var(--sub);margin-top:8px}
+.fld textarea{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:5px;
+  padding:11px 12px;font-size:13.5px;outline:none;min-height:90px;resize:vertical;line-height:1.6;color:var(--ink)}
 .me .nk{color:var(--ink);font-weight:700;font-size:12.5px}
 .me .adm{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;
          border-radius:3px;padding:2px 5px;margin-top:3px}
@@ -301,7 +313,10 @@ footer a{color:#7a8290}
   <h1>첫밤 사망자 <span class="r">클럽</span>
     <div class="sub" id="hsub"></div>
   </h1>
-  <div class="me" id="meBox" onclick="askNick()"></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="bell" id="bell" onclick="openNotices()" style="display:none">🔔<span class="dot" id="bellDot" style="display:none"></span></div>
+    <div class="me" id="meBox" onclick="askNick()"></div>
+  </div>
 </header>
 <div class="checker"></div>
 
@@ -378,6 +393,8 @@ let favs  = [];                                // 즐겨찾기 — 이 기기에
 let picks = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');   // 로그인 전에는 이 기기, 로그인하면 서버
 let edits = JSON.parse(localStorage.getItem(RKEY)||'{}');   // 서버 이전 시절의 로컬 기록(백업용)
 let serverPast = [];        // 서버에 저장된 지난 모임 기록 — 시작할 때 불러온다
+let NOTICES = [];           // 서버 공지 전체
+let readIds = [];           // 내가 읽은 공지 id
 let MEMBERS = [];           // 전체 회원 — @태그(uid)를 현재 닉네임으로 바꿔 보여줄 때 쓴다
 let OWNERS = {};            // {게임이름: uid} — 관리자가 지정한 게임 소유자 (서버)
 let myRsvp = null;          // 모집중 회차 참석 여부 'yes'|'no'|null
@@ -408,6 +425,17 @@ async function bootSession(){
   try{ serverPast = await API.pastList(); }catch(e){}
   try{ MEMBERS = await API.list(); }catch(e){}
   try{ OWNERS = await API.ownerMap(); }catch(e){}
+  try{ NOTICES = await API.noticeList(); }catch(e){}
+  if(acc){ try{ readIds = await API.getRead(acc.uid); }catch(e){} }
+  // 공지 대상 판정용: 앞으로의 회차별 참석자·게임선택자 uid 캐시
+  try{
+    for(const r of upcoming){
+      const rs = await API.allRsvp(r.d);
+      RSVP_YES_UIDS[r.d] = rs.filter(x=>x.v==='yes').map(x=>x.uid);
+      const pk = await API.allPicks(r.d);
+      PICK_UIDS[r.d] = pk.map(x=>x.uid);
+    }
+  }catch(e){}
   try{ if(openRound) await loadRsvpCnt(); }catch(e){}
   renderMe(); renderGames();
   if(view==='sched') renderSched();
@@ -424,6 +452,107 @@ function renderMe(){
   document.getElementById('hsub').innerHTML =
     `보유 게임 ${GAMES.filter(g=>g.have!==false).length}종 · 잡아둔 회차 ${upcoming.length}개`;
   document.getElementById('navMembers').style.display = isAdmin() ? '' : 'none';
+  renderBell();
+}
+
+/* ── 공지 대상 판정 ── */
+function noticeForMe(n){
+  if(!acc) return false;
+  if(n.target==='all') return true;
+  if(n.target==='rsvp' && n.roundDate) return (RSVP_YES_UIDS[n.roundDate]||[]).includes(acc.uid);
+  if(n.target==='picks' && n.roundDate) return (PICK_UIDS[n.roundDate]||[]).includes(acc.uid);
+  return false;
+}
+let RSVP_YES_UIDS = {};   // {날짜:[uid]}  대상 판정용 캐시
+let PICK_UIDS = {};
+function myNotices(){ return NOTICES.filter(noticeForMe); }
+function unreadCount(){ return myNotices().filter(n=>!readIds.includes(n.id)).length; }
+function renderBell(){
+  const bell=document.getElementById('bell'), dot=document.getElementById('bellDot');
+  if(!bell) return;
+  if(!acc){ bell.style.display='none'; return; }
+  bell.style.display='';
+  const u=unreadCount();
+  if(u>0){ dot.style.display=''; dot.textContent=u>9?'9+':u; }
+  else dot.style.display='none';
+}
+
+/* ── 공지 보기 (참가자) ── */
+function openNotices(){
+  if(!acc){ askNick('login'); return; }
+  const mine=myNotices();
+  document.getElementById('modal').innerHTML=`
+    <h2>공지 🔔</h2>
+    ${isAdmin()?`<div class="mbtns" style="margin:12px 0 4px"><button class="mbtn" onclick="composeNotice()">＋ 공지 보내기</button></div>`:''}
+    ${mine.length? mine.map(n=>{
+      const unread=!readIds.includes(n.id);
+      const tgt = n.target==='all'?'전체':(n.target==='rsvp'?`${fmt(n.roundDate)} 참석자`:`${fmt(n.roundDate)} 게임선택자`);
+      return `<div class="ntc${unread?' unread':''}">
+        <div class="nh"><b>${n.title}</b>${unread?'<span class="nu">NEW</span>':''}</div>
+        <div class="nb2">${n.body.replace(/\n/g,'<br>')}</div>
+        <div class="nm2">${tgt} · ${(n.at||'').slice(5,16).replace('T',' ')}${isAdmin()?` · <span style="color:var(--red-lite);cursor:pointer" onclick="delNotice('${n.id}')">삭제</span>`:''}</div>
+      </div>`;
+    }).join('') : `<div class="empty" style="padding:30px">아직 온 공지가 없어요.</div>`}
+    <button class="mclose" onclick="markAllRead();closeM()">닫기</button>`;
+  document.getElementById('ov').style.display='flex';
+}
+async function markAllRead(){
+  const ids=[...new Set([...readIds, ...myNotices().map(n=>n.id)])];
+  readIds=ids; renderBell();
+  if(acc){ try{ await API.setRead(acc.uid, ids); }catch(e){} }
+}
+
+/* ── 공지 보내기 (관리자) ── */
+function composeNotice(){
+  const opts = upcoming.map(r=>`<option value="${r.d}">${fmt(r.d)} (${r.dow}) ${r.place}</option>`).join('');
+  document.getElementById('modal').innerHTML=`
+    <h2>공지 보내기</h2>
+    <div class="fld"><label>받는 사람</label>
+      <select id="ncTarget" onchange="ncTargetChange()" style="width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:11px 12px;font-size:13.5px">
+        <option value="all">전체 회원</option>
+        <option value="rsvp">특정 회차 — 참석한다고 한 사람</option>
+        <option value="picks">특정 회차 — 게임 고른 사람</option>
+      </select></div>
+    <div class="fld" id="ncRoundWrap" style="display:none"><label>회차</label>
+      <select id="ncRound" onchange="ncUpdateCount()" style="width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:11px 12px;font-size:13.5px">${opts}</select>
+      <div id="ncCount" style="font-size:11.5px;color:var(--sub);margin-top:6px"></div></div>
+    <div class="fld"><label>제목</label><input id="ncTitle" placeholder="예: 8/15 장소 안내"></div>
+    <div class="fld"><label>내용</label><textarea id="ncBody" placeholder="공지 내용을 적어주세요"></textarea></div>
+    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
+    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="sendNotice()">보내기</button></div>
+    <button class="mclose" onclick="openNotices()">← 공지 목록</button>`;
+  document.getElementById('ov').style.display='flex';
+}
+function ncTargetChange(){
+  const v=document.getElementById('ncTarget').value;
+  document.getElementById('ncRoundWrap').style.display = v==='all'?'none':'';
+  ncUpdateCount();
+}
+function ncUpdateCount(){
+  const el=document.getElementById('ncCount'); if(!el) return;
+  const v=document.getElementById('ncTarget').value;
+  if(v==='all'){ el.textContent=''; return; }
+  const d=document.getElementById('ncRound').value;
+  const n = v==='rsvp' ? (RSVP_YES_UIDS[d]||[]).length : (PICK_UIDS[d]||[]).length;
+  el.textContent = `이 조건에 해당하는 회원 ${n}명`;
+}
+async function sendNotice(){
+  const v=id=>document.getElementById(id).value;
+  const target=v('ncTarget'), title=v('ncTitle').trim(), body=v('ncBody').trim();
+  if(!title) return joinErr('제목을 적어주세요.');
+  if(!body) return joinErr('내용을 적어주세요.');
+  const roundDate = target==='all'? '' : v('ncRound');
+  busy('보내는 중');
+  try{
+    const rec = await API.noticeCreate({ title, body, target, roundDate, by:acc.nick, at:new Date().toISOString() });
+    NOTICES.unshift(rec);
+    closeM(); openNotices();
+  }catch(e){ joinErr(e.message); }
+}
+async function delNotice(id){
+  if(!confirm('이 공지를 지울까요?')) return;
+  try{ await API.noticeDelete(id); NOTICES=NOTICES.filter(n=>n.id!==id); }catch(e){}
+  openNotices();
 }
 
 /* ══ 카카오 로그인 ══ */
@@ -1320,6 +1449,9 @@ function renderMePage(){
     <div class="notice">닉네임을 바꿔도 활동 기록은 그대로 따라옵니다. 계정은 내 아이디로 구분되고,
       예전에 쓰던 닉네임도 같이 기억해뒀다가 대조하거든요.</div>
     <div style="margin:14px"><button class="abtn ghost" onclick="askNick()">내 정보 · 닉네임 변경</button></div>
+    <div class="notice" style="border-color:var(--red)">📲 <b style="color:var(--red-lite)">홈 화면에 추가</b>해두면 앱처럼 바로 열려요.<br>
+      <span style="font-size:11.5px">갤럭시는 크롬 메뉴 → "홈 화면에 추가", 아이폰은 사파리 공유 → "홈 화면에 추가".
+      나중에 회차 알림도 여기로 받을 수 있게 준비 중이에요.</span></div>
     <footer>즐겨찾기는 이 기기에, 고른 게임은 서버에 저장돼요</footer>`;
 }
 

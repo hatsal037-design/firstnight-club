@@ -249,3 +249,28 @@ API.setOwner = async function(gameName, uid){
   if(uid) await kvPut(key, uid);
   else    await kvDel(key);
 };
+
+/* ── 공지 (앱 자체 알림) ──
+   botc:notice:<id> = { id, title, body, target, roundDate, by, at }
+     target: 'all' | 'rsvp' | 'picks'  (특정 회차 참석자 / 게임 고른 사람)
+   읽음 표시는 사람별로: botc:read:<uid> = [noticeId, ...]  (내 기기+서버 동기화) */
+API.noticeList = async function(){
+  const rows = await kvList('botc:notice:');
+  return rows.map(([,v])=>{ try{return JSON.parse(v);}catch(e){return null;} })
+             .filter(Boolean).sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+};
+API.noticeCreate = async function(n){
+  const id = 'n' + Date.now().toString(36);
+  const rec = { id, ...n };
+  await kvPut(`botc:notice:${id}`, JSON.stringify(rec));
+  return rec;
+};
+API.noticeDelete = async function(id){ await kvDel(`botc:notice:${id}`); };
+
+API.getRead = async function(uid){
+  const t = await kvGet(`botc:read:${uid}`);
+  try{ return t ? JSON.parse(t) : []; }catch(e){ return []; }
+};
+API.setRead = async function(uid, ids){
+  await kvPut(`botc:read:${uid}`, JSON.stringify(ids));
+};
