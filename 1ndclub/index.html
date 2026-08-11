@@ -421,6 +421,19 @@ function renderMe(){
 function askNick(tab){
   if(tab) authTab = tab;
   if(acc){ myAccountSheet(); return; }
+  /* http로 열면 브라우저 암호화(crypto.subtle)가 잠겨 로그인이 안 된다.
+     인증서 발급 전 임시 안내 — https가 열리면 자동으로 그쪽으로 보낸다 */
+  if(!(window.crypto && crypto.subtle)){
+    document.getElementById('modal').innerHTML = `
+      <h2>잠깐만요 🔧</h2>
+      <div class="mdesc">지금 보안 연결(https) 설정이 마무리되는 중이라
+        로그인·가입이 잠시 막혀 있어요.<br><br>
+        게임 도감과 일정 구경은 그대로 가능합니다.
+        조금 뒤에 다시 시도해주세요!</div>
+      <button class="mclose" onclick="closeM()">닫기</button>`;
+    document.getElementById('ov').style.display='flex';
+    return;
+  }
   const isJoin = authTab==='join';
   document.getElementById('modal').innerHTML = `
     <div class="tabsw">
