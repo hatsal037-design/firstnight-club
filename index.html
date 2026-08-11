@@ -354,6 +354,7 @@ footer a{color:#7a8290}
 
 <script src="api.js"></script>
 <script src="games.js"></script>
+<script src="games_db.js"></script>
 <script src="schedule.js"></script>
 <script src="past.js"></script>
 <script>
@@ -619,9 +620,57 @@ function renderGames(){
   document.getElementById('crewMsg').innerHTML = crew
     ? `<b>${crew}명</b>이면 <b>${ok}개</b>가 돌아가요. 나머지는 흐리게 표시됩니다`
     : `인원을 고르면 그 인원으로 <b>돌아가는 게임</b>만 진하게 보여드려요`;
-  document.getElementById('glist').innerHTML = list.length
+  let html = list.length
     ? list.map(g=>gameCard(g,'fav')).join('')
     : `<div class="empty">조건에 맞는 게임이 없어요.<br>인원을 바꾸거나 검색어를 지워보세요.</div>`;
+
+  // 검색 중이면 미보유 DB에서도 찾아 붙여준다 (인기 순위 기반 참고 데이터)
+  if(q && typeof GAMES_DB!=='undefined'){
+    const sq=q.toLowerCase();
+    const db=GAMES_DB.filter(g=>(g.n+g.eng).toLowerCase().includes(sq)).slice(0,10);
+    if(db.length){
+      html += `<div class="label" style="margin:20px 4px 9px">미보유 · 참고 DB에서 ${db.length}개</div>`
+        + db.map(g=>dbCard(g)).join('');
+    }
+  }
+  document.getElementById('glist').innerHTML = html;
+}
+
+/* 미보유 DB 카드 — 흐리게, 별 없이 */
+function dbCard(g){
+  const i=GAMES_DB.indexOf(g);
+  return `<div class="game dim" style="opacity:.62">
+    <div class="info" onclick="openDbM(${i})">
+      <div class="nm">${g.n}</div>
+      <div class="meta"><b>${g.players||'?'}명</b> · ${g.minutes||'?'}분 · ⭐ ${g.rate}</div>
+      <div class="desc">${g.eng}${g.year?` (${g.year})`:''}</div>
+      <div class="badges">
+        <span class="bd">미보유</span>
+        <span class="bd">보드라이프 ${g.rank}위</span>
+        ${g.weight?`<span class="bd">난이도 ${g.weight}</span>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+function openDbM(i){
+  const g=GAMES_DB[i];
+  document.getElementById('modal').innerHTML=`
+    <h2>${g.n}</h2>
+    <div class="mdesc">${g.eng}${g.year?` (${g.year})`:''}</div>
+    <div style="margin-top:14px">
+      <div class="mrow"><div class="k">인원</div><div>${g.players||'?'}명</div></div>
+      <div class="mrow"><div class="k">시간</div><div>약 ${g.minutes||'?'}분</div></div>
+      ${g.age?`<div class="mrow"><div class="k">연령</div><div>${g.age}세 이상</div></div>`:''}
+      <div class="mrow"><div class="k">평점</div><div>⭐ ${g.rate} / 10 · 난이도 ${g.weight??'?'} · 종합 ${g.rank}위<br><span style="color:var(--sub);font-size:11px">보드라이프 유저 평가 기준</span></div></div>
+    </div>
+    <div class="notice" style="margin:14px 0 0">클럽 보유 게임은 아니에요.
+      가져오셔서 함께 하면 지난 모임 기록에 남길 수 있습니다.</div>
+    <div style="display:flex;gap:6px;margin-top:12px">
+      <a class="mclose" style="flex:1;margin:0;text-decoration:none;text-align:center" href="${g.url}" target="_blank" rel="noopener">보드라이프에서 보기</a>
+      ${g.bgg?`<a class="mclose" style="flex:1;margin:0;text-decoration:none;text-align:center" href="${g.bgg}" target="_blank" rel="noopener">BGG에서 보기</a>`:''}
+    </div>
+    <button class="mclose" onclick="closeM()">닫기</button>`;
+  document.getElementById('ov').style.display='flex';
 }
 /* 확인 창 — 게임 고르기 시트 위에도 떠야 해서 모달과 별도 레이어를 쓴다 */
 let askYes = null;
@@ -929,9 +978,14 @@ function editPast(d){
         <input id="pplIn" placeholder="@닉네임 또는 이름 입력 후 엔터" autocomplete="off">
         <div class="sug" id="pplSug" style="display:none"></div>
       </div></div>
-    <div class="fld"><label>그날 한 게임 — 눌러서 선택</label>
+    <div class="fld"><label>그날 한 게임 — 보유 게임은 눌러서, 가져온 게임은 아래에 입력</label>
       <div class="gsel" id="gsel">${GAMES.filter(g=>g.have!==false).map(g=>
-        `<span class="gs${sel.includes(g.n)?' on':''}" onclick="this.classList.toggle('on')" data-n="${g.n}">${g.n}</span>`).join('')}</div></div>
+        `<span class="gs${sel.includes(g.n)?' on':''}" onclick="this.classList.toggle('on')" data-n="${g.n}">${g.n}</span>`).join('')}</div>
+      <div class="chips2" id="xgChips" style="margin-top:9px"></div>
+      <div style="position:relative">
+        <input id="xgIn" placeholder="미보유 게임 이름 입력 (인기 게임은 자동완성)" autocomplete="off">
+        <div class="sug" id="xgSug" style="display:none"></div>
+      </div></div>
     <div class="fld"><label>2차</label><input id="e_after" value="${cur.after||''}" placeholder="레드버튼 (달무티)"></div>
     <div class="fld"><label>메모</label><textarea id="e_memo" placeholder="그날 어땠는지 한두 줄">${cur.memo||''}</textarea></div>
     <div class="mbtns">
@@ -941,6 +995,49 @@ function editPast(d){
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
   initPplEditor(cur.people||[]);
+  initXgEditor(cur.played||[]);
+}
+
+/* ── 미보유 게임 입력기 (지난 모임 '한 게임') ── */
+let extraPlayed = [];
+function initXgEditor(played){
+  const ownNames = new Set(GAMES.filter(g=>g.have!==false).map(g=>g.n));
+  extraPlayed = (played||[]).filter(n=>!ownNames.has(n));
+  const inp=document.getElementById('xgIn'); if(!inp) return;
+  inp.addEventListener('input', xgSuggest);
+  inp.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); xgCommit(); }
+    else if(e.key==='Backspace' && !inp.value && extraPlayed.length){ extraPlayed.pop(); renderXg(); }
+  });
+  renderXg();
+}
+function renderXg(){
+  const box=document.getElementById('xgChips'); if(!box) return;
+  box.innerHTML = extraPlayed.map((n,i)=>
+    `<span class="ch">${n}<b onclick="extraPlayed.splice(${i},1);renderXg()">✕</b></span>`).join('');
+}
+function xgSuggest(){
+  const inp=document.getElementById('xgIn'), sug=document.getElementById('xgSug');
+  const v=inp.value.trim();
+  if(!v || typeof GAMES_DB==='undefined'){ sug.style.display='none'; return; }
+  const hits=GAMES_DB.filter(g=>!extraPlayed.includes(g.n) && (g.n+g.eng).toLowerCase().includes(v.toLowerCase())).slice(0,6);
+  sug.innerHTML = hits.length
+    ? hits.map(g=>`<div class="si" onclick="xgPick('${g.n.replace(/'/g,"\\'")}')">${g.n}<span>⭐${g.rate} · ${g.players}명</span></div>`).join('')
+    : `<div class="si none">DB에 없어요 — 엔터로 그대로 기록</div>`;
+  sug.style.display='block';
+}
+function xgPick(n){
+  if(!extraPlayed.includes(n)) extraPlayed.push(n);
+  document.getElementById('xgIn').value='';
+  document.getElementById('xgSug').style.display='none';
+  renderXg();
+}
+function xgCommit(){
+  const inp=document.getElementById('xgIn');
+  const v=inp.value.trim(); if(!v) return;
+  if(!extraPlayed.includes(v)) extraPlayed.push(v);
+  inp.value=''; document.getElementById('xgSug').style.display='none';
+  renderXg();
 }
 
 /* ── 참여자 칩 편집기 ──
@@ -998,6 +1095,7 @@ function pplCommit(){
 
 function savePast(){
   pplCommit();                       // 입력창에 쓰다 만 이름도 챙긴다
+  xgCommit();
   const v=id=>document.getElementById(id).value.trim();
   const d=v('e_d');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ alert('날짜를 2026-08-08 형식으로 적어주세요'); return; }
@@ -1007,7 +1105,7 @@ function savePast(){
     r: rn?+rn:null, kind: rn?'round':'flash',
     place:v('e_place'), fee:v('e_fee'), after:v('e_after'), memo:v('e_memo'),
     people: editPeople.slice(),
-    played: [...document.querySelectorAll('#gsel .gs.on')].map(el=>el.dataset.n),
+    played: [...document.querySelectorAll('#gsel .gs.on')].map(el=>el.dataset.n).concat(extraPlayed),
   };
   const rec = edits[d];
   localStorage.setItem(RKEY,JSON.stringify(edits));   // 일단 로컬에 남겨 유실을 막는다
