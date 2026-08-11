@@ -234,3 +234,18 @@ API.signupKakao = async function(kid, nick, payname=''){
   await API.linkKakao(kid, acc.uid);
   return acc;
 };
+
+/* ── 게임 소유자 (서버) ──
+   botc:owner:<게임이름> = uid   관리자가 지정. games.js의 own(씨앗)을 덮어쓴다.
+   소유자 본인과 관리자만 볼 수 있게 표시 제어는 화면(index.html)에서. */
+API.ownerMap = async function(){
+  const rows = await kvList('botc:owner:');
+  const m = {};
+  rows.forEach(([k,v]) => { m[k.slice('botc:owner:'.length)] = v; });   // {게임이름: uid}
+  return m;
+};
+API.setOwner = async function(gameName, uid){
+  const key = `botc:owner:${gameName}`;
+  if(uid) await kvPut(key, uid);
+  else    await kvDel(key);
+};

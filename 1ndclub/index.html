@@ -379,6 +379,7 @@ let picks = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');   // 로�
 let edits = JSON.parse(localStorage.getItem(RKEY)||'{}');   // 서버 이전 시절의 로컬 기록(백업용)
 let serverPast = [];        // 서버에 저장된 지난 모임 기록 — 시작할 때 불러온다
 let MEMBERS = [];           // 전체 회원 — @태그(uid)를 현재 닉네임으로 바꿔 보여줄 때 쓴다
+let OWNERS = {};            // {게임이름: uid} — 관리자가 지정한 게임 소유자 (서버)
 let myRsvp = null;          // 모집중 회차 참석 여부 'yes'|'no'|null
 let rsvpCnt = {yes:0,no:0};
 let cat='all', crew=0, q='', view='games', authTab='login';
@@ -406,6 +407,7 @@ async function bootSession(){
   }catch(e){ /* 오프라인이면 그냥 비로그인으로 둔다 */ }
   try{ serverPast = await API.pastList(); }catch(e){}
   try{ MEMBERS = await API.list(); }catch(e){}
+  try{ OWNERS = await API.ownerMap(); }catch(e){}
   try{ if(openRound) await loadRsvpCnt(); }catch(e){}
   renderMe(); renderGames();
   if(view==='sched') renderSched();
@@ -679,7 +681,7 @@ function gameCard(g, mode){
         ${(g.max===null||g.max>=12)?'<span class="bd big">12명 OK</span>':''}
         ${g.out?'<span class="bd out">탈락 있음</span>':'<span class="bd safe">아무도 안 죽음</span>'}
         ${g.host?'<span class="bd host">진행자 필요</span>':''}
-        ${isAdmin()?`<span class="bd">${g.own||'소유자 미확인'}</span>`:''}
+        ${canSeeOwner(g)?`<span class="bd">${ownerName(g)||'소유자 미지정'}</span>`:''}
       </div>
     </div>
     <div class="gright">
@@ -706,7 +708,7 @@ function cover(g){ return g.img || fallbackCover(g.n, g.cat); }
 function renderGames(){
   let list=GAMES.filter(g=>g.have!==false);
   if(cat!=='all') list=list.filter(g=>g.cat===cat);
-  if(q){const s=q.toLowerCase();list=list.filter(g=>(g.n+g.d+g.r+g.lv+g.own).toLowerCase().includes(s));}
+  if(q){const s=q.toLowerCase();list=list.filter(g=>(g.n+g.d+g.r+g.lv+g.own+(isAdmin()?ownerName(g):'')).toLowerCase().includes(s));}
   const sort=document.getElementById('sort').value;
   if(sort==='people') list.sort((a,b)=>(b.max===null?99:b.max)-(a.max===null?99:a.max));
   else if(sort==='short') list.sort((a,b)=>a.t-b.t);
@@ -1031,6 +1033,23 @@ async function togPick(n){
    people 배열의 항목은 두 종류다.
      "이름"        수기 기록 — 그대로 보여준다
      { uid:"..." }  회원 태그 — 지금 닉네임을 찾아 보여준다. 닉변해도 따라간다 */
+/* 게임 소유자 — 서버 지정(uid)이 우선, 없으면 games.js의 own(씨앗 이름) */
+function ownerUid(g){ return OWNERS[g.n] || null; }
+function ownerName(g){
+  const uid = ownerUid(g);
+  if(uid){ const m=MEMBERS.find(m=>m.uid===uid); return m ? m.nick : '(탈퇴한 회원)'; }
+  return g.own || '';
+}
+/* 이 게임 소유자 정보를 볼 수 있는가 — 관리자이거나, 내가 그 소유자이거나 */
+function canSeeOwner(g){
+  if(isAdmin()) return true;
+  const uid = ownerUid(g);
+  if(uid && acc && uid===acc.uid) return true;
+  // 씨앗 이름(문자열) 소유는 내 닉네임과 일치할 때만
+  if(!uid && g.own && acc && myNames().includes(g.own)) return true;
+  return false;
+}
+
 function pName(x){
   if(typeof x === 'string') return x;
   const m = MEMBERS.find(m=>m.uid===x.uid);
@@ -1324,7 +1343,7 @@ async function renderMembers(){
       const sorted=Object.entries(tally).sort((a,b)=>b[1]-a[1]);
       if(sorted.length){
         const grp={};
-        sorted.forEach(([g,c])=>{const o=GAMES.find(x=>x.n===g)?.own||'미확인';(grp[o]=grp[o]||[]).push(`${g} ${c}표`);});
+        sorted.forEach(([g,c])=>{const gm=GAMES.find(x=>x.n===g); const o=(gm?ownerName(gm):'')||'미지정';(grp[o]=grp[o]||[]).push(`${g} ${c}표`);});
         agg=`<div class="adminbox">
           <div class="at">🗳️ ${fmt(openRound.d)} 회차 게임 집계 · ${rows.length}명 참여</div>
           ${sorted.slice(0,8).map(([g,c])=>`<div class="row"><b>${g}</b> — ${c}표</div>`).join('')}
@@ -1441,7 +1460,9 @@ function openM(i){
       <div class="mrow"><div class="k">탈락</div><div>${g.out?'있음 — 죽으면 관전':'없음 — 끝까지 참여'}</div></div>
       <div class="mrow"><div class="k">진행자</div><div>${g.host?'필요':'필요 없음'}</div></div>
       ${g.bl?`<div class="mrow"><div class="k">평점</div><div>⭐ ${g.bl.rate} / 10 · 난이도 ${g.bl.weight}${g.bl.rank?` · 종합 ${g.bl.rank}위`:''}<br><span style="color:var(--sub);font-size:11px">보드라이프 유저 평가 기준</span></div></div>`:''}
-      ${isAdmin()?`<div class="mrow"><div class="k">소유자</div><div>${g.own||'미확인'}</div></div>`:''}
+      ${canSeeOwner(g)?`<div class="mrow"><div class="k">소유자</div><div>${ownerName(g)||'미지정'}${isAdmin()?` <span style="color:var(--red-lite);cursor:pointer;font-size:11.5px" onclick="editOwner(${i})">· 변경</span>`:''}</div></div>`
+        : (isAdmin()?'':'') }
+      ${isAdmin()&&!canSeeOwner(g)?`<div class="mrow"><div class="k">소유자</div><div><span style="color:var(--red-lite);cursor:pointer" onclick="editOwner(${i})">지정하기</span></div></div>`:''}
     </div>
     <div class="mrule"><b style="color:var(--ink)">어떻게 하는 게임인가요</b><br>${g.r}</div>
     ${g.bl?`<div style="display:flex;gap:6px;margin-top:10px">
@@ -1456,6 +1477,56 @@ function openM(i){
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
 }
+/* ── 게임 소유자 지정 (관리자 전용) ── */
+function editOwner(i){
+  if(!isAdmin()) return;
+  const g=GAMES[i];
+  const cur=ownerUid(g);
+  const curName = cur ? (MEMBERS.find(m=>m.uid===cur)?.nick||'') : '';
+  document.getElementById('modal').innerHTML=`
+    <h2>${g.n} 소유자</h2>
+    <div class="mdesc">이 게임을 가진 회원을 지정해요. <b style="color:var(--red-lite)">@</b>로 회원을 찾아 지정하면,
+      그 회원과 관리자에게만 소유 표시가 보입니다. 닉네임이 바뀌어도 따라가요.</div>
+    <div class="fld"><label>현재 소유자</label>
+      <div class="chips2" id="ownChip">${cur?`<span class="ch m">@${curName}<b onclick="ownClear()">✕</b></span>`
+        : (g.own?`<span class="ch">${g.own} <span style="color:var(--sub);font-size:10.5px">(씨앗 정보)</span></span>`:'<span style="color:var(--sub);font-size:12.5px">미지정</span>')}</div>
+    </div>
+    <div class="fld"><label>@로 회원 지정</label>
+      <div style="position:relative">
+        <input id="ownIn" placeholder="@닉네임 입력" autocomplete="off">
+        <div class="sug" id="ownSug" style="display:none"></div>
+      </div></div>
+    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
+    <div class="mbtns"><button class="mbtn ghost" onclick="openM(${i})">← 게임으로</button></div>
+    <button class="mclose" onclick="closeM()">닫기</button>`;
+  document.getElementById('ov').style.display='flex';
+  const inp=document.getElementById('ownIn');
+  inp.addEventListener('input', ()=>ownSuggest(i));
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); ownSuggest(i); }});
+}
+function ownSuggest(i){
+  const inp=document.getElementById('ownIn'), sug=document.getElementById('ownSug');
+  let v=inp.value.trim(); if(v.startsWith('@')) v=v.slice(1);
+  if(!v){ sug.style.display='none'; return; }
+  const hits=MEMBERS.filter(m=>m.nick.includes(v)).slice(0,6);
+  sug.innerHTML = hits.length
+    ? hits.map(m=>`<div class="si" onclick="ownPick(${i},'${m.uid}')">@${m.nick}<span>${(m.joined||'').slice(2)}</span></div>`).join('')
+    : `<div class="si none">'${v}' 회원이 없어요</div>`;
+  sug.style.display='block';
+}
+async function ownPick(i, uid){
+  const g=GAMES[i];
+  try{ await API.setOwner(g.n, uid); OWNERS[g.n]=uid; }catch(e){ alert('저장 실패: '+e.message); return; }
+  editOwner(i);
+}
+async function ownClear(){
+  // 현재 열린 게임 찾기: 제목으로
+  const nm=document.querySelector('#modal h2').textContent.replace(' 소유자','');
+  const i=GAMES.findIndex(g=>g.n===nm);
+  try{ await API.setOwner(nm, null); delete OWNERS[nm]; }catch(e){}
+  if(i>=0) editOwner(i);
+}
+
 /* 룰 자세히 보기 — games.js 의 rules 배열을 순서대로 그린다.
    글·번호목록·사진을 섞을 수 있고, 아직 없으면 준비 중 화면이 뜬다. */
 function openRules(i){
