@@ -1243,9 +1243,14 @@ function openM(i){
       <div class="mrow"><div class="k">난이도</div><div>${g.lv}</div></div>
       <div class="mrow"><div class="k">탈락</div><div>${g.out?'있음 — 죽으면 관전':'없음 — 끝까지 참여'}</div></div>
       <div class="mrow"><div class="k">진행자</div><div>${g.host?'필요':'필요 없음'}</div></div>
+      ${g.bl?`<div class="mrow"><div class="k">평점</div><div>⭐ ${g.bl.rate} / 10 · 난이도 ${g.bl.weight}${g.bl.rank?` · 종합 ${g.bl.rank}위`:''}<br><span style="color:var(--sub);font-size:11px">보드라이프 유저 평가 기준</span></div></div>`:''}
       ${isAdmin()?`<div class="mrow"><div class="k">소유자</div><div>${g.own||'미확인'}</div></div>`:''}
     </div>
     <div class="mrule"><b style="color:var(--ink)">어떻게 하는 게임인가요</b><br>${g.r}</div>
+    ${g.bl?`<div style="display:flex;gap:6px;margin-top:10px">
+      <a class="mclose" style="flex:1;margin:0;text-decoration:none;text-align:center" href="${g.bl.url}" target="_blank" rel="noopener">보드라이프에서 보기</a>
+      ${g.bl.bgg?`<a class="mclose" style="flex:1;margin:0;text-decoration:none;text-align:center" href="${g.bl.bgg}" target="_blank" rel="noopener">BGG에서 보기</a>`:''}
+    </div>`:''}
     <div class="mbtns">
       <button class="mbtn" onclick="openRules(${i})">📖 룰 자세히 보기${g.rules?.length?'':' (준비 중)'}</button>
       <button class="mbtn ghost" onclick="${fn};closeM()">${on?'★ 해제':(inPick?'☆ 이거 하고 싶어요':'☆ 관심 표시')}</button>
