@@ -276,6 +276,13 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
 .mem .b{flex:1;text-align:center;font-size:11.5px;font-weight:600;padding:8px 0;border-radius:5px;
         background:var(--surface2);border:1px solid var(--line);cursor:pointer}
 .mem .b.d{color:#ff7b84;border-color:#5e2429}
+.kakaobtn{width:100%;background:#FEE500;color:#191919;border:none;border-radius:8px;
+  padding:14px 0;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:9px;letter-spacing:-.3px}
+.kakaobtn .ksym{background:#191919;color:#FEE500;font-size:8.5px;font-weight:800;border-radius:5px;
+  padding:3px 5px;letter-spacing:.5px}
+.ordiv{display:flex;align-items:center;gap:12px;margin:16px 0 10px;color:var(--sub);font-size:11px}
+.ordiv::before,.ordiv::after{content:'';height:1px;background:var(--line);flex:1}
 .tabsw{display:flex;gap:6px;margin-bottom:4px}
 .tabsw .t{flex:1;text-align:center;padding:10px 0;border-radius:6px;font-size:13px;font-weight:700;
           background:var(--surface2);border:1px solid var(--line);cursor:pointer;color:var(--sub)}
@@ -417,6 +424,81 @@ function renderMe(){
   document.getElementById('navMembers').style.display = isAdmin() ? '' : 'none';
 }
 
+/* ══ 카카오 로그인 ══ */
+function kakaoStart(){
+  if(!(window.crypto && crypto.subtle) && !location.href.startsWith('https')){
+    // http 단계에서도 카카오 인가는 가능하지만, 세션 저장 후 흐름 일관성 위해 안내만
+  }
+  sessionStorage.setItem('botc_kakao_pending','1');
+  API.kakaoAuthorize();
+}
+
+/* 인가 후 돌아왔을 때 (?code=) */
+async function kakaoReturn(code){
+  history.replaceState(null,'',location.pathname + location.hash);   // 주소에서 code 제거
+  let kid;
+  try{ kid = await API.kakaoExchange(code); }
+  catch(e){ alert('카카오 로그인에 실패했어요.\n'+e.message); return; }
+  const existing = await API.findByKakao(kid);
+  if(existing){ await afterAuth(existing); return; }
+  // 처음 온 카카오 계정 — 새로 가입하거나 기존 닉네임 계정에 연결
+  kakaoOnboard(kid);
+}
+
+function kakaoOnboard(kid){
+  document.getElementById('modal').innerHTML = `
+    <h2>거의 다 됐어요</h2>
+    <div class="mdesc">카카오 인증 완료! 모임에서 쓸 정보만 정해주세요.<br>
+      <span style="color:var(--sub);font-size:12px">카톡 이름·프로필은 가져오지 않아요. 닉네임은 여기서 정한 것만 씁니다.</span></div>
+    <div class="fld"><label>닉네임 (한글만)</label>
+      <input id="kkNick" placeholder="예: 투넬" autocomplete="off"></div>
+    <div class="fld"><label>입금자명</label>
+      <input id="kkPay" placeholder="계좌이체 때 찍히는 이름" autocomplete="off"></div>
+    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px;line-height:1.6"></div>
+    <div class="notice" style="margin:13px 0 0">입금자명은 실수로 참가비 입금을 닉네임으로 하지 않았을 때 대조하려고 받아요.
+      <b style="color:var(--red-lite)">모임장만 볼 수 있어요.</b></div>
+    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="kakaoJoin('${kid}')">시작하기</button></div>
+    <button class="mclose" onclick="kakaoLink('${kid}')">전에 닉네임·비밀번호로 가입했어요 (계정 연결)</button>
+    <button class="mclose" onclick="closeM()">닫기</button>`;
+  document.getElementById('ov').style.display='flex';
+}
+
+async function kakaoJoin(kid){
+  const n=document.getElementById('kkNick').value.trim();
+  const pn=document.getElementById('kkPay').value.trim();
+  if(!n) return joinErr('닉네임을 적어주세요.');
+  if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자).');
+  if(!pn) return joinErr('입금자명을 적어주세요.');
+  if(ADMINS.includes(n)) return joinErr('그 닉네임은 관리자 전용이에요.');
+  busy('가입 중');
+  try{ await afterAuth(await API.signupKakao(kid, n, pn)); }
+  catch(e){ joinErr(e.message); }
+}
+
+function kakaoLink(kid){
+  document.getElementById('modal').innerHTML = `
+    <h2>기존 계정 연결</h2>
+    <div class="mdesc">전에 만든 닉네임 계정에 이 카카오 계정을 연결합니다.
+      다음부터는 카카오 버튼 한 번으로 들어와져요.</div>
+    <div class="fld"><label>닉네임</label><input id="lkNick" autocomplete="off"></div>
+    <div class="fld"><label>비밀번호</label><input id="lkPw" type="password"></div>
+    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
+    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="kakaoDoLink('${kid}')">연결하기</button></div>
+    <button class="mclose" onclick="closeM()">닫기</button>`;
+  document.getElementById('ov').style.display='flex';
+}
+async function kakaoDoLink(kid){
+  const n=document.getElementById('lkNick').value.trim(), p=document.getElementById('lkPw').value;
+  if(!n||!p) return joinErr('닉네임과 비밀번호를 적어주세요.');
+  busy('연결 중');
+  try{
+    const a = await API.login(n,p);
+    a.kakao = kid; await API.save(a);
+    await API.linkKakao(kid, a.uid);
+    await afterAuth(a);
+  }catch(e){ joinErr(e.message); }
+}
+
 /* ══ 로그인 · 가입 ══ */
 function askNick(tab){
   if(tab) authTab = tab;
@@ -436,6 +518,10 @@ function askNick(tab){
   }
   const isJoin = authTab==='join';
   document.getElementById('modal').innerHTML = `
+    <button class="kakaobtn" onclick="kakaoStart()">
+      <span class="ksym">TALK</span> 카카오로 시작하기
+    </button>
+    <div class="ordiv"><span>또는 닉네임·비밀번호로</span></div>
     <div class="tabsw">
       <div class="t${isJoin?'':' on'}" onclick="askNick('login')">로그인</div>
       <div class="t${isJoin?' on':''}" onclick="askNick('join')">가입하기</div>
@@ -1420,6 +1506,15 @@ renderMe(); renderGames();
   if(['sched','me','members'].includes(v)) setView(v,true);
 }
 bootSession();
+
+/* 카카오 인가에서 돌아온 경우 */
+{
+  const code = new URLSearchParams(location.search).get('code');
+  if(code && sessionStorage.getItem('botc_kakao_pending')){
+    sessionStorage.removeItem('botc_kakao_pending');
+    kakaoReturn(code);
+  }
+}
 
 /* 주소에 ?rules=게임이름 을 붙이면 그 게임 룰이 바로 열린다.
    "달무티 룰 여기서 봐" 하고 링크만 던지면 되게. */

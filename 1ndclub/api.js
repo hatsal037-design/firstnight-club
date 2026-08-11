@@ -177,3 +177,60 @@ API.allRsvp = async function(date){
   const rows = await kvList(`botc:a:${date}:`);
   return rows.map(([k,v])=>({ uid:k.split(':').pop(), v }));
 };
+
+/* ── 카카오 로그인 ──
+   흐름: 버튼 → kauth 인가(리다이렉트) → ?code= 받아 토큰 교환 → 회원번호(kakao id) 획득
+   매핑: botc:kk:<카카오회원번호> = uid   (카카오 계정 1개 = 클럽 계정 1개)
+   ※ REST 키·시크릿이 소스에 있지만, 등록된 리다이렉트 URI(tunel.kr)로만 코드가 떨어지므로
+     타 사이트가 이 앱 행세를 할 수는 없다. */
+const KAKAO = {
+  restKey: '48a2b31b13cafa57e7dae415e7a38383',
+  secret:  'cHhtNvBgktotgmxo8ovFR91wV7JL62fr',
+  redirect: 'https://tunel.kr/1ndclub/',
+};
+
+API.kakaoAuthorize = function(){
+  const u = new URLSearchParams({
+    client_id: KAKAO.restKey, redirect_uri: KAKAO.redirect, response_type: 'code',
+  });
+  location.href = 'https://kauth.kakao.com/oauth/authorize?' + u.toString();
+};
+
+/* 인가 코드 → 카카오 회원번호 */
+API.kakaoExchange = async function(code){
+  const body = new URLSearchParams({
+    grant_type:'authorization_code', client_id:KAKAO.restKey,
+    redirect_uri:KAKAO.redirect, code, client_secret:KAKAO.secret,
+  });
+  const tr = await fetch('https://kauth.kakao.com/oauth/token', {
+    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=utf-8'}, body,
+  });
+  if(!tr.ok) throw new Error('카카오 인증에 실패했어요 ('+tr.status+')');
+  const tok = await tr.json();
+  const ur = await fetch('https://kapi.kakao.com/v2/user/me', {
+    headers:{ Authorization:'Bearer '+tok.access_token },
+  });
+  if(!ur.ok) throw new Error('카카오 정보 조회 실패 ('+ur.status+')');
+  const me = await ur.json();
+  return String(me.id);
+};
+
+const K_KAKAO = kid => `botc:kk:${kid}`;
+
+API.findByKakao = async function(kid){
+  const uid = await kvGet(K_KAKAO(kid));
+  return uid ? await API.get(uid) : null;
+};
+API.linkKakao = async function(kid, uid){
+  await kvPut(K_KAKAO(kid), uid);
+};
+/* 카카오로 새 계정 만들기 — 비밀번호가 없는 계정 */
+API.signupKakao = async function(kid, nick, payname=''){
+  if(await API.nickTaken(nick)) throw new Error(`'${nick}'은(는) 이미 쓰고 있는 닉네임이에요.`);
+  const acc = { uid:newUid(), nick, aliases:[], salt:'', hash:'', kakao:kid, admin:false,
+                payname, joined:new Date().toISOString().slice(0,10) };
+  await kvPut(K_USER(acc.uid), JSON.stringify(acc));
+  await kvPut(K_NICK(nick), acc.uid);
+  await API.linkKakao(kid, acc.uid);
+  return acc;
+};
