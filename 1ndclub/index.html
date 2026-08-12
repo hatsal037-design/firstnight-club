@@ -1117,7 +1117,10 @@ async function openPast(d){
   const p = pastList().find(x=>x.d===d); if(!p) return;
   const mine = (p.people||[]).some(pIsMe);
   if(!mine && !isStaff()) return;
-  try{ await loadPfps((p.people||[]).filter(x=>typeof x==='object').map(x=>x.uid)); }catch(e){}
+  try{
+    const uids = (p.people||[]).map(meetKeyOf).filter(k=>MEMBERS.some(m=>m.uid===k));
+    await loadPfps(uids);
+  }catch(e){}
   document.getElementById('modal').innerHTML=`
     <h2>${fmt(p.d)} (${p.dow}) ${p.kind==='flash'?'번개':(p.r?p.r+'회차':'정모')}</h2>
     <div class="mdesc">${p.place}</div>
@@ -1127,7 +1130,9 @@ async function openPast(d){
       <div class="mrow"><div class="k">장소</div><div>${p.place}</div></div>
       ${p.fee?`<div class="mrow"><div class="k">참가비</div><div>${p.fee}</div></div>`:''}
       ${p.people?.length?`<div class="mrow"><div class="k">참여자</div><div>${p.people.length}명<br>${p.people.map(x=>{
-        if(typeof x==='object'){ const n=pName(x); return `<span class="pf" onclick="openProfile('${x.uid}','${p.d}')">${avHtml(x.uid,n)}${n}</span>`; }
+        const key = meetKeyOf(x);
+        const mem = MEMBERS.find(m=>m.uid===key);
+        if(mem) return `<span class="pf" onclick="openProfile('${mem.uid}','${p.d}')">${avHtml(mem.uid,mem.nick)}${mem.nick}</span>`;
         const esc=String(x).replace(/'/g,"\\'");
         return `<span class="pf guest" onclick="openProfile('${esc}','${p.d}')"><i style="background:#4a4a55">${String(x)[0]}</i>${x}</span>`;
       }).join('')}</div></div>`:''}
@@ -1406,6 +1411,13 @@ function pfpShrink(file){
    아직 화면에 표기하는 곳은 없지만, 참여자 기록(@태그)만 쌓이면 언제든 소급 계산되는 구조라
    따로 저장하는 카운터 없이 이 함수 하나로 끝난다. key는 회원이면 uid, 비회원 수기는 이름.
    반환 예: { "0b25749c-…": 5, "지민": 2 } */
+/* 참여자 항목을 회원과 연결 — 가입 전에 이름 문자열로 기록됐어도,
+   지금 그 닉네임(또는 옛 닉네임)을 쓰는 회원이 있으면 그 사람으로 본다 */
+function meetKeyOf(x){
+  if(typeof x==='object') return x.uid;
+  const m = MEMBERS.find(m=>m.nick===x || (m.aliases||[]).includes(x));
+  return m ? m.uid : x;
+}
 function myMeetCounts(){
   if(!acc) return {};
   const counts = {};
@@ -1414,7 +1426,7 @@ function myMeetCounts(){
     if(!ppl.some(pIsMe)) return;             // 내가 안 간 회차는 제외
     ppl.forEach(x=>{
       if(pIsMe(x)) return;                   // 나 자신 제외
-      const key = typeof x==='object' ? x.uid : x;
+      const key = meetKeyOf(x);
       counts[key] = (counts[key]||0)+1;
     });
   });
