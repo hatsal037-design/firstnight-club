@@ -16,6 +16,7 @@
 const KV = 'https://kvdb.io/DJQNWiVLSeiXfWCAYSyAZz';
 const K_USER = uid  => `botc:u:${uid}`;
 const K_NICK = nick => `botc:n:${nick.toLowerCase()}`;
+const K_SEQ  = 'botc:seq:member';   // 다음에 발급할 회원번호(정수). 한 번 준 번호는 탈퇴해도 재사용하지 않는다
 
 /* ── 저수준 ── */
 async function kvGet(key){
@@ -58,6 +59,17 @@ function newUid(){
        : 'xxxxxxxx-xxxx-4xxx-yxxx'.replace(/[xy]/g,()=>((Math.random()*16)|0).toString(16));
 }
 
+/* 회원번호는 가입 순서를 계산해서 매기지 않고, 발급 즉시 계정에 고정으로 박아둔다.
+   그래야 중간에 누가 탈퇴해도 남은 사람 번호가 밀리지 않는다 — 탈퇴한 자리는 그냥 빈 번호로 남는다.
+   ⚠️ kvdb에 원자적 증가가 없어 동시가입이 겹치면 같은 번호가 나갈 수 있지만,
+   이 규모의 클럽에서 같은 순간에 두 명이 동시가입할 확률은 무시 가능하다고 봤다. */
+async function nextMemberNo(){
+  const cur = await kvGet(K_SEQ);
+  const n = cur ? parseInt(cur,10) : 1;
+  await kvPut(K_SEQ, String(n+1));
+  return n;
+}
+
 /* ── 계정 ── */
 const API = {
   /* 닉네임이 이미 쓰이고 있는가 */
@@ -74,6 +86,7 @@ const API = {
       payname,                                   // 입금자명 — 관리자만 본다
       joined: new Date().toISOString().slice(0,10),
       joinedAt: new Date().toISOString(),         // 가입 순번 정렬용 — joined는 날짜만이라 동일자 가입 순서를 못 가림
+      no: await nextMemberNo(),                   // 고정 회원번호 — 탈퇴자가 생겨도 재배정하지 않는다
     };
     await kvPut(K_USER(acc.uid), JSON.stringify(acc));
     await kvPut(K_NICK(nick), acc.uid);
@@ -229,7 +242,8 @@ API.linkKakao = async function(kid, uid){
 API.signupKakao = async function(kid, nick, payname=''){
   if(await API.nickTaken(nick)) throw new Error(`'${nick}'은(는) 이미 쓰고 있는 닉네임이에요.`);
   const acc = { uid:newUid(), nick, aliases:[], salt:'', hash:'', kakao:kid, admin:false,
-                payname, joined:new Date().toISOString().slice(0,10), joinedAt:new Date().toISOString() };
+                payname, joined:new Date().toISOString().slice(0,10), joinedAt:new Date().toISOString(),
+                no: await nextMemberNo() };
   await kvPut(K_USER(acc.uid), JSON.stringify(acc));
   await kvPut(K_NICK(nick), acc.uid);
   await API.linkKakao(kid, acc.uid);

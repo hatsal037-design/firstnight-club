@@ -382,7 +382,7 @@ footer a{color:#7a8290}
   <div class="askbox" id="askBox"></div>
 </div>
 
-<script src="api.js?v=3"></script>
+<script src="api.js?v=4"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js"></script>
@@ -457,11 +457,11 @@ function myAttendance(){
   const names = myNames();
   return pastList().filter(p=>(p.people||[]).some(pIsMe)).length;
 }
-/* MEMBERS는 API.list()가 가입일 오름차순으로 정렬해서 넘겨준다 — 그 순서가 곧 가입 순번 */
+/* 회원번호는 가입 시점에 계정에 고정으로 박아둔 값(acc.no)을 그대로 보여준다.
+   목록 순서로 계산하지 않는 이유 — 중간에 탈퇴자가 생기면 순서 계산값은 밀리지만 고정번호는 안 밀린다. */
 function myMemberNo(){
-  if(!acc || !MEMBERS?.length) return null;
-  const i = MEMBERS.findIndex(m=>m.uid===acc.uid);
-  return i<0 ? null : String(i+1).padStart(4,'0');
+  if(!acc || acc.no==null) return null;
+  return String(acc.no).padStart(4,'0');
 }
 function renderMe(){
   const att = acc ? myAttendance() : 0;
