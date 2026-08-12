@@ -326,6 +326,28 @@ API.crushOffList = async function(){
   const rows = await kvList('botc:crushoff:');
   return rows.map(([k])=>k.slice('botc:crushoff:'.length));
 };
+/* 연락처는 "그 쌍만 열 수 있는" 키로 암호화 — 두 uid를 정렬해 만든 키라서
+   서로를 아는 두 사람(=매칭된 둘)만 복호화 가능. 제3자는 쌍을 알아내야만 열 수 있다 */
+async function crushPairKey(a, b){
+  const seed = 'joalarm-pair|' + [a,b].sort().join('|') + '|' + CRUSH_PEPPER;
+  const bits = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(seed));
+  return await crypto.subtle.importKey('raw', bits, 'AES-GCM', false, ['encrypt','decrypt']);
+}
+API.crushEncContact = async function(a, b, text){
+  const key = await crushPairKey(a, b);
+  const iv = new Uint8Array(12); crypto.getRandomValues(iv);
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(text));
+  return hex(iv)+':'+hex(new Uint8Array(ct));
+};
+API.crushDecContact = async function(a, b, enc){
+  try{
+    const un = s => new Uint8Array(s.match(/../g).map(x=>parseInt(x,16)));
+    const [ivh, cth] = enc.split(':');
+    const key = await crushPairKey(a, b);
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:un(ivh)}, key, un(cth));
+    return new TextDecoder().decode(pt);
+  }catch(e){ return null; }
+};
 API.crushEncTarget = async function(uid, targetUid){
   const key = await crushAesKey(uid);
   const iv = new Uint8Array(12); crypto.getRandomValues(iv);

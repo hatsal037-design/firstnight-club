@@ -307,6 +307,8 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
 .mem .tag{font-size:9px;font-weight:700;border-radius:3px;padding:2px 6px;margin-left:auto;
           background:var(--red);color:#fff}
 .mem .tag.staff{background:#2b3648;color:#a9c4e0}
+.mem .tag.scribe{background:#3d3320;color:#ffd98e}
+.mem .tag.ready{background:var(--surface2);color:var(--sub);border:1px dashed var(--line)}
 .mem .sub2{font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6}
 .mem .btns{display:flex;gap:6px;margin-top:10px}
 .mem .b{flex:1;text-align:center;font-size:11.5px;font-weight:600;padding:8px 0;border-radius:5px;
@@ -398,7 +400,7 @@ footer a{color:#7a8290}
   <div class="askbox" id="askBox"></div>
 </div>
 
-<script src="api.js?v=7"></script>
+<script src="api.js?v=8"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js"></script>
@@ -430,6 +432,10 @@ let cat='all', crew=0, q='', view='games', authTab='login';
 const isAdmin = () => !!acc && acc.admin;
 /* 운영진 — 관리자가 지정. 게임 소유자 열람·회원 목록 열람만 되고, 수정·삭제 같은 관리 조작은 여전히 관리자만 */
 const isStaff = () => !!acc && (acc.admin || acc.role==='staff');
+/* 서기 — 참석 10회에 "깨어날 준비" 알림이 뜨고, 관리자가 승인하면 지난모임 기록 권한이 생긴다.
+   운영진·관리자는 원래 기록이 되니 서기 여부와 무관 */
+const canRecord = () => isStaff() || !!acc?.scribe;
+const SCRIBE_MIN = 10;
 const myNames = () => acc ? [acc.nick, ...(acc.aliases||[])] : [];
 const FKEY = () => 'botc_fav_' + (acc?.uid||'anon');
 
@@ -466,6 +472,7 @@ async function bootSession(){
     }
   }catch(e){}
   try{ if(openRound) await loadRsvpCnt(); }catch(e){}
+  try{ await checkScribe(); }catch(e){}
   renderMe(); renderGames();
   if(view==='sched') renderSched();
   if(view==='me') renderMePage();
@@ -1012,7 +1019,7 @@ function renderSched(){
   }
   let lastM='';
   past.forEach(p=>{
-    const mine = mineOf(p), open = mine || isStaff();
+    const mine = mineOf(p), open = mine || canRecord();
     const m=p.d.slice(0,7);
     if(m!==lastM){ html+=`<div class="monthlab">${+p.d.slice(5,7)}월 · ${p.d.slice(0,4)}</div>`; lastM=m; }
     html+=`<div class="rd past${mine?' mine':''}">
@@ -1028,7 +1035,7 @@ function renderSched(){
         ${(p.played||[]).length?`<div class="tags">${p.played.map(g=>`<span class="tg">${g}</span>`).join('')}</div>`:''}
         <div class="btns">
           <span class="b" onclick="openPast('${p.d}')">자세히 보기</span>
-          ${isStaff()?`<span class="b" onclick="editPast('${p.d}')">✏️ 편집</span>`:''}
+          ${canRecord()?`<span class="b" onclick="editPast('${p.d}')">✏️ 편집</span>`:''}
         </div>`
       :`<div class="ad" style="margin-top:7px">참석하지 않은 모임이에요</div>`}
     </div>`;
@@ -1065,9 +1072,9 @@ function renderSched(){
       </div>`;
   });
 
-  document.getElementById('schedTop').innerHTML = isStaff()
+  document.getElementById('schedTop').innerHTML = canRecord()
     ? `<div class="adminbox" style="margin:14px 14px 0">
-         <div class="at">🔧 ${isAdmin()?'관리자':'운영진'}</div>
+         <div class="at">${isAdmin()?'🔧 관리자':isStaff()?'🔧 운영진':'📜 서기'}</div>
          <div class="row" style="color:var(--sub)">지난 모임의 참여자와 한 게임을 기록할 수 있어요.</div>
          <button class="abtn" onclick="editPast('')">＋ 지난 모임 추가</button>
          ${isAdmin()?`<button class="abtn ghost" onclick="exportPast()">📋 past.js 코드 복사</button>`:''}
@@ -1116,7 +1123,7 @@ function watchPastLoader(){
 async function openPast(d){
   const p = pastList().find(x=>x.d===d); if(!p) return;
   const mine = (p.people||[]).some(pIsMe);
-  if(!mine && !isStaff()) return;
+  if(!mine && !canRecord()) return;
   try{
     const uids = (p.people||[]).map(meetKeyOf).filter(k=>MEMBERS.some(m=>m.uid===k));
     await loadPfps(uids);
@@ -1142,7 +1149,7 @@ async function openPast(d){
       <div class="tags">${p.played.map(g=>{const i=GAMES.findIndex(x=>x.n===g);
         return i>=0?`<span class="tg" style="cursor:pointer" onclick="openM(${i})">${g}</span>`:`<span class="tg">${g}</span>`;}).join('')}</div>`:''}
     ${p.memo?`<div class="mrule">${p.memo}</div>`:''}
-    ${isStaff()?`<div class="mbtns"><button class="mbtn ghost" onclick="editPast('${p.d}')">✏️ 기록 편집</button></div>`:''}
+    ${canRecord()?`<div class="mbtns"><button class="mbtn ghost" onclick="editPast('${p.d}')">✏️ 기록 편집</button></div>`:''}
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
 }
@@ -1356,7 +1363,7 @@ async function openProfile(key, backD){
       <div class="av" style="${ph?`background:url('${ph}') center/cover`:`background:${avColor(m.uid)}`}">${ph?'':m.nick[0]}</div>
       <div>
         <div class="nm3">${m.nick}</div>
-        <div class="sb3">No. ${m.no!=null?String(m.no).padStart(4,'0'):'—'}${m.admin?' · 관리자':m.role==='staff'?' · 운영진':''}</div>
+        <div class="sb3">No. ${m.no!=null?String(m.no).padStart(4,'0'):'—'}${m.admin?' · 관리자':m.role==='staff'?' · 운영진':m.scribe?' · 서기':''}</div>
       </div>
     </div>
     <div style="margin-top:12px">
@@ -1437,6 +1444,41 @@ function metTimes(uidOrName){
   return myMeetCounts()[uidOrName] || 0;
 }
 
+/* ══ 서기 각성 ══
+   참석 10회를 채우면 본인에게 "능력이 깨어날 준비가 됐다"는 카드가 한 번 뜨고,
+   관리자가 회원관리에서 승인하면 진짜 권한(지난모임 기록)이 붙는다.
+   acc.scribeReady: 알림 봤음 / acc.scribe: 승인됨 / acc.scribeHello: 임명 축하 봤음 */
+async function checkScribe(){
+  if(!acc || acc.admin || acc.role==='staff') return;
+  if(acc.scribe && !acc.scribeHello){
+    acc.scribeHello = true;
+    try{ await API.save(acc); }catch(e){}
+    scribeModal(true);
+  } else if(!acc.scribe && !acc.scribeReady && myAttendance() >= SCRIBE_MIN){
+    acc.scribeReady = true;
+    try{ await API.save(acc); }catch(e){}
+    scribeModal(false);
+  }
+}
+function scribeModal(appointed){
+  document.getElementById('modal').innerHTML = appointed ? `
+    <h2 style="text-align:center">📜</h2>
+    <div class="hero" style="margin:10px 0 0;text-align:center">
+      <div class="dt">서기로 임명되었습니다</div>
+      <div class="tm">이제 정모일정 탭에서 지난 모임을 기록할 수 있어요.<br>
+        그날 한 게임과 참여자를 남겨주세요 — 참석 기록·만난 횟수가 전부 여기서 나옵니다.</div>
+    </div>
+    <button class="mclose" onclick="closeM();renderSched()">시작하기</button>` : `
+    <h2 style="text-align:center">🌙</h2>
+    <div class="hero" style="margin:10px 0 0;text-align:center">
+      <div class="dt">밤이 지나고… 능력이 깨어날 준비가 되었습니다</div>
+      <div class="tm">${SCRIBE_MIN}번의 밤을 살아남은 당신에게 <b style="color:var(--red-lite)">서기</b>의 자격이 생겼어요.<br>
+        촌장의 승인이 떨어지면 능력이 활성화됩니다.</div>
+    </div>
+    <button class="mclose" onclick="closeM()">기다리기</button>`;
+  document.getElementById('ov').style.display='flex';
+}
+
 /* ══ 좋알람 (히든) ══
    들어가는 길: 마이페이지 참석 뱃지를 2초 안에 5번 연타.
    어디에도 버튼·배지·알림이 없다 — 아는 사람만 여는 기능. */
@@ -1449,6 +1491,12 @@ function jaTap(){
   jaTapT=now;
   if(++jaTapN>=5){ jaTapN=0; openJoalarm(); }
 }
+const JA_COOLDOWN = 30*24*3600*1000;   // 지정 쿨다운 30일 — 마지막으로 "지정한 시점" 기준. 중간에 거둬도 시계는 계속 간다
+function jaDaysLeft(rec){
+  if(!rec?.ts) return 0;
+  const left = JA_COOLDOWN - (Date.now() - Date.parse(rec.ts));
+  return left>0 ? Math.ceil(left/86400000) : 0;
+}
 async function openJoalarm(){
   if(!acc) return;
   if(myAttendance() < JA_MIN_ATT) return;   // 5회 미만 참석자에겐 5연타해도 아무 일 없음 — 존재 자체를 숨긴다
@@ -1458,21 +1506,22 @@ async function openJoalarm(){
   const [off, offList, rec] = await Promise.all([
     API.crushOffGet(acc.uid), API.crushOffList(), API.crushGet(acc.uid)]);
 
-  let target=null, tNick='', matched=false, freed=false;
+  let target=null, tNick='', matched=false, freed=false, tContact=null;
   if(!off && rec?.e){
     target = await API.crushDecTarget(acc.uid, rec.e);
     if(target && offList.includes(target)){
-      // 상대가 좋알람을 껐으면 내 슬롯은 조용히 해제 — 월 변경 횟수에 안 친다
+      // 상대가 좋알람을 껐으면 내 슬롯은 통째로 해제 — 쿨다운도 안 남긴다 (내 잘못이 아니니까)
       await API.crushClear(acc.uid); target=null; freed=true;
     }
     if(target){
       const m=MEMBERS.find(m=>m.uid===target); tNick=m?m.nick:'(탈퇴한 회원)';
       const trec = await API.crushGet(target);
       if(trec?.h) matched = trec.h === await API.crushHash(target, acc.uid);
+      if(matched && trec.c) tContact = await API.crushDecContact(acc.uid, target, trec.c);
     }
   }
-  const ym = new Date().toISOString().slice(0,7);
-  const canChange = !rec || rec.m !== ym || freed;
+  const daysLeft = freed ? 0 : jaDaysLeft(rec);
+  const canSet = daysLeft===0;
   const counts = myMeetCounts();
   const eligible = MEMBERS.filter(m =>
     m.uid!==acc.uid && !offList.includes(m.uid) && (counts[m.uid]||0)>=JA_MIN_MEET);
@@ -1481,7 +1530,7 @@ async function openJoalarm(){
     <h2>🔔 좋알람</h2>
     <div class="mdesc">${JA_MIN_MEET}번 이상 함께한 멤버 한 명을 조용히 가리켜둘 수 있어요.
       상대는 모르고, <b style="color:var(--red-lite)">서로 가리키고 있을 때만</b> 둘 다에게 울립니다.
-      대상 변경은 한 달에 한 번.</div>
+      새로 가리키는 건 마지막 지정으로부터 30일에 한 번.</div>
     ${off ? `
       <div class="notice" style="margin:14px 0 0">좋알람이 꺼져 있어요. 다른 사람이 나를 가리킬 수도 없는 상태예요.</div>
       <div class="mbtns"><button class="mbtn" onclick="jaToggleOff()">다시 켜기</button></div>
@@ -1489,11 +1538,14 @@ async function openJoalarm(){
       ${matched ? `<div class="hero" style="margin:14px 0 0;text-align:center">
           <div style="font-size:34px">🎉</div>
           <div class="dt">서로예요!</div>
-          <div class="tm"><b style="color:var(--red-lite)">${tNick}</b> 님도 나를 가리키고 있어요.<br>이제 연락해보세요.</div>
+          <div class="tm"><b style="color:var(--red-lite)">${tNick}</b> 님도 나를 가리키고 있어요.</div>
+          ${tContact?`<div class="rows" style="text-align:left"><div class="rw"><div class="k">연락처</div><div><b style="color:var(--red-lite)">${tContact}</b><br><span style="font-size:11px;color:var(--sub)">${tNick} 님이 남긴 연락처예요. 먼저 인사해보세요.</span></div></div></div>`
+            :`<div class="tm" style="margin-top:8px;font-size:11.5px">상대가 연락처를 안 남겼어요. 모임에서 살짝 물어보세요.</div>`}
         </div>`
       : target ? `<div class="notice" style="margin:14px 0 0">지금 <b style="color:var(--red-lite)">${tNick}</b> 님을 가리키는 중이에요. 상대는 몰라요.
-          ${canChange?'':'<br>대상 변경은 다음 달부터 가능해요.'}</div>`
-      : freed ? `<div class="notice" style="margin:14px 0 0">가리키던 분이 좋알람을 꺼서 슬롯이 비워졌어요. 다시 정할 수 있어요.</div>`
+          ${canSet?'':`<br>다른 사람으로 바꾸는 건 ${daysLeft}일 후부터 가능해요.`}</div>`
+      : freed ? `<div class="notice" style="margin:14px 0 0">가리키던 분이 좋알람을 꺼서 슬롯이 비워졌어요. 바로 다시 정할 수 있어요.</div>`
+      : daysLeft?`<div class="notice" style="margin:14px 0 0">지금은 미지정 상태예요. 새로 가리키는 건 ${daysLeft}일 후부터 가능해요.</div>`
       : ''}
       ${eligible.length ? `
         <div style="font-size:11px;color:var(--sub);margin-top:16px">가리킬 수 있는 멤버 (${JA_MIN_MEET}번 이상 만남)</div>
@@ -1501,11 +1553,11 @@ async function openJoalarm(){
           <div class="mem" style="display:flex;align-items:center;justify-content:space-between">
             <span class="nm">${m.nick} <span style="font-size:11px;color:var(--sub)">${counts[m.uid]}번 만남</span></span>
             ${target===m.uid?'<span class="tag">가리키는 중</span>'
-              : canChange?`<span class="b" style="flex:none;padding:8px 14px" onclick="jaSet('${m.uid}')">가리키기</span>`:''}
+              : canSet?`<span class="b" style="flex:none;padding:8px 14px" onclick="jaPick('${m.uid}')">가리키기</span>`:''}
           </div>`).join('')}</div>`
       : `<div class="empty" style="padding:24px 20px">아직 ${JA_MIN_MEET}번 이상 만난 멤버가 없어요.<br>모임에 꾸준히 나오면 목록이 생겨요.</div>`}
       <div class="mbtns" style="margin-top:16px">
-        ${target&&canChange?`<button class="mbtn ghost" onclick="jaUnset()">가리키기 거두기</button>`:''}
+        ${target?`<button class="mbtn ghost" onclick="jaUnset()">가리키기 거두기</button>`:''}
         <button class="mbtn ghost" onclick="jaToggleOff()">좋알람 끄기 (받기 거부)</button>
       </div>
     `}
@@ -1513,20 +1565,36 @@ async function openJoalarm(){
       이 기능은 어디에도 표시되지 않는 비공개 기능이에요. 참석 뱃지 5연타로만 열립니다.</div>
     <button class="mclose" onclick="closeM()">닫기</button>`;
 }
-async function jaSet(uid){
+/* 가리키기 전 확인 단계 — 매칭됐을 때 상대에게 보여줄 연락처를 여기서 받는다 */
+function jaPick(uid){
+  const m = MEMBERS.find(x=>x.uid===uid); if(!m) return;
+  document.getElementById('modal').innerHTML=`
+    <h2>🔔 ${m.nick} 님 가리키기</h2>
+    <div class="mdesc">상대는 모르게 조용히 저장돼요. 나중에 <b style="color:var(--red-lite)">${m.nick}</b> 님도 나를 가리키면
+      그때 서로에게 알려지고, 아래 연락처가 상대에게 보여요.</div>
+    <div class="fld"><label>매칭되면 보여줄 내 연락처</label>
+      <input id="jaContact" placeholder="인스타 @아이디 또는 카톡 ID" autocomplete="off"></div>
+    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
+    <div style="font-size:10.5px;color:var(--sub);margin-top:10px">한 번 가리키면 다른 사람으로 바꾸는 건 30일 후부터 가능해요.</div>
+    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="jaConfirm('${uid}')">가리키기</button></div>
+    <button class="mclose" onclick="openJoalarm()">← 돌아가기</button>`;
+}
+async function jaConfirm(uid){
+  const contact = document.getElementById('jaContact').value.trim();
+  if(!contact) return joinErr('연락처를 적어주세요. 매칭돼도 연락할 방법이 없으면 소용없어요.');
   const rec = await API.crushGet(acc.uid);
-  const ym = new Date().toISOString().slice(0,7);
-  if(rec && rec.m===ym){ alert('이번 달에는 이미 정했어요. 다음 달에 바꿀 수 있어요.'); return; }
+  if(jaDaysLeft(rec)>0){ alert('아직 변경할 수 없어요. '+jaDaysLeft(rec)+'일 후에 가능해요.'); return; }
+  busy('저장 중');
   const h = await API.crushHash(acc.uid, uid);
   const e = await API.crushEncTarget(acc.uid, uid);
-  await API.crushSave(acc.uid, {h, e, m:ym});
+  const c = await API.crushEncContact(acc.uid, uid, contact);
+  await API.crushSave(acc.uid, {h, e, c, ts:new Date().toISOString()});
   openJoalarm();
 }
+/* 거두기는 언제든 — 단, 쿨다운 시계(ts)는 남겨서 "거뒀다 바로 딴 사람" 꼼수를 막는다 */
 async function jaUnset(){
-  const ym = new Date().toISOString().slice(0,7);
   const rec = await API.crushGet(acc.uid);
-  if(rec && rec.m===ym){ alert('이번 달에는 이미 정했어요. 다음 달에 바꿀 수 있어요.'); return; }
-  await API.crushClear(acc.uid);
+  await API.crushSave(acc.uid, {ts: rec?.ts || new Date().toISOString()});
   openJoalarm();
 }
 async function jaToggleOff(){
@@ -1534,7 +1602,10 @@ async function jaToggleOff(){
   if(!off){
     if(!confirm('좋알람을 끄면 내 가리키기도 지워지고, 남이 나를 가리킬 수도 없게 돼요. 끌까요?')) return;
     await API.crushOffSet(acc.uid, true);
-    await API.crushClear(acc.uid);
+    // 가리킴은 지우되 쿨다운 시계(ts)는 남긴다 — 끄고 켜서 30일 제한을 우회 못 하게
+    const rec = await API.crushGet(acc.uid);
+    if(rec?.ts) await API.crushSave(acc.uid, {ts: rec.ts});
+    else await API.crushClear(acc.uid);
   } else {
     await API.crushOffSet(acc.uid, false);
   }
@@ -1753,7 +1824,7 @@ function renderMePage(){
     <div class="hero" style="text-align:center">
       <div class="attbadge" onclick="jaTap()"><div class="an">${cnt}</div><div class="al">회 참석</div></div>
       <div class="dt" style="margin-top:12px">${acc.nick}</div>
-      <div class="tm">${isAdmin()?'관리자':acc.role==='staff'?'운영진':'첫밤 사망자 클럽 멤버'}</div>
+      <div class="tm">${isAdmin()?'관리자':acc.role==='staff'?'운영진':acc.scribe?'서기':'첫밤 사망자 클럽 멤버'}</div>
       ${myMemberNo()?`<div class="memno">No. ${myMemberNo()}</div>`:''}
       <div class="rows" style="text-align:left">
         <div class="rw"><div class="k">참석</div><div>${cnt?`${cnt}번`:'아직 기록 없음'}</div></div>
@@ -1844,7 +1915,7 @@ async function renderMembers(){
         <div class="top">
           <span class="nm">${m.nick}</span>
           <span class="pn">${m.payname||'입금자명 없음'}</span>
-          ${m.admin?'<span class="tag">관리자</span>':m.role==='staff'?'<span class="tag staff">운영진</span>':''}
+          ${m.admin?'<span class="tag">관리자</span>':m.role==='staff'?'<span class="tag staff">운영진</span>':m.scribe?'<span class="tag scribe">서기</span>':m.scribeReady?'<span class="tag ready">서기 대기</span>':''}
         </div>
         <div class="sub2">
           가입 ${(m.joined||'').replace(/-/g,'.')} · 참석 ${cntOf(m)}번
@@ -1855,6 +1926,8 @@ async function renderMembers(){
           <span class="b" onclick="memEdit(${i})">✏️ 수정</span>
           <span class="b" onclick="memPw(${i})">🔑 비번 초기화</span>
           ${isAdmin()&&!m.admin?`<span class="b" onclick="memToggleStaff(${i})">${m.role==='staff'?'🛠 운영진 해제':'🛠 운영진 지정'}</span>`:''}
+          ${isAdmin()&&!m.admin&&m.scribeReady&&!m.scribe?`<span class="b" onclick="memScribe(${i},true)">📜 서기 승인</span>`:''}
+          ${isAdmin()&&!m.admin&&m.scribe?`<span class="b" onclick="memScribe(${i},false)">📜 서기 해제</span>`:''}
           ${isAdmin()&&!m.admin?`<span class="b d" onclick="memDel(${i})">삭제</span>`:''}
         </div>
       </div>`).join('')||`<div class="empty">아직 가입한 회원이 없어요.</div>`}
@@ -1916,6 +1989,18 @@ async function memDel(i){
   if(!confirm(`${m.nick} 회원을 지울까요? 되돌릴 수 없어요.`)) return;
   try{ await API.remove(await API.get(m.uid) || m); renderMembers(); }
   catch(e){ alert('삭제에 실패했어요: '+e.message); }
+}
+/* 서기 승인/해제 — 관리자만. 해제해도 scribeReady는 남겨서 각성 알림이 또 뜨진 않는다 */
+async function memScribe(i, on){
+  if(!isAdmin()) return;
+  try{
+    const cur = await API.get(MEMS[i].uid);
+    cur.scribe = on;
+    if(on) cur.scribeHello = false;   // 다음 접속 때 임명 축하 카드가 뜬다
+    await API.save(cur);
+    if(acc && acc.uid===cur.uid){ acc=cur; renderMe(); }
+    renderMembers();
+  }catch(e){ alert('저장에 실패했어요: '+e.message); }
 }
 /* 운영진 지정/해제 — 관리자만. 관리자 계정 자체는 이미 버튼을 안 띄우지만 한 번 더 막아둔다 */
 async function memToggleStaff(i){
