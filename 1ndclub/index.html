@@ -181,6 +181,17 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
 .rbtn.yes.on{background:var(--red);border-color:var(--red);color:#fff}
 .rbtn.no.on{background:#2b3648;border-color:#3d4a5c;color:#a9c4e0}
 .rsvp .rn2{font-size:11px;color:var(--sub);margin-top:8px;line-height:1.5}
+/* 참석자 프로필 칩 — 누르면 프로필 카드 */
+.pf{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--line);
+    border-radius:999px;padding:3px 10px 3px 4px;font-size:11.5px;color:var(--ink);cursor:pointer;margin:2px 3px 2px 0}
+.pf i{width:19px;height:19px;border-radius:50%;font-style:normal;display:inline-flex;align-items:center;
+      justify-content:center;font-size:10px;font-weight:700;color:#fff;flex:none}
+.pf.guest{opacity:.65}
+.pfcard{display:flex;align-items:center;gap:13px;margin-top:14px}
+.pfcard .av{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+            font-size:22px;font-weight:700;color:#fff;flex:none;font-family:'Do Hyeon',sans-serif}
+.pfcard .nm3{font-family:'Do Hyeon',sans-serif;font-size:21px}
+.pfcard .sb3{font-size:11.5px;color:var(--sub);margin-top:2px}
 .rd.past{opacity:.5}
 .rd.past.mine{opacity:1;border-color:#3d4a5c}
 .rd.past .dt{color:var(--sub)}
@@ -387,7 +398,7 @@ footer a{color:#7a8290}
   <div class="askbox" id="askBox"></div>
 </div>
 
-<script src="api.js?v=6"></script>
+<script src="api.js?v=7"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js"></script>
@@ -413,6 +424,7 @@ let OWNERS = {};            // {게임이름: uid} — 관리자가 지정한 �
 let myRsvp = null;          // 모집중 회차 참석 여부 'yes'|'no'|null
 let rsvpCnt = {yes:0,no:0};
 let rsvpYesNames = [];
+let rsvpYesList = [];   // [{uid, nick}] — 프로필 칩용
 let cat='all', crew=0, q='', view='games', authTab='login';
 
 const isAdmin = () => !!acc && acc.admin;
@@ -440,6 +452,7 @@ async function bootSession(){
   }catch(e){ /* 오프라인이면 그냥 비로그인으로 둔다 */ }
   try{ serverPast = await API.pastList(); }catch(e){}
   try{ MEMBERS = await API.list(); }catch(e){}
+  try{ if(acc) await loadPfps([acc.uid]); }catch(e){}
   try{ OWNERS = await API.ownerMap(); }catch(e){}
   try{ NOTICES = await API.noticeList(); }catch(e){}
   if(acc){ try{ readIds = await API.getRead(acc.uid); }catch(e){} }
@@ -460,9 +473,12 @@ async function bootSession(){
 async function loadRsvpCnt(){
   const rows = await API.allRsvp(openRound.d);
   rsvpCnt = { yes: rows.filter(r=>r.v==='yes').length, no: rows.filter(r=>r.v==='no').length };
-  // 참석자 이름도 같이 — uid를 현재 닉네임으로 바꿔서 (탈퇴 등으로 못 찾으면 생략)
-  rsvpYesNames = rows.filter(r=>r.v==='yes')
-    .map(r=>MEMBERS.find(m=>m.uid===r.uid)?.nick).filter(Boolean);
+  // 참석자 프로필 목록 — uid를 현재 닉네임으로 (탈퇴 등으로 못 찾으면 생략), 썸네일도 미리 로드
+  rsvpYesList = rows.filter(r=>r.v==='yes')
+    .map(r=>({uid:r.uid, nick:MEMBERS.find(m=>m.uid===r.uid)?.nick}))
+    .filter(x=>x.nick);
+  rsvpYesNames = rsvpYesList.map(x=>x.nick);
+  try{ await loadPfps(rsvpYesList.map(x=>x.uid)); }catch(e){}
 }
 function myAttendance(){
   const names = myNames();
@@ -762,10 +778,23 @@ function logout(){
   if(view==='members') setView('games');
 }
 function myAccountSheet(){
+  const ph = PFP[acc.uid];
   document.getElementById('modal').innerHTML = `
     <h2>내 정보</h2>
     <div class="mdesc"><b style="color:var(--red-lite)">${acc.nick}</b> 으로 접속해 있어요.
       닉네임을 바꿔도 활동 기록은 그대로 따라옵니다.</div>
+    <div class="fld"><label>프로필 사진</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+        <div class="av" style="width:48px;height:48px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+             font-size:19px;font-weight:700;color:#fff;font-family:'Do Hyeon',sans-serif;
+             ${ph?`background:url('${ph}') center/cover`:`background:${avColor(acc.uid)}`}">${ph?'':acc.nick[0]}</div>
+        <span class="b" style="flex:none;padding:9px 14px;font-size:12px;font-weight:600;background:var(--surface2);
+              border:1px solid var(--line);border-radius:5px;cursor:pointer" onclick="pickPfp()">📷 사진 바꾸기</span>
+        ${ph?`<span class="b" style="flex:none;padding:9px 14px;font-size:12px;font-weight:600;background:var(--surface2);
+              border:1px solid var(--line);border-radius:5px;cursor:pointer;color:var(--sub)" onclick="delPfp()">기본으로</span>`:''}
+      </div>
+      <div style="font-size:10.5px;color:var(--sub);margin-top:7px">참석자 목록과 프로필 카드에 동그랗게 보여요</div>
+    </div>
     <div style="margin-top:14px">
       <div class="mrow"><div class="k">닉네임</div><div>${acc.nick}</div></div>
       <div class="mrow"><div class="k">입금자명</div><div>${acc.payname||'—'}</div></div>
@@ -1084,10 +1113,11 @@ function watchPastLoader(){
 }
 
 /* 지난 모임 자세히 보기 */
-function openPast(d){
+async function openPast(d){
   const p = pastList().find(x=>x.d===d); if(!p) return;
   const mine = (p.people||[]).some(pIsMe);
   if(!mine && !isStaff()) return;
+  try{ await loadPfps((p.people||[]).filter(x=>typeof x==='object').map(x=>x.uid)); }catch(e){}
   document.getElementById('modal').innerHTML=`
     <h2>${fmt(p.d)} (${p.dow}) ${p.kind==='flash'?'번개':(p.r?p.r+'회차':'정모')}</h2>
     <div class="mdesc">${p.place}</div>
@@ -1096,7 +1126,11 @@ function openPast(d){
       <div class="mrow"><div class="k">시간</div><div>${p.s} ~ ${p.e}</div></div>
       <div class="mrow"><div class="k">장소</div><div>${p.place}</div></div>
       ${p.fee?`<div class="mrow"><div class="k">참가비</div><div>${p.fee}</div></div>`:''}
-      ${p.people?.length?`<div class="mrow"><div class="k">참여자</div><div>${p.people.length}명 · ${p.people.map(pName).join(', ')}</div></div>`:''}
+      ${p.people?.length?`<div class="mrow"><div class="k">참여자</div><div>${p.people.length}명<br>${p.people.map(x=>{
+        if(typeof x==='object'){ const n=pName(x); return `<span class="pf" onclick="openProfile('${x.uid}','${p.d}')">${avHtml(x.uid,n)}${n}</span>`; }
+        const esc=String(x).replace(/'/g,"\\'");
+        return `<span class="pf guest" onclick="openProfile('${esc}','${p.d}')"><i style="background:#4a4a55">${String(x)[0]}</i>${x}</span>`;
+      }).join('')}</div></div>`:''}
       ${p.after?`<div class="mrow"><div class="k">2차</div><div>${p.after}</div></div>`:''}
     </div>
     ${(p.played||[]).length?`<div style="font-size:11px;color:var(--sub);margin-top:14px">그날 한 게임</div>
@@ -1162,7 +1196,8 @@ function renderRsvp(){
       <button class="rbtn yes${myRsvp==='yes'?' on':''}" onclick="setRsvp('yes')">참석 ${rsvpCnt.yes||''}</button>
       <button class="rbtn no${myRsvp==='no'?' on':''}" onclick="setRsvp('no')">불참 ${rsvpCnt.no||''}</button>
     </div>
-    ${rsvpYesNames.length?`<div class="rn2">참석 — ${rsvpYesNames.join(', ')}</div>`:''}
+    ${rsvpYesList.length?`<div class="rn2">참석 —<br>${rsvpYesList.map(p=>
+      `<span class="pf" onclick="openProfile('${p.uid}')">${avHtml(p.uid,p.nick)}${p.nick}</span>`).join('')}</div>`:''}
     ${acc?'':'<div class="rn2">로그인하면 응답이 저장되고 모임장에게 전달돼요</div>'}`;
 }
 async function setRsvp(v){
@@ -1172,10 +1207,11 @@ async function setRsvp(v){
   /* 낙관적 갱신 — 서버 응답을 기다리지 말고 화면부터 바꾼다 (버튼 딜레이 피드백 반영).
      숫자·이름도 로컬에서 미리 맞춰두고, 서버 저장이 실패하면 원래대로 되돌린다. */
   myRsvp = next;
-  if(prev==='yes'){ rsvpCnt.yes--; rsvpYesNames = rsvpYesNames.filter(n=>n!==acc.nick); }
+  if(prev==='yes'){ rsvpCnt.yes--; rsvpYesList = rsvpYesList.filter(x=>x.uid!==acc.uid); }
   if(prev==='no') rsvpCnt.no--;
-  if(next==='yes'){ rsvpCnt.yes++; rsvpYesNames.push(acc.nick); }
+  if(next==='yes'){ rsvpCnt.yes++; rsvpYesList.push({uid:acc.uid, nick:acc.nick}); }
   if(next==='no') rsvpCnt.no++;
+  rsvpYesNames = rsvpYesList.map(x=>x.nick);
   renderRsvp();
   try{
     await API.setRsvp(openRound.d, acc.uid, next);
@@ -1272,6 +1308,99 @@ function pTag(x){
   return typeof x === 'object'
     ? `<span class="tg m">@${pName(x)}</span>`
     : `<span class="tg p">${x}</span>`;
+}
+
+/* ══ 프로필 (썸네일 + 카드) ══ */
+const PFP = {};   // uid → dataURL(사진) 또는 null(없음). 세션 캐시
+async function loadPfps(uids){
+  await Promise.all([...new Set(uids)].filter(u=>!(u in PFP)).map(async u=>{
+    try{ PFP[u] = await API.pfpGet(u); }catch(e){ PFP[u]=null; }
+  }));
+}
+function avColor(key){
+  let h=0; for(const c of key) h=(h*31+c.charCodeAt(0))%360;
+  return `hsl(${h},45%,42%)`;
+}
+/* 칩 안에 들어가는 작은 동그라미 — 사진 있으면 사진, 없으면 색+첫글자 */
+function avHtml(uid, nick){
+  const p = PFP[uid];
+  return p ? `<i style="background:url('${p}') center/cover"></i>`
+           : `<i style="background:${avColor(uid)}">${(nick||'?')[0]}</i>`;
+}
+/* 참석자 프로필 카드 */
+async function openProfile(key, backD){
+  const m = MEMBERS.find(x=>x.uid===key);
+  const back = backD ? `<div class="mbtns"><button class="mbtn ghost" onclick="openPast('${backD}')">← 모임으로</button></div>` : '';
+  if(!m){
+    document.getElementById('modal').innerHTML=`
+      <h2>${key}</h2>
+      <div class="mdesc">비회원 참가자예요. 아직 앱에 가입하지 않아서 프로필이 없어요.</div>
+      ${back}<button class="mclose" onclick="closeM()">닫기</button>`;
+    document.getElementById('ov').style.display='flex';
+    return;
+  }
+  await loadPfps([m.uid]);
+  const list = pastList();
+  const att = list.filter(p=>(p.people||[]).some(x=>
+    (typeof x==='object' && x.uid===m.uid) || (typeof x==='string' && [m.nick,...(m.aliases||[])].includes(x)))).length;
+  const met = (acc && acc.uid!==m.uid) ? metTimes(m.uid) : null;
+  const ph = PFP[m.uid];
+  document.getElementById('modal').innerHTML=`
+    <h2>프로필</h2>
+    <div class="pfcard">
+      <div class="av" style="${ph?`background:url('${ph}') center/cover`:`background:${avColor(m.uid)}`}">${ph?'':m.nick[0]}</div>
+      <div>
+        <div class="nm3">${m.nick}</div>
+        <div class="sb3">No. ${m.no!=null?String(m.no).padStart(4,'0'):'—'}${m.admin?' · 관리자':m.role==='staff'?' · 운영진':''}</div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div class="mrow"><div class="k">참석</div><div>${att?att+'번':'아직 기록 없음'}</div></div>
+      <div class="mrow"><div class="k">가입일</div><div>${(m.joined||'').replace(/-/g,'.')||'—'}</div></div>
+      ${met!=null?`<div class="mrow"><div class="k">나와</div><div>${met?`${met}번 같이 했어요`:'아직 같은 회차가 없었어요'}</div></div>`:''}
+    </div>
+    ${back}<button class="mclose" onclick="closeM()">닫기</button>`;
+  document.getElementById('ov').style.display='flex';
+}
+/* 내 프로필 사진 올리기 — 기기에서 골라 128px 정사각 jpeg로 줄여 저장 */
+function pickPfp(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+  inp.onchange=async()=>{
+    const f=inp.files[0]; if(!f) return;
+    try{
+      const url=await pfpShrink(f);
+      await API.pfpSet(acc.uid,url);
+      PFP[acc.uid]=url;
+      myAccountSheet(); renderRsvp();
+    }catch(e){ alert('사진을 저장하지 못했어요: '+e.message); }
+  };
+  inp.click();
+}
+async function delPfp(){
+  await API.pfpDel(acc.uid); PFP[acc.uid]=null;
+  myAccountSheet(); renderRsvp();
+}
+function pfpShrink(file){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      URL.revokeObjectURL(img.src);
+      let size=128, q=0.72, out='';
+      const draw=(S)=>{
+        const c=document.createElement('canvas'); c.width=c.height=S;
+        const x=c.getContext('2d');
+        const s=Math.min(img.width,img.height);
+        x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,S,S);
+        return c;
+      };
+      out=draw(size).toDataURL('image/jpeg',q);
+      if(out.length>15000) out=draw(size).toDataURL('image/jpeg',0.5);   // kvdb 값 크기 여유 확보
+      if(out.length>15000) out=draw(96).toDataURL('image/jpeg',0.5);
+      res(out);
+    };
+    img.onerror=()=>rej(new Error('이미지를 읽지 못했어요'));
+    img.src=URL.createObjectURL(file);
+  });
 }
 /* 내가 이 사람을 몇 번 만났나 — 나와 같은 회차에 참여했던 사람별 횟수.
    아직 화면에 표기하는 곳은 없지만, 참여자 기록(@태그)만 쌓이면 언제든 소급 계산되는 구조라

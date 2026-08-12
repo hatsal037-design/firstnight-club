@@ -292,6 +292,12 @@ API.setRead = async function(uid, ids){
   await kvPut(`botc:read:${uid}`, JSON.stringify(ids));
 };
 
+/* ── 프로필 사진 ──
+   botc:pfp:<uid> = dataURL(jpeg). 클라이언트에서 128px 정사각으로 줄여 저장 (kvdb 값 크기 제한 대비) */
+API.pfpGet = async function(uid){ return await kvGet(`botc:pfp:${uid}`); };
+API.pfpSet = async function(uid, dataUrl){ await kvPut(`botc:pfp:${uid}`, dataUrl); };
+API.pfpDel = async function(uid){ await kvDel(`botc:pfp:${uid}`); };
+
 /* ── 좋알람 (히든 기능) ──
    호감은 1인 1슬롯 지속 상태. 서로를 가리키는 순간에만 양쪽에 공개된다.
    저장 구조
