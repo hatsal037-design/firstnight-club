@@ -64,6 +64,7 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
 .me .nk{color:var(--ink);font-weight:700;font-size:12.5px}
 .me .adm{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;
          border-radius:3px;padding:2px 5px;margin-top:3px}
+.me .adm.staff{background:#2b3648;color:#a9c4e0}
 .me .attmini{display:inline-block;background:var(--surface2);border:1px solid var(--red);color:var(--red-lite);
   font-size:10px;font-weight:700;border-radius:999px;padding:2px 7px;margin-left:5px;vertical-align:1px}
 .attbadge{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
@@ -294,6 +295,7 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
 .mem .pn{font-size:12px;color:var(--sub)}
 .mem .tag{font-size:9px;font-weight:700;border-radius:3px;padding:2px 6px;margin-left:auto;
           background:var(--red);color:#fff}
+.mem .tag.staff{background:#2b3648;color:#a9c4e0}
 .mem .sub2{font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6}
 .mem .btns{display:flex;gap:6px;margin-top:10px}
 .mem .b{flex:1;text-align:center;font-size:11.5px;font-weight:600;padding:8px 0;border-radius:5px;
@@ -413,6 +415,8 @@ let rsvpCnt = {yes:0,no:0};
 let cat='all', crew=0, q='', view='games', authTab='login';
 
 const isAdmin = () => !!acc && acc.admin;
+/* 운영진 — 관리자가 지정. 게임 소유자 열람·회원 목록 열람만 되고, 수정·삭제 같은 관리 조작은 여전히 관리자만 */
+const isStaff = () => !!acc && (acc.admin || acc.role==='staff');
 const myNames = () => acc ? [acc.nick, ...(acc.aliases||[])] : [];
 const FKEY = () => 'botc_fav_' + (acc?.uid||'anon');
 
@@ -469,11 +473,11 @@ function myMemberNo(){
 function renderMe(){
   const att = acc ? myAttendance() : 0;
   document.getElementById('meBox').innerHTML = acc
-    ? `<span class="nk">${acc.nick}</span>${att?`<span class="attmini">${att}회</span>`:''}${isAdmin()?'<br><span class="adm">관리자</span>':''}`
+    ? `<span class="nk">${acc.nick}</span>${att?`<span class="attmini">${att}회</span>`:''}${isAdmin()?'<br><span class="adm">관리자</span>':acc.role==='staff'?'<br><span class="adm staff">운영진</span>':''}`
     : `<span class="nk">로그인 ›</span>`;
   document.getElementById('hsub').innerHTML =
     `보유 게임 ${GAMES.filter(g=>g.have!==false).length}종 · 잡아둔 회차 ${upcoming.length}개`;
-  document.getElementById('navMembers').style.display = isAdmin() ? '' : 'none';
+  document.getElementById('navMembers').style.display = isStaff() ? '' : 'none';
   renderBell();
 }
 
@@ -783,7 +787,7 @@ async function doRename(){
 
 /* ══ 뷰 전환 ══ */
 function setView(v, skipHash){
-  if(v==='members' && !isAdmin()) v='games';
+  if(v==='members' && !isStaff()) v='games';
   view=v;
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
   document.querySelectorAll('nav .nb').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
@@ -859,7 +863,7 @@ function cover(g){ return g.img || fallbackCover(g.n, g.cat); }
 function renderGames(){
   let list=GAMES.filter(g=>g.have!==false);
   if(cat!=='all') list=list.filter(g=>g.cat===cat);
-  if(q){const s=q.toLowerCase();list=list.filter(g=>(g.n+g.d+g.r+g.lv+g.own+(isAdmin()?ownerName(g):'')).toLowerCase().includes(s));}
+  if(q){const s=q.toLowerCase();list=list.filter(g=>(g.n+g.d+g.r+g.lv+g.own+(isStaff()?ownerName(g):'')).toLowerCase().includes(s));}
   const sort=document.getElementById('sort').value;
   if(sort==='people') list.sort((a,b)=>(b.max===null?99:b.max)-(a.max===null?99:a.max));
   else if(sort==='short') list.sort((a,b)=>a.t-b.t);
@@ -975,7 +979,7 @@ function renderSched(){
   }
   let lastM='';
   past.forEach(p=>{
-    const mine = mineOf(p), open = mine || isAdmin();
+    const mine = mineOf(p), open = mine || isStaff();
     const m=p.d.slice(0,7);
     if(m!==lastM){ html+=`<div class="monthlab">${+p.d.slice(5,7)}월 · ${p.d.slice(0,4)}</div>`; lastM=m; }
     html+=`<div class="rd past${mine?' mine':''}">
@@ -991,7 +995,7 @@ function renderSched(){
         ${(p.played||[]).length?`<div class="tags">${p.played.map(g=>`<span class="tg">${g}</span>`).join('')}</div>`:''}
         <div class="btns">
           <span class="b" onclick="openPast('${p.d}')">자세히 보기</span>
-          ${isAdmin()?`<span class="b" onclick="editPast('${p.d}')">✏️ 편집</span>`:''}
+          ${isStaff()?`<span class="b" onclick="editPast('${p.d}')">✏️ 편집</span>`:''}
         </div>`
       :`<div class="ad" style="margin-top:7px">참석하지 않은 모임이에요</div>`}
     </div>`;
@@ -1028,12 +1032,12 @@ function renderSched(){
       </div>`;
   });
 
-  document.getElementById('schedTop').innerHTML = isAdmin()
+  document.getElementById('schedTop').innerHTML = isStaff()
     ? `<div class="adminbox" style="margin:14px 14px 0">
-         <div class="at">🔧 관리자</div>
+         <div class="at">🔧 ${isAdmin()?'관리자':'운영진'}</div>
          <div class="row" style="color:var(--sub)">지난 모임의 참여자와 한 게임을 기록할 수 있어요.</div>
          <button class="abtn" onclick="editPast('')">＋ 지난 모임 추가</button>
-         <button class="abtn ghost" onclick="exportPast()">📋 past.js 코드 복사</button>
+         ${isAdmin()?`<button class="abtn ghost" onclick="exportPast()">📋 past.js 코드 복사</button>`:''}
        </div>` : '';
   document.getElementById('schedList').innerHTML = html;
   renderPicked(); renderRsvp();
@@ -1079,7 +1083,7 @@ function watchPastLoader(){
 function openPast(d){
   const p = pastList().find(x=>x.d===d); if(!p) return;
   const mine = (p.people||[]).some(pIsMe);
-  if(!mine && !isAdmin()) return;
+  if(!mine && !isStaff()) return;
   document.getElementById('modal').innerHTML=`
     <h2>${fmt(p.d)} (${p.dow}) ${p.kind==='flash'?'번개':(p.r?p.r+'회차':'정모')}</h2>
     <div class="mdesc">${p.place}</div>
@@ -1095,7 +1099,7 @@ function openPast(d){
       <div class="tags">${p.played.map(g=>{const i=GAMES.findIndex(x=>x.n===g);
         return i>=0?`<span class="tg" style="cursor:pointer" onclick="openM(${i})">${g}</span>`:`<span class="tg">${g}</span>`;}).join('')}</div>`:''}
     ${p.memo?`<div class="mrule">${p.memo}</div>`:''}
-    ${isAdmin()?`<div class="mbtns"><button class="mbtn ghost" onclick="editPast('${p.d}')">✏️ 기록 편집</button></div>`:''}
+    ${isStaff()?`<div class="mbtns"><button class="mbtn ghost" onclick="editPast('${p.d}')">✏️ 기록 편집</button></div>`:''}
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
 }
@@ -1228,9 +1232,9 @@ function ownerName(g){
   if(uid){ const m=MEMBERS.find(m=>m.uid===uid); return m ? m.nick : '(탈퇴한 회원)'; }
   return g.own || '';
 }
-/* 이 게임 소유자 정보를 볼 수 있는가 — 관리자이거나, 내가 그 소유자이거나 */
+/* 이 게임 소유자 정보를 볼 수 있는가 — 관리자·운영진이거나, 내가 그 소유자이거나 */
 function canSeeOwner(g){
-  if(isAdmin()) return true;
+  if(isStaff()) return true;
   const uid = ownerUid(g);
   if(uid && acc && uid===acc.uid) return true;
   // 씨앗 이름(문자열) 소유는 내 닉네임과 일치할 때만
@@ -1466,7 +1470,7 @@ function renderMePage(){
     <div class="hero" style="text-align:center">
       <div class="attbadge"><div class="an">${cnt}</div><div class="al">회 참석</div></div>
       <div class="dt" style="margin-top:12px">${acc.nick}</div>
-      <div class="tm">${isAdmin()?'관리자':'첫밤 사망자 클럽 멤버'}</div>
+      <div class="tm">${isAdmin()?'관리자':acc.role==='staff'?'운영진':'첫밤 사망자 클럽 멤버'}</div>
       ${myMemberNo()?`<div class="memno">No. ${myMemberNo()}</div>`:''}
       <div class="rows" style="text-align:left">
         <div class="rw"><div class="k">참석</div><div>${cnt?`${cnt}번`:'아직 기록 없음'}</div></div>
@@ -1557,7 +1561,7 @@ async function renderMembers(){
         <div class="top">
           <span class="nm">${m.nick}</span>
           <span class="pn">${m.payname||'입금자명 없음'}</span>
-          ${m.admin?'<span class="tag">관리자</span>':''}
+          ${m.admin?'<span class="tag">관리자</span>':m.role==='staff'?'<span class="tag staff">운영진</span>':''}
         </div>
         <div class="sub2">
           가입 ${(m.joined||'').replace(/-/g,'.')} · 참석 ${cntOf(m)}번
@@ -1567,7 +1571,8 @@ async function renderMembers(){
         <div class="btns">
           <span class="b" onclick="memEdit(${i})">✏️ 수정</span>
           <span class="b" onclick="memPw(${i})">🔑 비번 초기화</span>
-          ${m.admin?'':`<span class="b d" onclick="memDel(${i})">삭제</span>`}
+          ${isAdmin()&&!m.admin?`<span class="b" onclick="memToggleStaff(${i})">${m.role==='staff'?'🛠 운영진 해제':'🛠 운영진 지정'}</span>`:''}
+          ${isAdmin()&&!m.admin?`<span class="b d" onclick="memDel(${i})">삭제</span>`:''}
         </div>
       </div>`).join('')||`<div class="empty">아직 가입한 회원이 없어요.</div>`}
     <div style="margin:14px"><button class="abtn ghost" onclick="renderMembers()">🔄 새로고침</button></div>
@@ -1623,10 +1628,24 @@ async function memPwSave(i){
   }catch(e){ joinErr(e.message); }
 }
 async function memDel(i){
+  if(!isAdmin()) return;
   const m=MEMS[i];
   if(!confirm(`${m.nick} 회원을 지울까요? 되돌릴 수 없어요.`)) return;
   try{ await API.remove(await API.get(m.uid) || m); renderMembers(); }
   catch(e){ alert('삭제에 실패했어요: '+e.message); }
+}
+/* 운영진 지정/해제 — 관리자만. 관리자 계정 자체는 이미 버튼을 안 띄우지만 한 번 더 막아둔다 */
+async function memToggleStaff(i){
+  if(!isAdmin()) return;
+  const m=MEMS[i];
+  if(m.admin) return;
+  try{
+    const cur = await API.get(m.uid);
+    cur.role = cur.role==='staff' ? undefined : 'staff';
+    await API.save(cur);
+    if(acc && acc.uid===cur.uid){ acc=cur; renderMe(); }
+    renderMembers();
+  }catch(e){ alert('저장에 실패했어요: '+e.message); }
 }
 
 /* ══ 게임 상세 ══ */
@@ -1652,9 +1671,9 @@ function openM(i){
       <div class="mrow"><div class="k">탈락</div><div>${g.out?'있음 — 죽으면 관전':'없음 — 끝까지 참여'}</div></div>
       <div class="mrow"><div class="k">진행자</div><div>${g.host?'필요':'필요 없음'}</div></div>
       ${g.bl?`<div class="mrow"><div class="k">평점</div><div>⭐ ${g.bl.rate} / 10 · 난이도 ${g.bl.weight}${g.bl.rank?` · 종합 ${g.bl.rank}위`:''}<br><span style="color:var(--sub);font-size:11px">보드라이프 유저 평가 기준</span></div></div>`:''}
-      ${canSeeOwner(g)?`<div class="mrow"><div class="k">소유자</div><div>${ownerName(g)||'미지정'}${isAdmin()?` <span style="color:var(--red-lite);cursor:pointer;font-size:11.5px" onclick="editOwner(${i})">· 변경</span>`:''}</div></div>`
-        : (isAdmin()?'':'') }
-      ${isAdmin()&&!canSeeOwner(g)?`<div class="mrow"><div class="k">소유자</div><div><span style="color:var(--red-lite);cursor:pointer" onclick="editOwner(${i})">지정하기</span></div></div>`:''}
+      ${canSeeOwner(g)?`<div class="mrow"><div class="k">소유자</div><div>${ownerName(g)||'미지정'}${isStaff()?` <span style="color:var(--red-lite);cursor:pointer;font-size:11.5px" onclick="editOwner(${i})">· 변경</span>`:''}</div></div>`
+        : (isStaff()?'':'') }
+      ${isStaff()&&!canSeeOwner(g)?`<div class="mrow"><div class="k">소유자</div><div><span style="color:var(--red-lite);cursor:pointer" onclick="editOwner(${i})">지정하기</span></div></div>`:''}
     </div>
     <div class="mrule"><b style="color:var(--ink)">어떻게 하는 게임인가요</b><br>${g.r}</div>
     ${g.bl?`<div style="display:flex;gap:6px;margin-top:10px">
@@ -1669,9 +1688,9 @@ function openM(i){
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
 }
-/* ── 게임 소유자 지정 (관리자 전용) ── */
+/* ── 게임 소유자 지정 (관리자·운영진) ── */
 function editOwner(i){
-  if(!isAdmin()) return;
+  if(!isStaff()) return;
   const g=GAMES[i];
   const cur=ownerUid(g);
   const curName = cur ? (MEMBERS.find(m=>m.uid===cur)?.nick||'') : '';
