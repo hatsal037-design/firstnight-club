@@ -18,22 +18,24 @@ const K_USER = uid  => `botc:u:${uid}`;
 const K_NICK = nick => `botc:n:${nick.toLowerCase()}`;
 const K_SEQ  = 'botc:seq:member';   // 다음에 발급할 회원번호(정수). 한 번 준 번호는 탈퇴해도 재사용하지 않는다
 
-/* ── 저수준 ── */
+/* ── 저수준 ──
+   cache:'no-store'를 꼭 붙인다 — 안 붙이면 브라우저가 같은 키 GET을 디스크에 캐싱해서,
+   서버 값이 바뀌어도 예전에 한 번 봤던 응답을 계속 돌려주는 사고가 난다(실제로 겪음). */
 async function kvGet(key){
-  const r = await fetch(`${KV}/${encodeURIComponent(key)}`);
+  const r = await fetch(`${KV}/${encodeURIComponent(key)}`, {cache:'no-store'});
   return r.ok ? await r.text() : null;
 }
 async function kvPut(key, val){
-  const r = await fetch(`${KV}/${encodeURIComponent(key)}`, {method:'PUT', body:val});
+  const r = await fetch(`${KV}/${encodeURIComponent(key)}`, {method:'PUT', body:val, cache:'no-store'});
   if(!r.ok) throw new Error('저장에 실패했어요 (' + r.status + ')');
 }
 async function kvDel(key){
-  await fetch(`${KV}/${encodeURIComponent(key)}`, {method:'DELETE'});
+  await fetch(`${KV}/${encodeURIComponent(key)}`, {method:'DELETE', cache:'no-store'});
 }
 /* 주의: 목록 조회는 방금 쓴 값이 1초쯤 늦게 반영된다(측정값).
    회원관리 화면에 새로고침 버튼을 둔 이유다. 개별 키 조회는 즉시 반영된다. */
 async function kvList(prefix){
-  const r = await fetch(`${KV}/?prefix=${encodeURIComponent(prefix)}&values=true&format=json`);
+  const r = await fetch(`${KV}/?prefix=${encodeURIComponent(prefix)}&values=true&format=json`, {cache:'no-store'});
   if(!r.ok) return [];
   try { return await r.json(); } catch(e){ return []; }
 }
