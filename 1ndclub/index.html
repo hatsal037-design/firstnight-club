@@ -400,14 +400,15 @@ footer a{color:#7a8290}
   <div class="askbox" id="askBox"></div>
 </div>
 
-<script src="api.js?v=8"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="api.js?v=sb1"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js"></script>
 <script src="past.js"></script>
 <script>
 /* ══ 상태 ══ */
-const RKEY='botc_past_edit', SESS='botc_session';
+const RKEY='botc_past_edit';
 const ADMINS = ['투넬'];                       // 관리자 닉네임
 /* 관리자 비번은 원문을 두지 않고 SHA-256 해시만 둔다.
    ※ 정적 HTML이라 소스를 보면 구조가 다 보인다. 이 잠금은 참가자 화면에서 관리자 UI를
@@ -443,11 +444,14 @@ const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const openRound = ROUNDS.find(r=>r.st==='open');
 const upcoming  = ROUNDS.filter(r=>new Date(r.d) >= TODAY);
 
-/* ══ 세션 ══ */
+/* ══ 세션 ══
+   Supabase가 세션을 관리한다. 카카오 로그인에서 돌아오면 세션이 자동으로 잡히고,
+   기존 회원이면 claim으로 자동 연결, 처음이면 가입 시트를 띄운다. */
 async function bootSession(){
-  const uid = localStorage.getItem(SESS);
+  let needOnboard = false;
   try{
-    if(uid) acc = await API.get(uid);
+    acc = await API.myMember();
+    if(!acc && await API.hasSession()) needOnboard = true;   // 카카오 인증은 됐는데 회원이 아직 아님
     if(acc){
       favs = JSON.parse(localStorage.getItem(FKEY())||'[]');
       if(openRound){
@@ -462,13 +466,11 @@ async function bootSession(){
   try{ OWNERS = await API.ownerMap(); }catch(e){}
   try{ NOTICES = await API.noticeList(); }catch(e){}
   if(acc){ try{ readIds = await API.getRead(acc.uid); }catch(e){} }
-  // 공지 대상 판정용: 앞으로의 회차별 참석자·게임선택자 uid 캐시
+  // 공지 대상 판정용: 내 참석·게임선택만 있으면 된다 (남의 것은 서버가 안 줌)
   try{
-    for(const r of upcoming){
-      const rs = await API.allRsvp(r.d);
-      RSVP_YES_UIDS[r.d] = rs.filter(x=>x.v==='yes').map(x=>x.uid);
-      const pk = await API.allPicks(r.d);
-      PICK_UIDS[r.d] = pk.map(x=>x.uid);
+    if(acc) for(const r of upcoming){
+      MY_RSVP[r.d]  = await API.getMyRsvp(r.d, acc.uid);
+      MY_PICKS[r.d] = (await API.getMyPicks(r.d, acc.uid)).length > 0;
     }
   }catch(e){}
   try{ if(openRound) await loadRsvpCnt(); }catch(e){}
@@ -476,6 +478,7 @@ async function bootSession(){
   renderMe(); renderGames();
   if(view==='sched') renderSched();
   if(view==='me') renderMePage();
+  if(needOnboard) kakaoOnboard();
 }
 async function loadRsvpCnt(){
   const rows = await API.allRsvp(openRound.d);
@@ -508,16 +511,16 @@ function renderMe(){
   renderBell();
 }
 
-/* ── 공지 대상 판정 ── */
+/* ── 공지 대상 판정 — 내 상태만 보면 된다 ── */
 function noticeForMe(n){
   if(!acc) return false;
   if(n.target==='all') return true;
-  if(n.target==='rsvp' && n.roundDate) return (RSVP_YES_UIDS[n.roundDate]||[]).includes(acc.uid);
-  if(n.target==='picks' && n.roundDate) return (PICK_UIDS[n.roundDate]||[]).includes(acc.uid);
+  if(n.target==='rsvp' && n.roundDate) return MY_RSVP[n.roundDate]==='yes';
+  if(n.target==='picks' && n.roundDate) return !!MY_PICKS[n.roundDate];
   return false;
 }
-let RSVP_YES_UIDS = {};   // {날짜:[uid]}  대상 판정용 캐시
-let PICK_UIDS = {};
+let MY_RSVP = {};    // {날짜:'yes'|'no'|null} 내 응답 캐시
+let MY_PICKS = {};   // {날짜:bool} 내가 게임 골랐는지
 function myNotices(){ return NOTICES.filter(noticeForMe); }
 function unreadCount(){ return myNotices().filter(n=>!readIds.includes(n.id)).length; }
 function renderBell(){
@@ -581,13 +584,18 @@ function ncTargetChange(){
   document.getElementById('ncRoundWrap').style.display = v==='all'?'none':'';
   ncUpdateCount();
 }
-function ncUpdateCount(){
+async function ncUpdateCount(){
   const el=document.getElementById('ncCount'); if(!el) return;
   const v=document.getElementById('ncTarget').value;
   if(v==='all'){ el.textContent=''; return; }
   const d=document.getElementById('ncRound').value;
-  const n = v==='rsvp' ? (RSVP_YES_UIDS[d]||[]).length : (PICK_UIDS[d]||[]).length;
-  el.textContent = `이 조건에 해당하는 회원 ${n}명`;
+  el.textContent = '세는 중…';
+  try{   // 관리자만 여는 화면이라 전체 조회 가능 (일반 회원은 서버가 안 줌)
+    const n = v==='rsvp'
+      ? (await API.allRsvp(d)).filter(x=>x.v==='yes').length
+      : (await API.allPicks(d)).length;
+    el.textContent = `이 조건에 해당하는 회원 ${n}명`;
+  }catch(e){ el.textContent=''; }
 }
 async function sendNotice(){
   const v=id=>document.getElementById(id).value;
@@ -597,8 +605,8 @@ async function sendNotice(){
   const roundDate = target==='all'? '' : v('ncRound');
   busy('보내는 중');
   try{
-    const rec = await API.noticeCreate({ title, body, target, roundDate, by:acc.nick, at:new Date().toISOString() });
-    NOTICES.unshift(rec);
+    await API.noticeCreate({ title, body, target, roundDate, by:acc.uid });
+    NOTICES = await API.noticeList();
     closeM(); openNotices();
   }catch(e){ joinErr(e.message); }
 }
@@ -608,28 +616,13 @@ async function delNotice(id){
   openNotices();
 }
 
-/* ══ 카카오 로그인 ══ */
-function kakaoStart(){
-  if(!(window.crypto && crypto.subtle) && !location.href.startsWith('https')){
-    // http 단계에서도 카카오 인가는 가능하지만, 세션 저장 후 흐름 일관성 위해 안내만
-  }
-  sessionStorage.setItem('botc_kakao_pending','1');
-  API.kakaoAuthorize();
-}
+/* ══ 카카오 로그인 (Supabase Auth) ══
+   버튼 → 카카오 인가 → Supabase가 세션 처리 후 여기로 복귀 →
+   bootSession이 기존 회원이면 자동 연결, 처음이면 가입 시트(kakaoOnboard)를 연다. */
+function kakaoStart(){ API.kakaoAuthorize(); }
 
-/* 인가 후 돌아왔을 때 (?code=) */
-async function kakaoReturn(code){
-  history.replaceState(null,'',location.pathname + location.hash);   // 주소에서 code 제거
-  let kid;
-  try{ kid = await API.kakaoExchange(code); }
-  catch(e){ alert('카카오 로그인에 실패했어요.\n'+e.message); return; }
-  const existing = await API.findByKakao(kid);
-  if(existing){ await afterAuth(existing); return; }
-  // 처음 온 카카오 계정 — 새로 가입하거나 기존 닉네임 계정에 연결
-  kakaoOnboard(kid);
-}
-
-function kakaoOnboard(kid){
+/* 카카오 인증은 됐지만 아직 회원이 아닌 사람 — 닉네임·톡방닉만 받으면 끝 */
+function kakaoOnboard(){
   document.getElementById('modal').innerHTML = `
     <h2>거의 다 됐어요</h2>
     <div class="mdesc">카카오 인증 완료! 모임에서 쓸 정보만 정해주세요.<br>
@@ -641,102 +634,48 @@ function kakaoOnboard(kid){
     <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px;line-height:1.6"></div>
     <div class="notice" style="margin:13px 0 0">오픈톡방 닉네임은 단톡방의 누구인지 알아보고, 참가비 입금을 대조하려고 받아요.
       <b style="color:var(--red-lite)">모임장만 볼 수 있어요.</b></div>
-    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="kakaoJoin('${kid}')">시작하기</button></div>
-    <button class="mclose" onclick="kakaoLink('${kid}')">전에 닉네임·비밀번호로 가입했어요 (계정 연결)</button>
+    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="kakaoJoin()">시작하기</button></div>
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
 }
-
-async function kakaoJoin(kid){
+async function kakaoJoin(){
   const n=document.getElementById('kkNick').value.trim();
   const pn=document.getElementById('kkPay').value.trim();
   if(!n) return joinErr('닉네임을 적어주세요.');
   if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자).');
   if(!pn) return joinErr('오픈톡방 닉네임을 적어주세요.');
-  if(ADMINS.includes(n)) return joinErr('그 닉네임은 관리자 전용이에요.');
   busy('가입 중');
-  try{ await afterAuth(await API.signupKakao(kid, n, pn)); }
+  try{ await afterAuth(await API.signupMember(n, pn)); }
   catch(e){ joinErr(e.message); }
 }
 
-function kakaoLink(kid){
-  document.getElementById('modal').innerHTML = `
-    <h2>기존 계정 연결</h2>
-    <div class="mdesc">전에 만든 닉네임 계정에 이 카카오 계정을 연결합니다.
-      다음부터는 카카오 버튼 한 번으로 들어와져요.</div>
-    <div class="fld"><label>닉네임</label><input id="lkNick" autocomplete="off"></div>
-    <div class="fld"><label>비밀번호</label><input id="lkPw" type="password"></div>
-    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
-    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="kakaoDoLink('${kid}')">연결하기</button></div>
-    <button class="mclose" onclick="closeM()">닫기</button>`;
-  document.getElementById('ov').style.display='flex';
-}
-async function kakaoDoLink(kid){
-  const n=document.getElementById('lkNick').value.trim(), p=document.getElementById('lkPw').value;
-  if(!n||!p) return joinErr('닉네임과 비밀번호를 적어주세요.');
-  busy('연결 중');
-  try{
-    const a = await API.login(n,p);
-    a.kakao = kid; await API.save(a);
-    await API.linkKakao(kid, a.uid);
-    await afterAuth(a);
-  }catch(e){ joinErr(e.message); }
-}
-
-/* ══ 로그인 · 가입 ══ */
+/* ══ 로그인 — 카카오 전용 ══ */
 function askNick(tab){
-  if(tab) authTab = tab;
   if(acc){ myAccountSheet(); return; }
-  /* http로 열면 브라우저 암호화(crypto.subtle)가 잠겨 로그인이 안 된다.
-     인증서 발급 전 임시 안내 — https가 열리면 자동으로 그쪽으로 보낸다 */
-  if(!(window.crypto && crypto.subtle)){
-    document.getElementById('modal').innerHTML = `
-      <h2>잠깐만요 🔧</h2>
-      <div class="mdesc">지금 보안 연결(https) 설정이 마무리되는 중이라
-        로그인·가입이 잠시 막혀 있어요.<br><br>
-        게임 도감과 일정 구경은 그대로 가능합니다.
-        조금 뒤에 다시 시도해주세요!</div>
-      <button class="mclose" onclick="closeM()">닫기</button>`;
-    document.getElementById('ov').style.display='flex';
-    return;
-  }
-  const isJoin = authTab==='join';
   document.getElementById('modal').innerHTML = `
+    <h2>첫밤 사망자 클럽</h2>
+    <div class="mdesc">카카오로 3초면 들어와요. 톡방 하나로 모이는 모임이라
+      계정도 카카오 하나로 통일했어요.</div>
     <button class="kakaobtn" onclick="kakaoStart()">
       <span class="ksym">TALK</span> 카카오로 시작하기
     </button>
-    <div class="ordiv"><span>또는 닉네임·비밀번호로</span></div>
-    <div class="tabsw">
-      <div class="t${isJoin?'':' on'}" onclick="askNick('login')">로그인</div>
-      <div class="t${isJoin?' on':''}" onclick="askNick('join')">가입하기</div>
-    </div>
-    <div class="fld"><label>닉네임</label>
-      <input id="nkIn" placeholder="예: 투넬 (한글만)" autocomplete="off"></div>
-    ${isJoin?`<div class="fld"><label>오픈톡방 닉네임</label>
-      <input id="pnIn" placeholder="단톡방에서 쓰는 이름" autocomplete="off"></div>`:''}
-    <div class="fld"><label>비밀번호</label>
-      <input id="pwIn" type="password" placeholder="비밀번호" autocomplete="${isJoin?'new-password':'current-password'}"></div>
-    ${isJoin?`<div class="fld"><label>비밀번호 확인</label>
-      <input id="pw2In" type="password" placeholder="한 번 더" autocomplete="new-password"></div>`:''}
-    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px;line-height:1.6"></div>
-    ${isJoin?`<div class="notice" style="margin:13px 0 0">오픈톡방 닉네임은 단톡방의 누구인지 알아보고, 참가비 입금을 대조하려고 받아요.
-      <b style="color:var(--red-lite)">모임장만 볼 수 있고</b> 다른 참가자에게는 보이지 않습니다.<br>
-      비밀번호는 원문이 저장되지 않고, 사람마다 다른 값을 섞어 10만 번 뒤섞은 결과만 남습니다.
-      그래도 <b style="color:var(--red-lite)">다른 곳에서 쓰는 비밀번호는 쓰지 마세요.</b></div>`:''}
-    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="${isJoin?'doJoin()':'doLogin()'}">${isJoin?'가입':'로그인'}</button></div>
+    <div style="font-size:11px;color:var(--sub);margin-top:14px;line-height:1.7">
+      카톡 이름·프로필·친구목록은 가져오지 않아요.<br>
+      닉네임은 로그인 후에 따로 정합니다.</div>
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
-  setTimeout(()=>document.getElementById('nkIn')?.focus(),120);
 }
 function joinErr(m){
-  const el=document.getElementById('joinErr'); el.innerHTML=m; el.style.display='block';
-  const b=document.getElementById('authBtn'); if(b){ b.disabled=false; b.textContent=authTab==='join'?'가입':'로그인'; }
+  const el=document.getElementById('joinErr'); if(!el) return;
+  el.innerHTML=m; el.style.display='block';
+  const b=document.getElementById('authBtn'); if(b){ b.disabled=false; b.textContent='시작하기'; }
 }
 function busy(t){ const b=document.getElementById('authBtn'); if(b){ b.disabled=true; b.innerHTML=`<span class="spin"></span> ${t}`; } }
 
+const NICK_RE = /^[가-힣]{1,10}$/;   // 닉네임은 한글 1~10자만
+
 async function afterAuth(a){
   acc = a;
-  localStorage.setItem(SESS, acc.uid);
   favs = JSON.parse(localStorage.getItem(FKEY())||'[]');
   const anon = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');
   picks = openRound ? await API.getMyPicks(openRound.d, acc.uid) : [];
@@ -746,40 +685,13 @@ async function afterAuth(a){
     try{ await API.setPicks(openRound.d, acc.uid, picks); }catch(e){}
     localStorage.removeItem('botc_picks_anon');
   }
+  try{ MEMBERS = await API.list(); }catch(e){}
   renderMe(); closeM(); renderGames();
   if(view==='me') renderMePage(); if(view==='sched') renderSched();
 }
-async function doLogin(){
-  const n=document.getElementById('nkIn').value.trim(), p=document.getElementById('pwIn').value;
-  if(!n||!p) return joinErr('닉네임과 비밀번호를 적어주세요.');
-  busy('확인 중');
-  try{ await afterAuth(await API.login(n,p)); }
-  catch(e){ joinErr(e.message); }
-}
-const NICK_RE = /^[가-힣]{1,10}$/;   // 닉네임은 한글 1~10자만
-async function doJoin(){
-  const n=document.getElementById('nkIn').value.trim();
-  const pn=document.getElementById('pnIn').value.trim();
-  const p=document.getElementById('pwIn').value, p2=document.getElementById('pw2In').value;
-  if(!n)           return joinErr('닉네임을 적어주세요.');
-  if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자, 띄어쓰기·영문·숫자 불가).');
-  if(!pn)          return joinErr('오픈톡방 닉네임을 적어주세요. 단톡방 대조에 씁니다.');
-  if(p.length<4)   return joinErr('비밀번호는 4자 이상으로 해주세요.');
-  if(p!==p2)       return joinErr('비밀번호 두 개가 서로 달라요.');
-
-  let admin=false;
-  if(ADMINS.includes(n)){
-    if(await sha256(p) !== ADMIN_HASH)
-      return joinErr(`'${n}'은(는) 관리자 전용 닉네임이에요. 다른 닉네임을 써주세요.`);
-    admin = true;
-  }
-  busy('가입 중');
-  try{ await afterAuth(await API.signup(n,p,pn,admin)); }
-  catch(e){ joinErr(e.message + (/이미 쓰고/.test(e.message)?' 본인 계정이면 <b>로그인</b> 탭으로 들어와주세요.':'')); }
-}
-function logout(){
+async function logout(){
+  try{ await API.logout(); }catch(e){}
   acc=null; favs=[]; picks=[];
-  localStorage.removeItem(SESS);
   renderMe(); closeM(); renderGames();
   if(view==='me') renderMePage(); if(view==='sched') renderSched();
   if(view==='members') setView('games');
@@ -1924,7 +1836,6 @@ async function renderMembers(){
         </div>
         <div class="btns">
           <span class="b" onclick="memEdit(${i})">✏️ 수정</span>
-          <span class="b" onclick="memPw(${i})">🔑 비번 초기화</span>
           ${isAdmin()&&!m.admin?`<span class="b" onclick="memToggleStaff(${i})">${m.role==='staff'?'🛠 운영진 해제':'🛠 운영진 지정'}</span>`:''}
           ${isAdmin()&&!m.admin&&m.scribeReady&&!m.scribe?`<span class="b" onclick="memScribe(${i},true)">📜 서기 승인</span>`:''}
           ${isAdmin()&&!m.admin&&m.scribe?`<span class="b" onclick="memScribe(${i},false)">📜 서기 해제</span>`:''}
@@ -1946,6 +1857,7 @@ function memEdit(i){
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
 }
+/* 관리 조작은 전부 서버 RPC — 브라우저를 조작해도 서버가 관리자 여부를 재검증한다 */
 async function memSave(i){
   const m=MEMS[i];
   const n=document.getElementById('m_nick').value.trim();
@@ -1954,64 +1866,29 @@ async function memSave(i){
   if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자).');
   busy('저장 중');
   try{
-    let cur = await API.get(m.uid);
-    if(n!==cur.nick) cur = await API.rename(cur, n);
-    cur.payname = p; await API.save(cur);
-    if(acc && acc.uid===cur.uid){ acc=cur; renderMe(); }
+    await API.adminUpdate(m.uid, n, p);
+    if(acc && acc.uid===m.uid){ acc = await API.get(m.uid); renderMe(); }
     closeM(); renderMembers();
-  }catch(e){ joinErr(e.message); }
-}
-function memPw(i){
-  const m=MEMS[i];
-  document.getElementById('modal').innerHTML=`
-    <h2>비밀번호 초기화</h2>
-    <div class="mdesc"><b style="color:var(--red-lite)">${m.nick}</b> 님의 비밀번호를 새로 정합니다.
-      정한 비밀번호를 본인에게 알려주고, 로그인한 뒤 바꾸도록 안내해주세요.</div>
-    <div class="fld"><label>새 비밀번호</label><input id="m_pw" type="text" placeholder="4자 이상"></div>
-    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
-    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="memPwSave(${i})">초기화</button></div>
-    <button class="mclose" onclick="closeM()">닫기</button>`;
-  document.getElementById('ov').style.display='flex';
-}
-async function memPwSave(i){
-  const pw=document.getElementById('m_pw').value;
-  if(pw.length<4) return joinErr('4자 이상으로 해주세요.');
-  busy('저장 중');
-  try{
-    const cur = await API.get(MEMS[i].uid);
-    await API.setPw(cur, pw);
-    closeM(); alert('비밀번호를 바꿨어요. 본인에게 알려주세요.');
   }catch(e){ joinErr(e.message); }
 }
 async function memDel(i){
   if(!isAdmin()) return;
   const m=MEMS[i];
   if(!confirm(`${m.nick} 회원을 지울까요? 되돌릴 수 없어요.`)) return;
-  try{ await API.remove(await API.get(m.uid) || m); renderMembers(); }
+  try{ await API.remove(m); renderMembers(); }
   catch(e){ alert('삭제에 실패했어요: '+e.message); }
 }
-/* 서기 승인/해제 — 관리자만. 해제해도 scribeReady는 남겨서 각성 알림이 또 뜨진 않는다 */
 async function memScribe(i, on){
   if(!isAdmin()) return;
-  try{
-    const cur = await API.get(MEMS[i].uid);
-    cur.scribe = on;
-    if(on) cur.scribeHello = false;   // 다음 접속 때 임명 축하 카드가 뜬다
-    await API.save(cur);
-    if(acc && acc.uid===cur.uid){ acc=cur; renderMe(); }
-    renderMembers();
-  }catch(e){ alert('저장에 실패했어요: '+e.message); }
+  try{ await API.adminSetScribe(MEMS[i].uid, on); renderMembers(); }
+  catch(e){ alert('저장에 실패했어요: '+e.message); }
 }
-/* 운영진 지정/해제 — 관리자만. 관리자 계정 자체는 이미 버튼을 안 띄우지만 한 번 더 막아둔다 */
 async function memToggleStaff(i){
   if(!isAdmin()) return;
   const m=MEMS[i];
   if(m.admin) return;
   try{
-    const cur = await API.get(m.uid);
-    cur.role = cur.role==='staff' ? undefined : 'staff';
-    await API.save(cur);
-    if(acc && acc.uid===cur.uid){ acc=cur; renderMe(); }
+    await API.adminSetRole(m.uid, m.role==='staff' ? null : 'staff');
     renderMembers();
   }catch(e){ alert('저장에 실패했어요: '+e.message); }
 }
@@ -2156,15 +2033,7 @@ renderMe(); renderGames();
   if(['sched','me','members'].includes(v)) setView(v,true);
 }
 bootSession();
-
-/* 카카오 인가에서 돌아온 경우 */
-{
-  const code = new URLSearchParams(location.search).get('code');
-  if(code && sessionStorage.getItem('botc_kakao_pending')){
-    sessionStorage.removeItem('botc_kakao_pending');
-    kakaoReturn(code);
-  }
-}
+/* 카카오 인가 복귀(?code=)는 supabase-js가 알아서 세션으로 바꿔준다 — 별도 처리 불필요 */
 
 /* 주소에 ?rules=게임이름 을 붙이면 그 게임 룰이 바로 열린다.
    "달무티 룰 여기서 봐" 하고 링크만 던지면 되게. */

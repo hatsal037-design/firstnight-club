@@ -1,2 +1,4 @@
+*.bak
+1ndclub/index.kvdb.html.bak
+1ndclub/api.kvdb.js.bak
 .DS_Store
-img/수집/
