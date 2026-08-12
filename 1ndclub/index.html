@@ -64,6 +64,13 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
 .me .nk{color:var(--ink);font-weight:700;font-size:12.5px}
 .me .adm{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;
          border-radius:3px;padding:2px 5px;margin-top:3px}
+.me .attmini{display:inline-block;background:var(--surface2);border:1px solid var(--red);color:var(--red-lite);
+  font-size:10px;font-weight:700;border-radius:999px;padding:2px 7px;margin-left:5px;vertical-align:1px}
+.attbadge{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  width:96px;height:96px;border-radius:50%;background:#101014;border:2.5px solid var(--red);
+  box-shadow:0 0 0 5px rgba(232,50,60,.12)}
+.attbadge .an{font-family:'Do Hyeon',sans-serif;font-size:38px;line-height:1;color:var(--red-lite)}
+.attbadge .al{font-size:11.5px;color:var(--sub);margin-top:3px;letter-spacing:-.3px}
 .checker{height:9px;background:repeating-linear-gradient(90deg,var(--red) 0 14px,transparent 14px 28px)}
 
 .label{display:flex;align-items:center;gap:9px;font-family:'Jua',sans-serif;
@@ -445,9 +452,14 @@ async function loadRsvpCnt(){
   const rows = await API.allRsvp(openRound.d);
   rsvpCnt = { yes: rows.filter(r=>r.v==='yes').length, no: rows.filter(r=>r.v==='no').length };
 }
+function myAttendance(){
+  const names = myNames();
+  return pastList().filter(p=>(p.people||[]).some(pIsMe)).length;
+}
 function renderMe(){
+  const att = acc ? myAttendance() : 0;
   document.getElementById('meBox').innerHTML = acc
-    ? `<span class="nk">${acc.nick}</span>${isAdmin()?'<br><span class="adm">관리자</span>':''}`
+    ? `<span class="nk">${acc.nick}</span>${att?`<span class="attmini">${att}회</span>`:''}${isAdmin()?'<br><span class="adm">관리자</span>':''}`
     : `<span class="nk">로그인 ›</span>`;
   document.getElementById('hsub').innerHTML =
     `보유 게임 ${GAMES.filter(g=>g.have!==false).length}종 · 잡아둔 회차 ${upcoming.length}개`;
@@ -1405,8 +1417,8 @@ function renderMePage(){
 
   body.innerHTML=`
     <div class="hero" style="text-align:center">
-      <div style="font-size:40px;line-height:1">🔪</div>
-      <div class="dt" style="margin-top:6px">${acc.nick}</div>
+      <div class="attbadge"><div class="an">${cnt}</div><div class="al">회 참석</div></div>
+      <div class="dt" style="margin-top:12px">${acc.nick}</div>
       <div class="tm">${isAdmin()?'관리자':'첫밤 사망자 클럽 멤버'}</div>
       <div class="rows" style="text-align:left">
         <div class="rw"><div class="k">참석</div><div>${cnt?`${cnt}번`:'아직 기록 없음'}</div></div>
