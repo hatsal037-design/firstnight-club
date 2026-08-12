@@ -636,10 +636,10 @@ function kakaoOnboard(kid){
       <span style="color:var(--sub);font-size:12px">카톡 이름·프로필은 가져오지 않아요. 닉네임은 여기서 정한 것만 씁니다.</span></div>
     <div class="fld"><label>닉네임 (한글만)</label>
       <input id="kkNick" placeholder="예: 투넬" autocomplete="off"></div>
-    <div class="fld"><label>입금자명</label>
-      <input id="kkPay" placeholder="계좌이체 때 찍히는 이름" autocomplete="off"></div>
+    <div class="fld"><label>오픈톡방 닉네임</label>
+      <input id="kkPay" placeholder="단톡방에서 쓰는 이름" autocomplete="off"></div>
     <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px;line-height:1.6"></div>
-    <div class="notice" style="margin:13px 0 0">입금자명은 실수로 참가비 입금을 닉네임으로 하지 않았을 때 대조하려고 받아요.
+    <div class="notice" style="margin:13px 0 0">오픈톡방 닉네임은 단톡방의 누구인지 알아보고, 참가비 입금을 대조하려고 받아요.
       <b style="color:var(--red-lite)">모임장만 볼 수 있어요.</b></div>
     <div class="mbtns"><button class="mbtn" id="authBtn" onclick="kakaoJoin('${kid}')">시작하기</button></div>
     <button class="mclose" onclick="kakaoLink('${kid}')">전에 닉네임·비밀번호로 가입했어요 (계정 연결)</button>
@@ -652,7 +652,7 @@ async function kakaoJoin(kid){
   const pn=document.getElementById('kkPay').value.trim();
   if(!n) return joinErr('닉네임을 적어주세요.');
   if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자).');
-  if(!pn) return joinErr('입금자명을 적어주세요.');
+  if(!pn) return joinErr('오픈톡방 닉네임을 적어주세요.');
   if(ADMINS.includes(n)) return joinErr('그 닉네임은 관리자 전용이에요.');
   busy('가입 중');
   try{ await afterAuth(await API.signupKakao(kid, n, pn)); }
@@ -712,14 +712,14 @@ function askNick(tab){
     </div>
     <div class="fld"><label>닉네임</label>
       <input id="nkIn" placeholder="예: 투넬 (한글만)" autocomplete="off"></div>
-    ${isJoin?`<div class="fld"><label>입금자명</label>
-      <input id="pnIn" placeholder="계좌이체 때 찍히는 이름" autocomplete="off"></div>`:''}
+    ${isJoin?`<div class="fld"><label>오픈톡방 닉네임</label>
+      <input id="pnIn" placeholder="단톡방에서 쓰는 이름" autocomplete="off"></div>`:''}
     <div class="fld"><label>비밀번호</label>
       <input id="pwIn" type="password" placeholder="비밀번호" autocomplete="${isJoin?'new-password':'current-password'}"></div>
     ${isJoin?`<div class="fld"><label>비밀번호 확인</label>
       <input id="pw2In" type="password" placeholder="한 번 더" autocomplete="new-password"></div>`:''}
     <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px;line-height:1.6"></div>
-    ${isJoin?`<div class="notice" style="margin:13px 0 0">입금자명은 실수로 참가비 입금을 닉네임으로 하지 않았을 때 대조하려고 받아요.
+    ${isJoin?`<div class="notice" style="margin:13px 0 0">오픈톡방 닉네임은 단톡방의 누구인지 알아보고, 참가비 입금을 대조하려고 받아요.
       <b style="color:var(--red-lite)">모임장만 볼 수 있고</b> 다른 참가자에게는 보이지 않습니다.<br>
       비밀번호는 원문이 저장되지 않고, 사람마다 다른 값을 섞어 10만 번 뒤섞은 결과만 남습니다.
       그래도 <b style="color:var(--red-lite)">다른 곳에서 쓰는 비밀번호는 쓰지 마세요.</b></div>`:''}
@@ -763,7 +763,7 @@ async function doJoin(){
   const p=document.getElementById('pwIn').value, p2=document.getElementById('pw2In').value;
   if(!n)           return joinErr('닉네임을 적어주세요.');
   if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자, 띄어쓰기·영문·숫자 불가).');
-  if(!pn)          return joinErr('입금자명을 적어주세요. 참가비 대조에 씁니다.');
+  if(!pn)          return joinErr('오픈톡방 닉네임을 적어주세요. 단톡방 대조에 씁니다.');
   if(p.length<4)   return joinErr('비밀번호는 4자 이상으로 해주세요.');
   if(p!==p2)       return joinErr('비밀번호 두 개가 서로 달라요.');
 
@@ -804,7 +804,7 @@ function myAccountSheet(){
     </div>
     <div style="margin-top:14px">
       <div class="mrow"><div class="k">닉네임</div><div>${acc.nick}</div></div>
-      <div class="mrow"><div class="k">입금자명</div><div>${acc.payname||'—'}</div></div>
+      <div class="mrow"><div class="k">톡방 닉</div><div>${acc.payname||'—'}</div></div>
       <div class="mrow"><div class="k">가입일</div><div>${(acc.joined||'').replace(/-/g,'.')}</div></div>
       ${acc.aliases?.length?`<div class="mrow"><div class="k">옛 닉네임</div><div>${acc.aliases.join(', ')}</div></div>`:''}
     </div>
@@ -1909,12 +1909,12 @@ async function renderMembers(){
   body.innerHTML=`
     <div class="label">회원 ${MEMS.length}명</div>
     ${agg}
-    <div class="notice">입금자명은 참가비 대조용이에요. 참가자에게는 안 보입니다.</div>
+    <div class="notice">오픈톡방 닉네임은 단톡방 대조·참가비 확인용이에요. 참가자에게는 안 보입니다.</div>
     <div style="margin-top:12px">${MEMS.map((m,i)=>`
       <div class="mem${m.admin?' adm':''}">
         <div class="top">
           <span class="nm">${m.nick}</span>
-          <span class="pn">${m.payname||'입금자명 없음'}</span>
+          <span class="pn">${m.payname||'톡방닉 없음'}</span>
           ${m.admin?'<span class="tag">관리자</span>':m.role==='staff'?'<span class="tag staff">운영진</span>':m.scribe?'<span class="tag scribe">서기</span>':m.scribeReady?'<span class="tag ready">서기 대기</span>':''}
         </div>
         <div class="sub2">
@@ -1940,7 +1940,7 @@ function memEdit(i){
     <h2>${m.nick}</h2>
     <div class="mdesc">닉네임을 바꾸면 옛 이름이 기록에 남아 지난 활동이 계속 잡힙니다.</div>
     <div class="fld"><label>닉네임</label><input id="m_nick" value="${m.nick}"></div>
-    <div class="fld"><label>입금자명</label><input id="m_pay" value="${m.payname||''}"></div>
+    <div class="fld"><label>오픈톡방 닉네임</label><input id="m_pay" value="${m.payname||''}"></div>
     <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
     <div class="mbtns"><button class="mbtn" id="authBtn" onclick="memSave(${i})">저장</button></div>
     <button class="mclose" onclick="closeM()">닫기</button>`;
