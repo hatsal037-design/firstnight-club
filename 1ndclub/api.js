@@ -73,6 +73,7 @@ const API = {
       hash: await hashPw(pw, salt), admin,
       payname,                                   // 입금자명 — 관리자만 본다
       joined: new Date().toISOString().slice(0,10),
+      joinedAt: new Date().toISOString(),         // 가입 순번 정렬용 — joined는 날짜만이라 동일자 가입 순서를 못 가림
     };
     await kvPut(K_USER(acc.uid), JSON.stringify(acc));
     await kvPut(K_NICK(nick), acc.uid);
@@ -120,7 +121,7 @@ const API = {
     const rows = await kvList('botc:u:');
     return rows.map(([,v]) => { try { return JSON.parse(v); } catch(e){ return null; } })
                .filter(Boolean)
-               .sort((a,b)=> (a.joined||'').localeCompare(b.joined||'') || a.nick.localeCompare(b.nick,'ko'));
+               .sort((a,b)=> (a.joinedAt||a.joined||'').localeCompare(b.joinedAt||b.joined||'') || a.nick.localeCompare(b.nick,'ko'));
   },
 
   async remove(acc){
@@ -228,7 +229,7 @@ API.linkKakao = async function(kid, uid){
 API.signupKakao = async function(kid, nick, payname=''){
   if(await API.nickTaken(nick)) throw new Error(`'${nick}'은(는) 이미 쓰고 있는 닉네임이에요.`);
   const acc = { uid:newUid(), nick, aliases:[], salt:'', hash:'', kakao:kid, admin:false,
-                payname, joined:new Date().toISOString().slice(0,10) };
+                payname, joined:new Date().toISOString().slice(0,10), joinedAt:new Date().toISOString() };
   await kvPut(K_USER(acc.uid), JSON.stringify(acc));
   await kvPut(K_NICK(nick), acc.uid);
   await API.linkKakao(kid, acc.uid);
