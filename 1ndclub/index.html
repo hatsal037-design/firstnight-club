@@ -412,6 +412,7 @@ let MEMBERS = [];           // 전체 회원 — @태그(uid)를 현재 닉네�
 let OWNERS = {};            // {게임이름: uid} — 관리자가 지정한 게임 소유자 (서버)
 let myRsvp = null;          // 모집중 회차 참석 여부 'yes'|'no'|null
 let rsvpCnt = {yes:0,no:0};
+let rsvpYesNames = [];
 let cat='all', crew=0, q='', view='games', authTab='login';
 
 const isAdmin = () => !!acc && acc.admin;
@@ -459,6 +460,9 @@ async function bootSession(){
 async function loadRsvpCnt(){
   const rows = await API.allRsvp(openRound.d);
   rsvpCnt = { yes: rows.filter(r=>r.v==='yes').length, no: rows.filter(r=>r.v==='no').length };
+  // 참석자 이름도 같이 — uid를 현재 닉네임으로 바꿔서 (탈퇴 등으로 못 찾으면 생략)
+  rsvpYesNames = rows.filter(r=>r.v==='yes')
+    .map(r=>MEMBERS.find(m=>m.uid===r.uid)?.nick).filter(Boolean);
 }
 function myAttendance(){
   const names = myNames();
@@ -1152,24 +1156,36 @@ function googleCal(){
 /* ══ 참석 여부 ══ */
 function renderRsvp(){
   const box=document.getElementById('rsvpBox'); if(!box||!openRound) return;
-  const label = v => v==='yes'?'참석':'불참';
   box.innerHTML = `
     <div class="rt">🙋 이번 회차 참석하시나요? <span class="rc">${rsvpCnt.yes?`지금까지 <b>${rsvpCnt.yes}명</b> 참석`:''}</span></div>
     <div class="rb2">
       <button class="rbtn yes${myRsvp==='yes'?' on':''}" onclick="setRsvp('yes')">참석 ${rsvpCnt.yes||''}</button>
       <button class="rbtn no${myRsvp==='no'?' on':''}" onclick="setRsvp('no')">불참 ${rsvpCnt.no||''}</button>
     </div>
+    ${rsvpYesNames.length?`<div class="rn2">참석 — ${rsvpYesNames.join(', ')}</div>`:''}
     ${acc?'':'<div class="rn2">로그인하면 응답이 저장되고 모임장에게 전달돼요</div>'}`;
 }
 async function setRsvp(v){
   if(!acc){ askNick('login'); return; }
   const next = myRsvp===v ? null : v;    // 같은 버튼 다시 누르면 취소
+  const prev = myRsvp;
+  /* 낙관적 갱신 — 서버 응답을 기다리지 말고 화면부터 바꾼다 (버튼 딜레이 피드백 반영).
+     숫자·이름도 로컬에서 미리 맞춰두고, 서버 저장이 실패하면 원래대로 되돌린다. */
   myRsvp = next;
+  if(prev==='yes'){ rsvpCnt.yes--; rsvpYesNames = rsvpYesNames.filter(n=>n!==acc.nick); }
+  if(prev==='no') rsvpCnt.no--;
+  if(next==='yes'){ rsvpCnt.yes++; rsvpYesNames.push(acc.nick); }
+  if(next==='no') rsvpCnt.no++;
+  renderRsvp();
   try{
     await API.setRsvp(openRound.d, acc.uid, next);
-    await loadRsvpCnt();
-  }catch(e){}
-  renderRsvp();
+    // 서버 기준으로 한 번 더 맞춤 — kvdb 목록 반영이 1~2초 늦으므로 바로 읽으면 방금 누른 게 빠진 옛 값이 온다
+    setTimeout(()=>{ loadRsvpCnt().then(renderRsvp).catch(()=>{}); }, 2000);
+  }catch(e){
+    myRsvp = prev;
+    try{ await loadRsvpCnt(); }catch(_){}
+    renderRsvp();
+  }
 }
 
 /* ══ 할 게임 고르기 ══ */
