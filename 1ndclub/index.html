@@ -1300,6 +1300,7 @@ function metTimes(uidOrName){
    들어가는 길: 마이페이지 참석 뱃지를 2초 안에 5번 연타.
    어디에도 버튼·배지·알림이 없다 — 아는 사람만 여는 기능. */
 const JA_MIN_MEET = 5;      // 이만큼 이상 만난 사람만 지정 가능
+const JA_MIN_ATT  = 5;      // 본인 참석이 이만큼 이상이어야 기능 자체가 열림
 let jaTapN=0, jaTapT=0;
 function jaTap(){
   const now=Date.now();
@@ -1309,6 +1310,7 @@ function jaTap(){
 }
 async function openJoalarm(){
   if(!acc) return;
+  if(myAttendance() < JA_MIN_ATT) return;   // 5회 미만 참석자에겐 5연타해도 아무 일 없음 — 존재 자체를 숨긴다
   document.getElementById('modal').innerHTML=`<h2>🔔</h2><div class="mdesc"><span class="spin"></span> 여는 중…</div>`;
   document.getElementById('ov').style.display='flex';
 
