@@ -387,7 +387,7 @@ footer a{color:#7a8290}
   <div class="askbox" id="askBox"></div>
 </div>
 
-<script src="api.js?v=5"></script>
+<script src="api.js?v=6"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js"></script>
@@ -1296,6 +1296,108 @@ function metTimes(uidOrName){
   return myMeetCounts()[uidOrName] || 0;
 }
 
+/* ══ 좋알람 (히든) ══
+   들어가는 길: 마이페이지 참석 뱃지를 2초 안에 5번 연타.
+   어디에도 버튼·배지·알림이 없다 — 아는 사람만 여는 기능. */
+const JA_MIN_MEET = 5;      // 이만큼 이상 만난 사람만 지정 가능
+let jaTapN=0, jaTapT=0;
+function jaTap(){
+  const now=Date.now();
+  if(now-jaTapT>2000) jaTapN=0;
+  jaTapT=now;
+  if(++jaTapN>=5){ jaTapN=0; openJoalarm(); }
+}
+async function openJoalarm(){
+  if(!acc) return;
+  document.getElementById('modal').innerHTML=`<h2>🔔</h2><div class="mdesc"><span class="spin"></span> 여는 중…</div>`;
+  document.getElementById('ov').style.display='flex';
+
+  const [off, offList, rec] = await Promise.all([
+    API.crushOffGet(acc.uid), API.crushOffList(), API.crushGet(acc.uid)]);
+
+  let target=null, tNick='', matched=false, freed=false;
+  if(!off && rec?.e){
+    target = await API.crushDecTarget(acc.uid, rec.e);
+    if(target && offList.includes(target)){
+      // 상대가 좋알람을 껐으면 내 슬롯은 조용히 해제 — 월 변경 횟수에 안 친다
+      await API.crushClear(acc.uid); target=null; freed=true;
+    }
+    if(target){
+      const m=MEMBERS.find(m=>m.uid===target); tNick=m?m.nick:'(탈퇴한 회원)';
+      const trec = await API.crushGet(target);
+      if(trec?.h) matched = trec.h === await API.crushHash(target, acc.uid);
+    }
+  }
+  const ym = new Date().toISOString().slice(0,7);
+  const canChange = !rec || rec.m !== ym || freed;
+  const counts = myMeetCounts();
+  const eligible = MEMBERS.filter(m =>
+    m.uid!==acc.uid && !offList.includes(m.uid) && (counts[m.uid]||0)>=JA_MIN_MEET);
+
+  document.getElementById('modal').innerHTML=`
+    <h2>🔔 좋알람</h2>
+    <div class="mdesc">${JA_MIN_MEET}번 이상 함께한 멤버 한 명을 조용히 가리켜둘 수 있어요.
+      상대는 모르고, <b style="color:var(--red-lite)">서로 가리키고 있을 때만</b> 둘 다에게 울립니다.
+      대상 변경은 한 달에 한 번.</div>
+    ${off ? `
+      <div class="notice" style="margin:14px 0 0">좋알람이 꺼져 있어요. 다른 사람이 나를 가리킬 수도 없는 상태예요.</div>
+      <div class="mbtns"><button class="mbtn" onclick="jaToggleOff()">다시 켜기</button></div>
+    ` : `
+      ${matched ? `<div class="hero" style="margin:14px 0 0;text-align:center">
+          <div style="font-size:34px">🎉</div>
+          <div class="dt">서로예요!</div>
+          <div class="tm"><b style="color:var(--red-lite)">${tNick}</b> 님도 나를 가리키고 있어요.<br>이제 연락해보세요.</div>
+        </div>`
+      : target ? `<div class="notice" style="margin:14px 0 0">지금 <b style="color:var(--red-lite)">${tNick}</b> 님을 가리키는 중이에요. 상대는 몰라요.
+          ${canChange?'':'<br>대상 변경은 다음 달부터 가능해요.'}</div>`
+      : freed ? `<div class="notice" style="margin:14px 0 0">가리키던 분이 좋알람을 꺼서 슬롯이 비워졌어요. 다시 정할 수 있어요.</div>`
+      : ''}
+      ${eligible.length ? `
+        <div style="font-size:11px;color:var(--sub);margin-top:16px">가리킬 수 있는 멤버 (${JA_MIN_MEET}번 이상 만남)</div>
+        <div style="margin-top:8px">${eligible.map(m=>`
+          <div class="mem" style="display:flex;align-items:center;justify-content:space-between">
+            <span class="nm">${m.nick} <span style="font-size:11px;color:var(--sub)">${counts[m.uid]}번 만남</span></span>
+            ${target===m.uid?'<span class="tag">가리키는 중</span>'
+              : canChange?`<span class="b" style="flex:none;padding:8px 14px" onclick="jaSet('${m.uid}')">가리키기</span>`:''}
+          </div>`).join('')}</div>`
+      : `<div class="empty" style="padding:24px 20px">아직 ${JA_MIN_MEET}번 이상 만난 멤버가 없어요.<br>모임에 꾸준히 나오면 목록이 생겨요.</div>`}
+      <div class="mbtns" style="margin-top:16px">
+        ${target&&canChange?`<button class="mbtn ghost" onclick="jaUnset()">가리키기 거두기</button>`:''}
+        <button class="mbtn ghost" onclick="jaToggleOff()">좋알람 끄기 (받기 거부)</button>
+      </div>
+    `}
+    <div style="font-size:10.5px;color:var(--sub);margin-top:14px;line-height:1.6">
+      이 기능은 어디에도 표시되지 않는 비공개 기능이에요. 참석 뱃지 5연타로만 열립니다.</div>
+    <button class="mclose" onclick="closeM()">닫기</button>`;
+}
+async function jaSet(uid){
+  const rec = await API.crushGet(acc.uid);
+  const ym = new Date().toISOString().slice(0,7);
+  if(rec && rec.m===ym){ alert('이번 달에는 이미 정했어요. 다음 달에 바꿀 수 있어요.'); return; }
+  const h = await API.crushHash(acc.uid, uid);
+  const e = await API.crushEncTarget(acc.uid, uid);
+  await API.crushSave(acc.uid, {h, e, m:ym});
+  openJoalarm();
+}
+async function jaUnset(){
+  const ym = new Date().toISOString().slice(0,7);
+  const rec = await API.crushGet(acc.uid);
+  if(rec && rec.m===ym){ alert('이번 달에는 이미 정했어요. 다음 달에 바꿀 수 있어요.'); return; }
+  await API.crushClear(acc.uid);
+  openJoalarm();
+}
+async function jaToggleOff(){
+  const off = await API.crushOffGet(acc.uid);
+  if(!off){
+    if(!confirm('좋알람을 끄면 내 가리키기도 지워지고, 남이 나를 가리킬 수도 없게 돼요. 끌까요?')) return;
+    await API.crushOffSet(acc.uid, true);
+    await API.crushClear(acc.uid);
+  } else {
+    await API.crushOffSet(acc.uid, false);
+  }
+  openJoalarm();
+}
+
 /* ══ 지난정모 ══ */
 function pastList(){
   /* 씨앗(past.js) → 로컬 편집(구버전 호환) → 서버 기록 순으로 겹쳐 쓴다. 서버가 최종. */
@@ -1506,7 +1608,7 @@ function renderMePage(){
 
   body.innerHTML=`
     <div class="hero" style="text-align:center">
-      <div class="attbadge"><div class="an">${cnt}</div><div class="al">회 참석</div></div>
+      <div class="attbadge" onclick="jaTap()"><div class="an">${cnt}</div><div class="al">회 참석</div></div>
       <div class="dt" style="margin-top:12px">${acc.nick}</div>
       <div class="tm">${isAdmin()?'관리자':acc.role==='staff'?'운영진':'첫밤 사망자 클럽 멤버'}</div>
       ${myMemberNo()?`<div class="memno">No. ${myMemberNo()}</div>`:''}

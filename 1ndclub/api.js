@@ -291,3 +291,47 @@ API.getRead = async function(uid){
 API.setRead = async function(uid, ids){
   await kvPut(`botc:read:${uid}`, JSON.stringify(ids));
 };
+
+/* ── 좋알람 (히든 기능) ──
+   호감은 1인 1슬롯 지속 상태. 서로를 가리키는 순간에만 양쪽에 공개된다.
+   저장 구조
+     botc:crush:<uid>    = { h, e, m }
+        h: SHA256("<나>-><상대>|페퍼")   — 상대가 자기 화면에서 매칭 여부를 대조할 때 씀
+        e: AES-GCM(상대 uid)             — 내 타겟 기억용. 기기 바뀌어도 유지되고 훑어봐선 안 보임
+        m: "2026-08"                     — 마지막 변경 월 (변경은 월 1회)
+     botc:crushoff:<uid> = "1"           — 비활성화(받기 거부). 지정 대상 목록에서 아예 빠짐
+   ⚠️ 한계: 공개 버킷 + 공개 소스라서, 작정하고 회원 조합을 전부 대입하면 해시 대조가 가능하다.
+   지나가다 보는 수준은 막지만 진짜 비밀은 아님 — 클럽 규모에선 수용, 커지면 서버 필요. */
+const CRUSH_PEPPER = 'tunel-joalarm-v1';
+
+async function crushAesKey(uid){
+  const bits = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('joalarm|'+uid+'|'+CRUSH_PEPPER));
+  return await crypto.subtle.importKey('raw', bits, 'AES-GCM', false, ['encrypt','decrypt']);
+}
+API.crushHash = async function(fromUid, toUid){
+  return await sha256(`${fromUid}->${toUid}|${CRUSH_PEPPER}`);
+};
+API.crushGet   = async function(uid){ const t=await kvGet(`botc:crush:${uid}`); try{return t?JSON.parse(t):null;}catch(e){return null;} };
+API.crushSave  = async function(uid, rec){ await kvPut(`botc:crush:${uid}`, JSON.stringify(rec)); };
+API.crushClear = async function(uid){ await kvDel(`botc:crush:${uid}`); };
+API.crushOffGet  = async function(uid){ return !!(await kvGet(`botc:crushoff:${uid}`)); };
+API.crushOffSet  = async function(uid, off){ if(off) await kvPut(`botc:crushoff:${uid}`,'1'); else await kvDel(`botc:crushoff:${uid}`); };
+API.crushOffList = async function(){
+  const rows = await kvList('botc:crushoff:');
+  return rows.map(([k])=>k.slice('botc:crushoff:'.length));
+};
+API.crushEncTarget = async function(uid, targetUid){
+  const key = await crushAesKey(uid);
+  const iv = new Uint8Array(12); crypto.getRandomValues(iv);
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(targetUid));
+  return hex(iv)+':'+hex(new Uint8Array(ct));
+};
+API.crushDecTarget = async function(uid, enc){
+  try{
+    const un = s => new Uint8Array(s.match(/../g).map(x=>parseInt(x,16)));
+    const [ivh, cth] = enc.split(':');
+    const key = await crushAesKey(uid);
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:un(ivh)}, key, un(cth));
+    return new TextDecoder().decode(pt);
+  }catch(e){ return null; }
+};
