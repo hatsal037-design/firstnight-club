@@ -1273,6 +1273,28 @@ function pTag(x){
     ? `<span class="tg m">@${pName(x)}</span>`
     : `<span class="tg p">${x}</span>`;
 }
+/* 내가 이 사람을 몇 번 만났나 — 나와 같은 회차에 참여했던 사람별 횟수.
+   아직 화면에 표기하는 곳은 없지만, 참여자 기록(@태그)만 쌓이면 언제든 소급 계산되는 구조라
+   따로 저장하는 카운터 없이 이 함수 하나로 끝난다. key는 회원이면 uid, 비회원 수기는 이름.
+   반환 예: { "0b25749c-…": 5, "지민": 2 } */
+function myMeetCounts(){
+  if(!acc) return {};
+  const counts = {};
+  pastList().forEach(p=>{
+    const ppl = p.people||[];
+    if(!ppl.some(pIsMe)) return;             // 내가 안 간 회차는 제외
+    ppl.forEach(x=>{
+      if(pIsMe(x)) return;                   // 나 자신 제외
+      const key = typeof x==='object' ? x.uid : x;
+      counts[key] = (counts[key]||0)+1;
+    });
+  });
+  return counts;
+}
+/* 특정 회원을 몇 번 만났나 (표기용 헬퍼 — 나중에 UI 붙일 때 이걸 쓰면 됨) */
+function metTimes(uidOrName){
+  return myMeetCounts()[uidOrName] || 0;
+}
 
 /* ══ 지난정모 ══ */
 function pastList(){
