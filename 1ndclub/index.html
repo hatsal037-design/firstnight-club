@@ -166,6 +166,9 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
        background:var(--surface2);border:1px solid var(--line);text-decoration:none;color:var(--ink);cursor:pointer}
 .rd .b.p{background:var(--red);border-color:var(--red);color:#fff}
 .monthlab{font-family:'Jua',sans-serif;font-size:13px;color:var(--sub);margin:16px 18px 8px}
+.pastmore{text-align:center;font-size:12px;color:var(--sub);border:1px dashed var(--line);
+          border-radius:8px;margin:14px 14px 0;padding:11px 0;cursor:pointer}
+.pastmore:active{background:var(--surface2)}
 /* 참석 여부 */
 .rsvp{margin-top:12px;background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:12px 13px}
 .rsvp .rt{font-family:'Jua',sans-serif;font-size:13px;letter-spacing:-.5px}
@@ -952,14 +955,25 @@ function togFav(n){
 const MAPN = s => 'https://map.naver.com/p/search/'+encodeURIComponent(s);
 const fmt  = d => {const [y,m,dd]=d.split('-');return `${+m}/${+dd}`;};
 
+const PAST_PAGE = 10;
+let pastShown = PAST_PAGE;   // 최신 N개만 먼저 보여주고, 위로 더 올리면 늘려간다
+
 function renderSched(){
   const names = myNames();
-  const past  = pastList().slice().sort((a,b)=>a.d.localeCompare(b.d));   // 오래된 것부터
+  const allPast = pastList().slice().sort((a,b)=>a.d.localeCompare(b.d));   // 오래된 것부터
+  const shown = Math.min(pastShown, allPast.length);
+  const hidden = allPast.length - shown;
+  const past = allPast.slice(hidden);   // 최근 shown개만 렌더링
   const mineOf = p => (p.people||[]).some(pIsMe);
 
   /* 지난 모임 — 내가 참석한 것만 자세히 보이고, 나머지는 날짜·장소만 흐리게.
-     관리자는 전부 볼 수 있다. */
-  let html='', lastM='';
+     관리자는 전부 볼 수 있다. 목록이 길어지는 걸 막으려고 최근 것만 먼저 그리고,
+     맨 위 더보기를 누르거나 그 지점까지 스크롤하면 10개씩 더 불러온다. */
+  let html='';
+  if(hidden>0){
+    html += `<div class="pastmore" id="pastLoader" onclick="loadMorePast()">이전 모임 ${Math.min(PAST_PAGE,hidden)}개 더보기 · ${hidden}개 남음</div>`;
+  }
+  let lastM='';
   past.forEach(p=>{
     const mine = mineOf(p), open = mine || isAdmin();
     const m=p.d.slice(0,7);
@@ -1024,16 +1038,42 @@ function renderSched(){
   document.getElementById('schedList').innerHTML = html;
   renderPicked(); renderRsvp();
 
-  // 가장 가까운 앞으로의 일정이 화면 맨 위에 오도록
+  // 가장 가까운 앞으로의 일정이 화면 맨 위에 오도록 (더보기로 다시 그릴 때는 건너뛴다)
   if(!schedScrolled){
     schedScrolled = true;
     setTimeout(()=>{
       const a=document.getElementById('nowAnchor');
       if(a) window.scrollTo({top: a.offsetTop - 12, behavior:'auto'});
+      watchPastLoader();   // 스크롤을 지금 위치로 옮긴 다음에 감시를 켜야, 로더가 화면에 잠깐 보였다가 바로 또 불러오는 걸 막는다
     },30);
+  } else {
+    watchPastLoader();
   }
 }
 let schedScrolled = false;
+
+/* 지난 모임 더보기 — 버튼을 눌러도 되고, 그 지점까지 스크롤을 올려도 자동으로 불러온다.
+   위에 내용이 추가되면 화면이 훅 튀니까, 늘어난 높이만큼 스크롤 위치를 보정해준다. */
+function loadMorePast(){
+  const prevHeight = document.documentElement.scrollHeight;
+  const prevScroll = window.scrollY;
+  pastShown += PAST_PAGE;
+  renderSched();
+  requestAnimationFrame(()=>{
+    const grew = document.documentElement.scrollHeight - prevHeight;
+    window.scrollTo({top: prevScroll + grew, behavior:'auto'});
+  });
+}
+let pastLoaderObs = null;
+function watchPastLoader(){
+  if(pastLoaderObs){ pastLoaderObs.disconnect(); pastLoaderObs=null; }
+  const el = document.getElementById('pastLoader');
+  if(!el || typeof IntersectionObserver==='undefined') return;
+  pastLoaderObs = new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting) loadMorePast();
+  }, {rootMargin:'200px 0px 0px 0px'});
+  pastLoaderObs.observe(el);
+}
 
 /* 지난 모임 자세히 보기 */
 function openPast(d){
