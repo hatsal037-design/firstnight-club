@@ -24,7 +24,7 @@
   --cream:#F4EBD9; --paper:#FDF8ED;
   --wood:#3A2A1E; --wood-soft:#6b5844;
   --brass:#B08D3E; --brass-deep:#8A6B2B;
-  --line2:#23566B; --line3:#D98A1F;
+  --line2:#23566B; --line3:#D98A1F; --line4:#1FA8C9;
   --spring:cubic-bezier(0.32,0.72,0,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -110,7 +110,22 @@ a.train:active .carbody{transform:translateX(10px)}
 .t3 .st{background:#FF6EC7;border:2px solid #1a1a1f;color:#1a1a1f}
 .t3 .windows i{background:#fff;border:2.5px solid #1a1a1f;border-radius:50% 50% 8px 8px;font-size:14px}
 .t3 .ds{color:#4a441a;font-weight:600}
+/* T4 — 사이버: 트론 라이트그리드 (검은 차체에 시안 라이트라인, 오렌지 포인트) */
+.t4 .carbody{background:#04070D;border:2px solid #35C8E8;
+             background-image:linear-gradient(rgba(53,200,232,.06) 1px,transparent 1px),
+                              linear-gradient(90deg,rgba(53,200,232,.06) 1px,transparent 1px);
+             background-size:20px 20px;
+             box-shadow:0 0 16px rgba(53,200,232,.45), inset 0 0 26px rgba(53,200,232,.07)}
+.t4 .lb{background:#04070D;border:2px solid #35C8E8;color:#9FE9FF;
+        font-family:'Do Hyeon',sans-serif;box-shadow:0 0 10px rgba(53,200,232,.8)}
+.t4 .nm{font-family:'Do Hyeon',sans-serif;color:#D8F5FF;text-shadow:0 0 12px rgba(53,200,232,.9)}
+.t4 .st{border:1.5px solid #FF9E36;color:#FFB763;font-family:ui-monospace,monospace;
+        box-shadow:0 0 8px rgba(255,158,54,.35)}
+.t4 .windows i{background:#060B14;border:1px solid #35C8E8;border-radius:3px;
+               box-shadow:inset 0 0 10px rgba(53,200,232,.3)}
+.t4 .ds{color:#7FA8B8}
 .train.soon{opacity:.78}
+.train.t4.soon{opacity:.86}
 
 /* ── 미니 노선도 ── */
 .railmap{margin:20px 6px 0;position:relative;height:70px}
@@ -121,6 +136,7 @@ a.train:active .carbody{transform:translateX(10px)}
 .stn.on .dot{background:var(--red);box-shadow:0 0 0 4px rgba(179,22,30,.16)}
 .stn.g2 .dot{border-color:var(--line2)}
 .stn.g3 .dot{border-color:var(--line3)}
+.stn.g4 .dot{border-color:var(--line4)}
 .stn.off .dot{opacity:.5}
 .stn .lb{font-size:11.5px;font-weight:800;margin-top:7px;white-space:nowrap}
 .stn.on .lb{color:var(--red)}
@@ -213,11 +229,26 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </div>
 
+  <div class="train t4 soon">
+    <div class="carbody">
+      <div class="carhead">
+        <div class="lb">T4</div>
+        <div class="nm">사이버</div>
+        <span class="st">접속대기</span>
+      </div>
+      <div class="windows"><i>👾</i><i>💣</i><i>🦎</i><i>🎧</i></div>
+      <div class="ds">덕몽어스, 크레이지아케이드, 온라인 파티게임 — 접속해서 노는 노선</div>
+    </div>
+    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+    <div class="track"></div>
+  </div>
+
   <div class="railmap" aria-hidden="true">
     <div class="rail"></div><div class="rail dash"></div>
-    <div class="stn on" style="left:12%"><div class="dot"></div><div class="lb">첫밤 클럽</div><div class="sub">운행중</div></div>
-    <div class="stn g2 off" style="left:50%"><div class="dot"></div><div class="lb">소풍</div><div class="sub">공사중</div></div>
-    <div class="stn g3 off" style="left:85%"><div class="dot"></div><div class="lb">플레이</div><div class="sub">개통준비</div></div>
+    <div class="stn on" style="left:10%"><div class="dot"></div><div class="lb">첫밤 클럽</div><div class="sub">운행중</div></div>
+    <div class="stn g2 off" style="left:37%"><div class="dot"></div><div class="lb">소풍</div><div class="sub">공사중</div></div>
+    <div class="stn g3 off" style="left:63%"><div class="dot"></div><div class="lb">플레이</div><div class="sub">개통준비</div></div>
+    <div class="stn g4 off" style="left:89%"><div class="dot"></div><div class="lb">사이버</div><div class="sub">접속대기</div></div>
   </div>
 
   <div class="relic">
