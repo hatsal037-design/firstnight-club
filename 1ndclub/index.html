@@ -974,9 +974,8 @@ function renderSched(){
       ${r.st==='open'&&r.after?`<div class="ad">2차 · ${r.after} (자율)</div>`:''}
       ${r.st==='open'?`<div class="rsvp" id="rsvpBox"></div>`:''}
       ${r.st==='open'?`<div class="picked" id="schedPicked" style="margin:11px 0 0;padding:11px 12px"></div>`:''}
-      ${r.st==='open'&&(r.munto||CHAT_LINK)?`<div class="btns">
-        ${r.munto?`<a class="b" style="background:var(--red);border-color:var(--red);color:#fff" href="${r.munto}" target="_blank" rel="noopener">📝 문토에서 신청</a>`:''}
-        ${CHAT_LINK?`<a class="b" style="background:#f9c000;border-color:#f9c000;color:#fff" href="${CHAT_LINK}" target="_blank" rel="noopener">💬 단톡방 들어가기</a>`:''}
+      ${r.st==='open'&&r.munto?`<div class="btns">
+        <a class="b" style="background:var(--red);border-color:var(--red);color:#fff" href="${r.munto}" target="_blank" rel="noopener">📝 문토에서 신청</a>
       </div>`:''}
       <div class="btns">
         <a class="b" href="${MAPN(r.mapq)}" target="_blank" rel="noopener">📍 지도</a>
