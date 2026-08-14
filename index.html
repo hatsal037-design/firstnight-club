@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://tunel.kr/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Do+Hyeon&family=Jua&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 /* ═══ 투넬 메트로 — 빈티지 이스탄불 트램 세계관 ═══
@@ -96,13 +96,18 @@ a.train:active .carbody{transform:translateX(10px)}
 .t1 .ds{color:#8b93a1;padding-right:58px}
 .t1 .arrow{position:absolute;right:16px;bottom:13px;color:var(--red);font-size:16px;font-weight:800}
 
-/* T2 — 소풍: 미니멀 (여백·사진 프레임 창문) */
-.t2 .carbody{background:#FDFDFA;border:1.5px solid #C9CDC6;box-shadow:0 4px 0 rgba(35,86,107,.14)}
+/* T2 — 소풍: 폴라로이드 스크랩북 (크라프트지 + 기울어진 사진 + 손글씨) */
+.t2 .carbody{background:#E9DFC8;border:1.5px solid #D6C7A6;box-shadow:0 5px 0 rgba(107,88,68,.15)}
 .t2 .lb{background:var(--line2);font-family:'Noto Serif KR',serif}
-.t2 .nm{font-family:'Noto Serif KR',serif;font-weight:900;color:#22303a;font-size:18px}
-.t2 .st{border:1.5px dashed #8fa3ad;color:#5b7482}
-.t2 .windows i{background:#F2F5F1;border:1.5px solid #DEE4DC;color:#5b7482;font-size:13px}
-.t2 .ds{color:#6d7a76;letter-spacing:.1px}
+.t2 .nm{font-family:'Nanum Pen Script',cursive;font-weight:400;color:#4a3f33;font-size:27px}
+.t2 .st{background:rgba(255,224,130,.85);color:#7a6430;border-radius:2px;
+        transform:rotate(-3deg);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.t2 .windows{gap:11px}
+.t2 .windows i{background:#fff;border:none;border-bottom:9px solid #fff;border-radius:2px;
+               box-shadow:0 3px 8px rgba(58,42,30,.22);height:34px}
+.t2 .windows i:nth-child(odd){transform:rotate(-2.5deg)}
+.t2 .windows i:nth-child(even){transform:rotate(2deg)}
+.t2 .ds{font-family:'Nanum Pen Script',cursive;font-size:17.5px;color:#6b5844;line-height:1.45}
 
 /* T3 — 플레이: 레트로팝 (파티 열차) */
 .t3 .carbody{background:#FFE95C;border:3px solid #1a1a1f;box-shadow:6px 6px 0 #1a1a1f;border-radius:10px}
