@@ -23,6 +23,7 @@ const ROUNDS = [
     mapq:'시디즈 더 프로그레시브 송파', cap:12,
     fee:'12,000원 (얼리버드 선착순 6명 10,200원)',
     note:'방이역 3번 출구 도보 12분 · 간단한 다과 준비돼요',
+    munto:'https://www.munto.kr/ko/socialing?id=670027',
     after:'홈즈앤루팡 송파방이점' },
 
   { r:null, d:'2026-08-29', dow:'토', s:'13:00', e:'19:00', h:6, st:'soon',
