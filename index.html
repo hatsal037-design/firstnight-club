@@ -25,6 +25,7 @@
   --wood:#3A2A1E; --wood-soft:#6b5844;
   --brass:#B08D3E; --brass-deep:#8A6B2B;
   --line2:#23566B; --line3:#D98A1F; --line4:#1FA8C9;
+  --line5:#2E64D8; --line6:#20563F; --line7:#8A5BA5;
   --spring:cubic-bezier(0.32,0.72,0,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -124,6 +125,36 @@ a.train:active .carbody{transform:translateX(10px)}
 .t4 .windows i{background:#060B14;border:1px solid #35C8E8;border-radius:3px;
                box-shadow:inset 0 0 10px rgba(53,200,232,.3)}
 .t4 .ds{color:#7FA8B8}
+/* T5 — 운동: 스포티 저지 (코발트 + 스피드 스트라이프) */
+.t5 .carbody{background:#fff;border:3px solid var(--line5);box-shadow:4px 4px 0 rgba(46,100,216,.3);
+             position:relative;overflow:hidden}
+.t5 .carbody::after{content:'';position:absolute;top:0;right:-14px;width:86px;height:100%;
+             background:repeating-linear-gradient(-55deg,rgba(46,100,216,.13) 0 10px,transparent 10px 22px);
+             pointer-events:none}
+.t5 .lb{background:var(--line5);font-family:'Do Hyeon',sans-serif}
+.t5 .nm{font-family:'Do Hyeon',sans-serif;font-style:italic;color:#1c3f8f}
+.t5 .st{background:var(--line5);color:#fff}
+.t5 .windows i{background:#EEF3FE;border:1.5px solid #BCCDF3}
+.t5 .ds{color:#5b6c8f}
+
+/* T6 — 서재: 양장본 (딥그린 가죽 + 금박 이중선) */
+.t6 .carbody{background:var(--line6);border:2px solid var(--brass);
+             box-shadow:inset 0 0 0 4px var(--line6), inset 0 0 0 5.5px rgba(212,178,106,.7),
+                        0 5px 0 rgba(32,54,43,.4)}
+.t6 .lb{background:var(--brass);font-family:'Noto Serif KR',serif}
+.t6 .nm{font-family:'Noto Serif KR',serif;font-weight:900;color:#F0E6C8;font-size:18px}
+.t6 .st{border:1.5px solid #D4B26A;color:#E8D9A8}
+.t6 .windows i{background:#FDF8ED;border:1px solid #D4B26A;border-radius:3px 3px 6px 6px}
+.t6 .ds{color:#BCD3C2}
+
+/* T7 — 공방: 크라프트 공작 (종이 + 스티치 테두리) */
+.t7 .carbody{background:#F3E7D2;border:2px dashed var(--line7);box-shadow:0 5px 0 rgba(90,60,110,.16)}
+.t7 .lb{background:var(--line7);font-family:'Jua',sans-serif}
+.t7 .nm{font-family:'Jua',sans-serif;color:#4a3358}
+.t7 .st{border:1.5px dashed var(--line7);color:#7a5495}
+.t7 .windows i{background:#fff;border:1.5px solid #D9C6E8;border-radius:11px}
+.t7 .ds{color:#7d6a55}
+
 .train.soon{opacity:.78}
 .train.t4.soon{opacity:.86}
 
@@ -137,6 +168,11 @@ a.train:active .carbody{transform:translateX(10px)}
 .stn.g2 .dot{border-color:var(--line2)}
 .stn.g3 .dot{border-color:var(--line3)}
 .stn.g4 .dot{border-color:var(--line4)}
+.stn.g5 .dot{border-color:var(--line5)}
+.stn.g6 .dot{border-color:var(--line6)}
+.stn.g7 .dot{border-color:var(--line7)}
+.railmap.r2{margin-top:34px}
+.railmap.r2 .rail{left:4%;width:92%}
 .stn.off .dot{opacity:.5}
 .stn .lb{font-size:11.5px;font-weight:800;margin-top:7px;white-space:nowrap}
 .stn.on .lb{color:var(--red)}
@@ -243,12 +279,60 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </div>
 
+  <div class="train t5 soon">
+    <div class="carbody">
+      <div class="carhead">
+        <div class="lb">T5</div>
+        <div class="nm">운동</div>
+        <span class="st">몸풀기중</span>
+      </div>
+      <div class="windows"><i>🏃</i><i>🏸</i><i>⚽</i><i>🏆</i></div>
+      <div class="ds">러닝, 배드민턴, 풋살, 운동회 — 땀 흘리며 노는 노선</div>
+    </div>
+    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+    <div class="track"></div>
+  </div>
+
+  <div class="train t6 soon">
+    <div class="carbody">
+      <div class="carhead">
+        <div class="lb">T6</div>
+        <div class="nm">서재</div>
+        <span class="st">제본중</span>
+      </div>
+      <div class="windows"><i>📖</i><i>☕</i><i>✒️</i><i>🌿</i></div>
+      <div class="ds">책모임, 자기계발 스터디 — 같이 읽고 성장하는 노선</div>
+    </div>
+    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+    <div class="track"></div>
+  </div>
+
+  <div class="train t7 soon">
+    <div class="carbody">
+      <div class="carhead">
+        <div class="lb">T7</div>
+        <div class="nm">공방</div>
+        <span class="st">빚는중</span>
+      </div>
+      <div class="windows"><i>🏺</i><i>🧶</i><i>🖌️</i><i>🎨</i></div>
+      <div class="ds">원데이 클래스, 공예, 만들기 체험 — 손으로 빚는 노선</div>
+    </div>
+    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+    <div class="track"></div>
+  </div>
+
   <div class="railmap" aria-hidden="true">
     <div class="rail"></div><div class="rail dash"></div>
     <div class="stn on" style="left:10%"><div class="dot"></div><div class="lb">첫밤 클럽</div><div class="sub">운행중</div></div>
     <div class="stn g2 off" style="left:37%"><div class="dot"></div><div class="lb">소풍</div><div class="sub">공사중</div></div>
     <div class="stn g3 off" style="left:63%"><div class="dot"></div><div class="lb">플레이</div><div class="sub">개통준비</div></div>
     <div class="stn g4 off" style="left:89%"><div class="dot"></div><div class="lb">사이버</div><div class="sub">접속대기</div></div>
+  </div>
+  <div class="railmap r2" aria-hidden="true">
+    <div class="rail dash"></div>
+    <div class="stn g5 off" style="left:14%"><div class="dot"></div><div class="lb">운동</div><div class="sub">몸풀기중</div></div>
+    <div class="stn g6 off" style="left:50%"><div class="dot"></div><div class="lb">서재</div><div class="sub">제본중</div></div>
+    <div class="stn g7 off" style="left:86%"><div class="dot"></div><div class="lb">공방</div><div class="sub">빚는중</div></div>
   </div>
 
   <div class="relic">
