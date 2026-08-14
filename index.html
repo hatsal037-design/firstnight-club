@@ -159,26 +159,6 @@ a.train:active .carbody{transform:translateX(10px)}
 .train.t4.soon{opacity:.86}
 
 /* ── 미니 노선도 ── */
-.railmap{margin:20px 6px 0;position:relative;height:70px}
-.rail{position:absolute;top:13px;left:4%;width:36%;height:5px;background:var(--red);border-radius:3px}
-.rail.dash{left:44%;width:52%;background:repeating-linear-gradient(90deg,var(--wood-soft) 0 9px,transparent 9px 17px);opacity:.35}
-.stn{position:absolute;top:0;text-align:center;transform:translateX(-50%)}
-.stn .dot{width:26px;height:26px;border-radius:50%;border:5px solid var(--red);background:var(--cream);margin:0 auto}
-.stn.on .dot{background:var(--red);box-shadow:0 0 0 4px rgba(179,22,30,.16)}
-.stn.g2 .dot{border-color:var(--line2)}
-.stn.g3 .dot{border-color:var(--line3)}
-.stn.g4 .dot{border-color:var(--line4)}
-.stn.g5 .dot{border-color:var(--line5)}
-.stn.g6 .dot{border-color:var(--line6)}
-.stn.g7 .dot{border-color:var(--line7)}
-.railmap.r2{margin-top:34px}
-.railmap.r2 .rail{left:4%;width:92%}
-.stn.off .dot{opacity:.5}
-.stn .lb{font-size:11.5px;font-weight:800;margin-top:7px;white-space:nowrap}
-.stn.on .lb{color:var(--red)}
-.stn.off .lb{color:var(--wood-soft)}
-.stn .sub{font-size:9.5px;color:var(--wood-soft)}
-
 /* ── 1875 원본 역 사진 액자 ── */
 .relic{margin-top:26px;text-align:center}
 .relic .frame{display:inline-block;background:#FDF8ED;border:3px solid var(--brass);
@@ -319,20 +299,6 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     </div>
     <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
     <div class="track"></div>
-  </div>
-
-  <div class="railmap" aria-hidden="true">
-    <div class="rail"></div><div class="rail dash"></div>
-    <div class="stn on" style="left:10%"><div class="dot"></div><div class="lb">첫밤 클럽</div><div class="sub">운행중</div></div>
-    <div class="stn g2 off" style="left:37%"><div class="dot"></div><div class="lb">소풍</div><div class="sub">공사중</div></div>
-    <div class="stn g3 off" style="left:63%"><div class="dot"></div><div class="lb">플레이</div><div class="sub">개통준비</div></div>
-    <div class="stn g4 off" style="left:89%"><div class="dot"></div><div class="lb">사이버</div><div class="sub">접속대기</div></div>
-  </div>
-  <div class="railmap r2" aria-hidden="true">
-    <div class="rail dash"></div>
-    <div class="stn g5 off" style="left:14%"><div class="dot"></div><div class="lb">운동</div><div class="sub">몸풀기중</div></div>
-    <div class="stn g6 off" style="left:50%"><div class="dot"></div><div class="lb">서재</div><div class="sub">제본중</div></div>
-    <div class="stn g7 off" style="left:86%"><div class="dot"></div><div class="lb">공방</div><div class="sub">빚는중</div></div>
   </div>
 
   <div class="relic">
