@@ -4,137 +4,192 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>투넬 — tunel.kr</title>
-<meta name="theme-color" content="#101014">
+<meta name="theme-color" content="#F4EBD9">
 <link rel="icon" type="image/png" href="1ndclub/favicon.png">
 <meta property="og:type" content="website">
 <meta property="og:title" content="투넬 tunel.kr">
-<meta property="og:description" content="일상 밖으로 나가는 터널 — 투넬의 모임들">
+<meta property="og:description" content="일상에서 취향으로 가는 터널 — 골라서 타세요">
 <meta property="og:image" content="https://tunel.kr/1ndclub/og.jpg">
 <meta property="og:url" content="https://tunel.kr/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Jua&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-/* ─ 투넬 허브 — 터널 모티프. 어두운 입구, 각 모임은 터널 끝의 빛 ─ */
+/* ═══ 투넬 메트로 — 빈티지 이스탄불 트램 세계관 ═══
+   튀넬(1875, 세계 2번째 지하철)과 이스탄불 노스탤지어 트램 오마주.
+   팔레트: 트램 레드 #B3161E · 크림 #F4EBD9 · 다크우드 #3A2A1E · 황동 #B08D3E */
 :root{
-  --bg:#101014; --surface:#1a1a21; --line:#2c2c36;
-  --ink:#eceef2; --sub:#8b93a1;
-  --red:#e8323c;        /* night — 첫밤 사망자 클럽 */
-  --amber:#e0a13a; --teal:#2fae90;
+  --red:#B3161E; --red-deep:#8E1017;
+  --cream:#F4EBD9; --paper:#FDF8ED;
+  --wood:#3A2A1E; --wood-soft:#6b5844;
+  --brass:#B08D3E; --brass-deep:#8A6B2B;
+  --line2:#23566B; --line3:#D98A1F;
   --spring:cubic-bezier(0.32,0.72,0,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-font-smoothing:antialiased}
 body{
   font-family:'Pretendard',-apple-system,'Apple SD Gothic Neo',sans-serif;
-  color:var(--ink); background:var(--bg); min-height:100vh;
-  background-image:radial-gradient(rgba(255,255,255,.025) 1px, transparent 1px);
-  background-size:5px 5px;
+  color:var(--wood); background:var(--cream); min-height:100vh;
+  background-image:repeating-linear-gradient(90deg, rgba(58,42,30,.028) 0 1px, transparent 1px 9px);
   display:flex; flex-direction:column;
 }
 a{text-decoration:none;color:inherit}
 
-/* 터널 입구 헤더 */
-header{padding:calc(52px + env(safe-area-inset-top)) 24px 34px;text-align:center;position:relative;overflow:hidden}
-.rings{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.rings i{position:absolute;border:1.5px solid rgba(255,255,255,.05);border-radius:50%}
-.rings i:nth-child(1){width:190px;height:190px}
-.rings i:nth-child(2){width:320px;height:320px;border-color:rgba(255,255,255,.035)}
-.rings i:nth-child(3){width:470px;height:470px;border-color:rgba(255,255,255,.022)}
-.rings i:nth-child(4){width:640px;height:640px;border-color:rgba(255,255,255,.014)}
-header h1{font-family:'Do Hyeon',sans-serif;font-size:44px;letter-spacing:2px;position:relative}
-header h1 span{color:var(--red)}
-header .en{font-size:12.5px;color:var(--sub);letter-spacing:6px;margin-top:4px;position:relative;text-transform:uppercase}
-header .tag{font-family:'Jua',sans-serif;font-size:14.5px;color:var(--sub);margin-top:16px;letter-spacing:-.4px;position:relative}
-header .tag b{color:var(--ink);font-weight:400}
+/* ── 아치 역명판 헤더 ── */
+header{padding:calc(46px + env(safe-area-inset-top)) 20px 10px;text-align:center}
+.arch{
+  display:inline-block;background:var(--paper);
+  border:3px solid var(--red);border-bottom-width:6px;
+  border-radius:130px 130px 12px 12px;
+  padding:30px 46px 20px;
+  box-shadow:0 6px 0 rgba(58,42,30,.14);
+}
+.arch .nm{font-family:'Noto Serif KR',serif;font-weight:900;font-size:40px;letter-spacing:10px;padding-left:10px}
+.arch .en{font-size:11px;letter-spacing:5px;color:var(--brass);font-weight:700;margin-top:5px}
+.arch .est{font-size:10px;color:var(--wood-soft);margin-top:9px;letter-spacing:1.5px;
+           border-top:1px solid #E3D5B8;padding-top:8px}
+.tagline{margin-top:18px;font-size:14.5px;color:var(--wood-soft);letter-spacing:-.2px}
+.tagline b{color:var(--wood);font-weight:700}
 
-main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:0 16px 30px}
+main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 
-.label{display:flex;align-items:center;gap:9px;font-family:'Jua',sans-serif;
-       font-size:13.5px;color:var(--sub);letter-spacing:-.4px;margin:6px 4px 12px}
-.label::before{content:'';width:5px;height:.85em;background:var(--red);border-radius:2px}
+/* ── 구간 라벨 ── */
+.label{display:flex;align-items:center;gap:10px;margin:26px 4px 14px;
+       font-size:12px;font-weight:800;letter-spacing:3px;color:var(--wood-soft)}
+.label::before{content:'';width:22px;height:3px;background:var(--red)}
+.label::after{content:'';flex:1;height:1px;background:rgba(58,42,30,.15)}
 
-/* 모임 카드 = 터널 출구 */
-.door{display:flex;align-items:center;gap:15px;background:var(--surface);
-      border:1px solid var(--line);border-radius:12px;padding:18px 17px;margin-bottom:11px;
-      transition:transform 180ms var(--spring), box-shadow 180ms ease, border-color 150ms ease;
-      position:relative;overflow:hidden}
-.door:active{transform:scale(.985)}
-.door.live{border-color:var(--red);box-shadow:4px 4px 0 rgba(232,50,60,.4)}
-.door.live::after{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--red)}
-.door .ic{width:52px;height:52px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
-          font-size:25px;background:#101014;border:1.5px solid var(--line)}
-.door.live .ic{border-color:var(--red)}
-.door .tx{flex:1;min-width:0}
-.door .nm{font-family:'Do Hyeon',sans-serif;font-size:19px;letter-spacing:-.3px}
-.door .ds{font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.55}
-.door .st{flex:none;font-size:10px;font-weight:700;border-radius:999px;padding:5px 11px}
-.door.live .st{background:var(--red);color:#fff}
-.door.soon{opacity:.55}
-.door.soon .st{background:var(--surface);border:1px solid var(--line);color:var(--sub)}
-.door .arrow{flex:none;color:var(--sub);font-size:17px}
+/* ── 노선 안내판 ── */
+.lines{background:var(--paper);border:2px solid var(--wood);border-radius:14px;overflow:hidden;
+       box-shadow:0 6px 0 rgba(58,42,30,.15)}
+.lines .board{background:var(--wood);color:var(--cream);padding:11px 18px;display:flex;
+              justify-content:space-between;align-items:center}
+.lines .board b{font-family:'Noto Serif KR',serif;font-size:14px;letter-spacing:2px}
+.lines .board span{font-size:10px;letter-spacing:2px;color:var(--brass)}
+.linerow{display:flex;align-items:center;gap:14px;padding:18px;border-top:1px solid #EADDC2;
+         transition:background 140ms ease, transform 160ms var(--spring)}
+a.linerow:active{transform:scale(.985);background:#F6EED9}
+.linerow:first-of-type{border-top:none}
+.lbadge{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+        font-family:'Noto Serif KR',serif;font-weight:900;font-size:16px;color:#fff;
+        border:2.5px solid rgba(0,0,0,.18);box-shadow:inset 0 2px 3px rgba(255,255,255,.3)}
+.t1 .lbadge{background:var(--red)}
+.t2 .lbadge{background:var(--line2)}
+.t3 .lbadge{background:var(--line3)}
+.linerow .tx{flex:1;min-width:0}
+.linerow .nm{font-family:'Noto Serif KR',serif;font-weight:900;font-size:18px;letter-spacing:-.3px}
+.linerow .ds{font-size:12.5px;color:var(--wood-soft);margin-top:3px;line-height:1.55}
+.linerow .st{flex:none;font-size:10px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:6px 12px}
+.t1 .st{background:var(--red);color:#fff}
+.linerow.soon{opacity:.62}
+.linerow.soon .st{background:transparent;border:1.5px dashed var(--wood-soft);color:var(--wood-soft)}
+.linerow .arrow{flex:none;color:var(--brass);font-size:18px;font-weight:700}
 
-.vision{margin-top:26px;border:1px dashed var(--line);border-radius:12px;padding:17px 18px;
-        font-size:12.5px;color:var(--sub);line-height:1.8}
-.vision b{color:var(--ink);font-weight:600}
+/* ── 미니 노선도 ── */
+.railmap{margin:20px 6px 0;position:relative;height:70px}
+.rail{position:absolute;top:13px;left:4%;width:36%;height:5px;background:var(--red);border-radius:3px}
+.rail.dash{left:44%;width:52%;background:repeating-linear-gradient(90deg,var(--wood-soft) 0 9px,transparent 9px 17px);opacity:.35}
+.stn{position:absolute;top:0;text-align:center;transform:translateX(-50%)}
+.stn .dot{width:26px;height:26px;border-radius:50%;border:5px solid var(--red);background:var(--cream);margin:0 auto}
+.stn.on .dot{background:var(--red);box-shadow:0 0 0 4px rgba(179,22,30,.16)}
+.stn.g2 .dot{border-color:var(--line2)}
+.stn.g3 .dot{border-color:var(--line3)}
+.stn.off .dot{opacity:.5}
+.stn .lb{font-size:11.5px;font-weight:800;margin-top:7px;white-space:nowrap}
+.stn.on .lb{color:var(--red)}
+.stn.off .lb{color:var(--wood-soft)}
+.stn .sub{font-size:9.5px;color:var(--wood-soft)}
 
-footer{text-align:center;font-size:11px;color:#565d6a;padding:18px 20px calc(20px + env(safe-area-inset-bottom));line-height:1.7}
+/* ── 종착역(비전) ── */
+.terminus{margin-top:26px;background:var(--wood);border:2px solid var(--brass);border-radius:14px;
+          color:var(--cream);padding:24px 22px;text-align:center;box-shadow:0 6px 0 rgba(58,42,30,.25)}
+.terminus .k{font-size:10px;letter-spacing:4px;color:var(--brass);font-weight:800}
+.terminus h2{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:900;margin-top:8px;letter-spacing:-.3px}
+.terminus p{font-size:12.5px;color:#CBBBA4;margin-top:10px;line-height:1.8}
+.terminus p b{color:var(--cream);font-weight:700}
+
+/* ── 제톤 푸터 ── */
+footer{text-align:center;padding:30px 20px calc(26px + env(safe-area-inset-bottom))}
+.jeton{width:46px;height:46px;border-radius:50%;margin:0 auto 10px;
+       background:radial-gradient(circle at 34% 30%, #D9B96A, var(--brass) 58%, var(--brass-deep));
+       border:2.5px solid var(--brass-deep);display:flex;align-items:center;justify-content:center;
+       font-family:'Noto Serif KR',serif;font-weight:900;font-size:20px;color:#4A3813;
+       box-shadow:0 3px 6px rgba(58,42,30,.3), inset 0 2px 3px rgba(255,255,255,.45)}
+footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-height:1.8}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="rings"><i></i><i></i><i></i><i></i></div>
-  <h1>투넬<span>.</span></h1>
-  <div class="en">tunel.kr</div>
-  <div class="tag">일상 밖으로 나가는 터널 — <b>골라서 들어오세요</b></div>
+  <div class="arch">
+    <div class="nm">투 넬</div>
+    <div class="en">T Ü N E L · S E O U L</div>
+    <div class="est">EST. İSTANBUL 1875 — SEOUL 2026</div>
+  </div>
+  <div class="tagline">일상에서 취향으로 가는 터널 — <b>골라서 타세요</b></div>
 </header>
 
 <main>
-  <div class="label">지금 열려 있는 터널</div>
+  <div class="label">노선 안내 · LINES</div>
 
-  <a class="door live" href="1ndclub/">
-    <div class="ic">🔪</div>
-    <div class="tx">
-      <div class="nm">첫밤 사망자 클럽</div>
-      <div class="ds">맨날 첫 밤에 죽는 사람들의 마피아 모임 · 게임 도감 · 정모 일정</div>
+  <div class="lines">
+    <div class="board"><b>운 행 안 내</b><span>DEPARTURES</span></div>
+
+    <a class="linerow t1" href="1ndclub/">
+      <div class="lbadge">T1</div>
+      <div class="tx">
+        <div class="nm">첫밤 사망자 클럽</div>
+        <div class="ds">맨날 첫 밤에 죽는 사람들의 마피아·보드게임 모임 · 게임 도감 · 정모 일정</div>
+      </div>
+      <span class="st">운행중</span>
+      <span class="arrow">›</span>
+    </a>
+
+    <div class="linerow t2 soon">
+      <div class="lbadge">T2</div>
+      <div class="tx">
+        <div class="nm">소풍 모임</div>
+        <div class="ds">카메라 들고 떠나는 골목 산책, 여행, 당일 소풍 — 사진·여행·소풍 통합 노선</div>
+      </div>
+      <span class="st">공사중</span>
     </div>
-    <span class="st">모집중</span>
-    <span class="arrow">›</span>
-  </a>
 
-  <div class="label" style="margin-top:24px">공사 중인 터널</div>
-
-  <div class="door soon">
-    <div class="ic">📷</div>
-    <div class="tx">
-      <div class="nm">사진 모임</div>
-      <div class="ds">골목과 여행, 자연스러운 순간을 찍으러 나가는 모임</div>
+    <div class="linerow t3 soon">
+      <div class="lbadge">T3</div>
+      <div class="tx">
+        <div class="nm">플레이 모임</div>
+        <div class="ds">한강 맥주파티, 풀파티, 술게임 밤 — 요즘 식으로 노는 모임</div>
+      </div>
+      <span class="st">개통준비</span>
     </div>
-    <span class="st">준비 중</span>
   </div>
 
-  <div class="door soon">
-    <div class="ic">🍻</div>
-    <div class="tx">
-      <div class="nm">플레이 모임</div>
-      <div class="ds">한강 맥주파티, 풀파티, 술게임 밤 — 요즘 식으로 노는 모임</div>
-    </div>
-    <span class="st">준비 중</span>
+  <div class="railmap" aria-hidden="true">
+    <div class="rail"></div><div class="rail dash"></div>
+    <div class="stn on" style="left:12%"><div class="dot"></div><div class="lb">첫밤 클럽</div><div class="sub">운행중</div></div>
+    <div class="stn g2 off" style="left:50%"><div class="dot"></div><div class="lb">소풍</div><div class="sub">공사중</div></div>
+    <div class="stn g3 off" style="left:85%"><div class="dot"></div><div class="lb">플레이</div><div class="sub">개통준비</div></div>
   </div>
 
-  <div class="vision">
-    투넬은 취향 모임을 하나씩 늘려가는 중입니다.<br>
-    언젠가 <b>우리만의 공간</b>을 구해서, 모임들이 돌아가며 쓰는
-    아지트로 만드는 게 목표예요.
+  <div class="terminus">
+    <div class="k">TERMINUS · 종착역</div>
+    <h2>우리만의 아지트</h2>
+    <p>투넬은 취향 노선을 하나씩 개통하는 중입니다.<br>
+       종착역은 <b>모임들이 돌아가며 쓰는 우리만의 공간</b> —<br>
+       예약한 시간에 문이 열리는 아지트예요.</p>
   </div>
 </main>
 
-<footer>tunel.kr · 문의는 각 모임 페이지에서</footer>
+<footer>
+  <div class="jeton">T</div>
+  <div class="ft">tunel.kr · 문의는 각 노선 페이지에서<br>
+    세계에서 두 번째로 오래된 터널의 이름을 빌렸습니다</div>
+</footer>
 
 <script>
-/* 예전 링크 호환 — 클럽 앱 딥링크(#sched 등, ?rules=)로 들어온 사람은 /night 로 보낸다 */
+/* 예전 링크 호환 — 클럽 앱 딥링크(#sched 등, ?rules=)로 들어온 사람은 1ndclub 으로 보낸다 */
 (function(){
   var h=(location.hash||'').slice(1);
   var q=new URLSearchParams(location.search);
