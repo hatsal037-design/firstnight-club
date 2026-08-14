@@ -777,7 +777,14 @@ document.getElementById('q').addEventListener('input',e=>{
   renderGames();
 });
 function clearQ(){q='';document.getElementById('q').value='';document.getElementById('qx').style.display='none';renderGames();}
-function setCat(k){cat=k;document.querySelectorAll('.ctab').forEach(t=>t.classList.toggle('on',t.dataset.k===k));renderGames();}
+/* 카테고리를 바꾸면 정렬 기본값도 맞춰준다 — 전체는 정리된 기본순, 특정 장르는 그 장르 인기순.
+   그 카테고리 안에서 정렬을 직접 바꾸면 그대로 유지되고, 다른 카테고리로 옮기면 다시 기본값. */
+function setCat(k){
+  cat=k;
+  document.querySelectorAll('.ctab').forEach(t=>t.classList.toggle('on',t.dataset.k===k));
+  document.getElementById('sort').value = (k==='all') ? 'cat' : 'popular';
+  renderGames();
+}
 function setCrew(n){crew=n;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',+c.dataset.n===n));renderGames();}
 
 const fits = g => !crew || (crew>=g.min && (g.max===null||crew<=g.max));
