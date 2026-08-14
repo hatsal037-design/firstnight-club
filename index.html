@@ -37,8 +37,13 @@ body{
 }
 a{text-decoration:none;color:inherit}
 
-/* ── 아치 역명판 헤더 ── */
-header{padding:calc(46px + env(safe-area-inset-top)) 20px 10px;text-align:center}
+/* ── 아치 역명판 헤더 (C안: 트램·인파 사진 + 세피아 + 크림 오버레이) ── */
+header{position:relative;overflow:hidden;padding:calc(52px + env(safe-area-inset-top)) 20px 26px;text-align:center}
+.herobg{position:absolute;inset:0;background:url(hero_tram.jpg) center 30%/cover;
+        filter:sepia(.3) saturate(1) brightness(1)}
+.heroov{position:absolute;inset:0;
+        background:linear-gradient(180deg, rgba(244,235,217,.42), rgba(244,235,217,.86) 75%, var(--cream))}
+header > .arch, header > .tagline{position:relative}
 .arch{
   display:inline-block;background:var(--paper);
   border:3px solid var(--red);border-bottom-width:6px;
@@ -102,6 +107,15 @@ a.linerow:active{transform:scale(.985);background:#F6EED9}
 .stn.off .lb{color:var(--wood-soft)}
 .stn .sub{font-size:9.5px;color:var(--wood-soft)}
 
+/* ── 1875 원본 역 사진 액자 ── */
+.relic{margin-top:26px;text-align:center}
+.relic .frame{display:inline-block;background:#FDF8ED;border:3px solid var(--brass);
+              border-radius:6px;padding:10px 10px 12px;box-shadow:0 6px 0 rgba(58,42,30,.18);
+              transform:rotate(-1deg);max-width:340px}
+.relic img{display:block;width:100%;border-radius:3px;filter:sepia(.35) contrast(.98)}
+.relic .cap{font-size:10.5px;color:var(--wood-soft);margin-top:9px;letter-spacing:.5px;line-height:1.6}
+.relic .cap b{color:var(--wood);font-family:'Noto Serif KR',serif}
+
 /* ── 종착역(비전) ── */
 .terminus{margin-top:26px;background:var(--wood);border:2px solid var(--brass);border-radius:14px;
           color:var(--cream);padding:24px 22px;text-align:center;box-shadow:0 6px 0 rgba(58,42,30,.25)}
@@ -123,6 +137,8 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
 <body>
 
 <header>
+  <div class="herobg" aria-hidden="true"></div>
+  <div class="heroov" aria-hidden="true"></div>
   <div class="arch">
     <div class="nm">투 넬</div>
     <div class="en">T Ü N E L · S E O U L</div>
@@ -173,6 +189,13 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="stn g3 off" style="left:85%"><div class="dot"></div><div class="lb">플레이</div><div class="sub">개통준비</div></div>
   </div>
 
+  <div class="relic">
+    <div class="frame">
+      <img src="tunel_1875.jpg" alt="1875년 페라의 튀넬 역 — B. Kargopoulo 사진" loading="lazy">
+      <div class="cap"><b>튀넬 역, 페라 · 1875</b><br>우리가 이름을 빌린 곳 — 세계에서 두 번째로 오래된 터널</div>
+    </div>
+  </div>
+
   <div class="terminus">
     <div class="k">TERMINUS · 종착역</div>
     <h2>우리만의 아지트</h2>
@@ -185,7 +208,8 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
 <footer>
   <div class="jeton">T</div>
   <div class="ft">tunel.kr · 문의는 각 노선 페이지에서<br>
-    세계에서 두 번째로 오래된 터널의 이름을 빌렸습니다</div>
+    세계에서 두 번째로 오래된 터널의 이름을 빌렸습니다<br>
+    <span style="opacity:.65">1875 역 사진: B. Kargopoulo (퍼블릭 도메인) · 배경: Unsplash</span></div>
 </footer>
 
 <script>
