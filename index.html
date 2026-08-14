@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://tunel.kr/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Do+Hyeon&family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 /* ═══ 투넬 메트로 — 빈티지 이스탄불 트램 세계관 ═══
@@ -66,31 +66,51 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .label::before{content:'';width:22px;height:3px;background:var(--red)}
 .label::after{content:'';flex:1;height:1px;background:rgba(58,42,30,.15)}
 
-/* ── 노선 안내판 ── */
-.lines{background:var(--paper);border:2px solid var(--wood);border-radius:14px;overflow:hidden;
-       box-shadow:0 6px 0 rgba(58,42,30,.15)}
-.lines .board{background:var(--wood);color:var(--cream);padding:11px 18px;display:flex;
-              justify-content:space-between;align-items:center}
-.lines .board b{font-family:'Noto Serif KR',serif;font-size:14px;letter-spacing:2px}
-.lines .board span{font-size:10px;letter-spacing:2px;color:var(--brass)}
-.linerow{display:flex;align-items:center;gap:14px;padding:18px;border-top:1px solid #EADDC2;
-         transition:background 140ms ease, transform 160ms var(--spring)}
-a.linerow:active{transform:scale(.985);background:#F6EED9}
-.linerow:first-of-type{border-top:none}
-.lbadge{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
-        font-family:'Noto Serif KR',serif;font-weight:900;font-size:16px;color:#fff;
-        border:2.5px solid rgba(0,0,0,.18);box-shadow:inset 0 2px 3px rgba(255,255,255,.3)}
-.t1 .lbadge{background:var(--red)}
-.t2 .lbadge{background:var(--line2)}
-.t3 .lbadge{background:var(--line3)}
-.linerow .tx{flex:1;min-width:0}
-.linerow .nm{font-family:'Noto Serif KR',serif;font-weight:900;font-size:18px;letter-spacing:-.3px}
-.linerow .ds{font-size:12.5px;color:var(--wood-soft);margin-top:3px;line-height:1.55}
-.linerow .st{flex:none;font-size:10px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:6px 12px}
+/* ── 노선 열차 — 카드가 곧 그 노선의 차량. 노선마다 디자인 자체가 다르다 ── */
+.train{display:block;margin-bottom:30px;position:relative}
+a.train{cursor:pointer}
+a.train:active .carbody{transform:translateX(10px)}
+.carbody{border-radius:14px;padding:16px 18px 15px;position:relative;
+         transition:transform 220ms var(--spring)}
+.carhead{display:flex;align-items:center;gap:11px}
+.lb{width:40px;height:40px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:15px;color:#fff}
+.carhead .nm{flex:1;min-width:0;font-size:19px;letter-spacing:-.3px}
+.carhead .st{flex:none;font-size:10px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:6px 12px}
+.windows{display:flex;gap:9px;margin:13px 0 11px}
+.windows i{flex:1;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;font-style:normal}
+.carbody .ds{font-size:12.5px;line-height:1.6}
+.undercar{display:flex;justify-content:space-between;padding:0 36px;margin-top:-9px;position:relative}
+.wheel{width:20px;height:20px;border-radius:50%;background:#2B2B31;border:4px solid #55555e;
+       box-shadow:inset 0 0 0 3px #1c1c21}
+.track{height:5px;margin-top:6px;border-radius:3px;
+       background:repeating-linear-gradient(90deg, rgba(58,42,30,.5) 0 16px, rgba(58,42,30,.12) 16px 26px)}
+
+/* T1 — 첫밤 클럽: 다크 네오브루탈리즘 (첫 밤의 어둠) */
+.t1 .carbody{background:#131318;border:2px solid var(--red);box-shadow:5px 5px 0 rgba(179,22,30,.5)}
+.t1 .lb{background:var(--red);font-family:'Do Hyeon',sans-serif}
+.t1 .nm{font-family:'Do Hyeon',sans-serif;color:#eceef2}
 .t1 .st{background:var(--red);color:#fff}
-.linerow.soon{opacity:.62}
-.linerow.soon .st{background:transparent;border:1.5px dashed var(--wood-soft);color:var(--wood-soft)}
-.linerow .arrow{flex:none;color:var(--brass);font-size:18px;font-weight:700}
+.t1 .windows i{background:#1d1d25;border:1px solid #34343f;color:#B3161E;text-shadow:0 0 8px rgba(232,50,60,.8)}
+.t1 .ds{color:#8b93a1;padding-right:58px}
+.t1 .arrow{position:absolute;right:16px;bottom:13px;color:var(--red);font-size:16px;font-weight:800}
+
+/* T2 — 소풍: 미니멀 (여백·사진 프레임 창문) */
+.t2 .carbody{background:#FDFDFA;border:1.5px solid #C9CDC6;box-shadow:0 4px 0 rgba(35,86,107,.14)}
+.t2 .lb{background:var(--line2);font-family:'Noto Serif KR',serif}
+.t2 .nm{font-family:'Noto Serif KR',serif;font-weight:900;color:#22303a;font-size:18px}
+.t2 .st{border:1.5px dashed #8fa3ad;color:#5b7482}
+.t2 .windows i{background:#F2F5F1;border:1.5px solid #DEE4DC;color:#5b7482;font-size:13px}
+.t2 .ds{color:#6d7a76;letter-spacing:.1px}
+
+/* T3 — 플레이: 레트로팝 (파티 열차) */
+.t3 .carbody{background:#FFE95C;border:3px solid #1a1a1f;box-shadow:6px 6px 0 #1a1a1f;border-radius:10px}
+.t3 .lb{background:#FF6EC7;border:3px solid #1a1a1f;color:#1a1a1f;font-family:'Jua',sans-serif}
+.t3 .nm{font-family:'Jua',sans-serif;color:#1a1a1f;text-shadow:2px 2px 0 rgba(255,110,199,.55)}
+.t3 .st{background:#FF6EC7;border:2px solid #1a1a1f;color:#1a1a1f}
+.t3 .windows i{background:#fff;border:2.5px solid #1a1a1f;border-radius:50% 50% 8px 8px;font-size:14px}
+.t3 .ds{color:#4a441a;font-weight:600}
+.train.soon{opacity:.78}
 
 /* ── 미니 노선도 ── */
 .railmap{margin:20px 6px 0;position:relative;height:70px}
@@ -150,36 +170,47 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
 <main>
   <div class="label">노선 안내 · LINES</div>
 
-  <div class="lines">
-    <div class="board"><b>운 행 안 내</b><span>DEPARTURES</span></div>
-
-    <a class="linerow t1" href="1ndclub/">
-      <div class="lbadge">T1</div>
-      <div class="tx">
+  <a class="train t1" href="1ndclub/">
+    <div class="carbody">
+      <div class="carhead">
+        <div class="lb">T1</div>
         <div class="nm">첫밤 사망자 클럽</div>
-        <div class="ds">맨날 첫 밤에 죽는 사람들의 마피아·보드게임 모임 · 게임 도감 · 정모 일정</div>
+        <span class="st">운행중</span>
       </div>
-      <span class="st">운행중</span>
-      <span class="arrow">›</span>
-    </a>
-
-    <div class="linerow t2 soon">
-      <div class="lbadge">T2</div>
-      <div class="tx">
-        <div class="nm">소풍 모임</div>
-        <div class="ds">카메라 들고 떠나는 골목 산책, 여행, 당일 소풍 — 사진·여행·소풍 통합 노선</div>
-      </div>
-      <span class="st">공사중</span>
+      <div class="windows"><i>🔪</i><i>🌙</i><i>🃏</i><i>🕯️</i></div>
+      <div class="ds">맨날 첫 밤에 죽는 사람들의 마피아·보드게임 모임 · 게임 도감 · 정모 일정</div>
+      <span class="arrow">탑승 ›</span>
     </div>
+    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+    <div class="track"></div>
+  </a>
 
-    <div class="linerow t3 soon">
-      <div class="lbadge">T3</div>
-      <div class="tx">
-        <div class="nm">플레이 모임</div>
-        <div class="ds">한강 맥주파티, 풀파티, 술게임 밤 — 요즘 식으로 노는 모임</div>
+  <div class="train t2 soon">
+    <div class="carbody">
+      <div class="carhead">
+        <div class="lb">T2</div>
+        <div class="nm">소풍</div>
+        <span class="st">공사중</span>
       </div>
-      <span class="st">개통준비</span>
+      <div class="windows"><i>📷</i><i>🌿</i><i>⛰️</i><i>🧺</i></div>
+      <div class="ds">카메라 들고 떠나는 골목 산책, 여행, 당일 소풍 — 사진·여행·소풍 통합 노선</div>
     </div>
+    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+    <div class="track"></div>
+  </div>
+
+  <div class="train t3 soon">
+    <div class="carbody">
+      <div class="carhead">
+        <div class="lb">T3</div>
+        <div class="nm">플레이</div>
+        <span class="st">개통준비</span>
+      </div>
+      <div class="windows"><i>🍻</i><i>🏖️</i><i>🎳</i><i>🪩</i></div>
+      <div class="ds">한강 맥주파티, 풀파티, 술게임 밤 — 요즘 식으로 노는 모임</div>
+    </div>
+    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+    <div class="track"></div>
   </div>
 
   <div class="railmap" aria-hidden="true">
