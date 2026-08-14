@@ -147,6 +147,9 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
       transition:color 150ms ease,transform 150ms var(--spring)}
 .star:active{transform:scale(1.3)}
 .star.on{color:var(--red)}
+.favn{display:inline-block;font-family:'Pretendard',sans-serif;font-size:11px;font-weight:700;
+      color:var(--red-lite);background:var(--surface2);border:1px solid var(--red);border-radius:999px;
+      padding:1px 6px;margin-right:6px;vertical-align:2px}
 .empty{text-align:center;color:var(--sub);font-size:13px;padding:40px 20px;line-height:1.7}
 
 .rd{background:var(--surface);border:1px solid var(--line);border-radius:6px;
@@ -368,13 +371,14 @@ footer a{color:#7a8290}
     <span class="cnt" id="cnt"></span>
     <select id="sort" onchange="renderGames()">
       <option value="cat">기본순</option>
+      <option value="popular">인기순 (★ 많은 순)</option>
       <option value="people">인원 많은 순</option>
       <option value="short">짧은 순</option>
       <option value="name">이름순</option>
     </select>
   </div>
   <div class="list" id="glist"></div>
-  <footer>★는 이 기기에만 저장돼요 · 인원·시간은 제조사 기준<br>없는 게임을 들고 오셔도 좋아요</footer>
+  <footer>★는 내 계정에 저장돼요 · 옆 숫자는 담은 사람 수<br>인원·시간은 제조사 기준, 없는 게임을 들고 오셔도 좋아요</footer>
 </section>
 
 <!-- 2. 정모일정 -->
@@ -407,7 +411,7 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="api.js?v=sb2"></script>
+<script src="api.js?v=sb3"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=sb2"></script>
@@ -460,7 +464,7 @@ async function bootSession(){
     acc = await API.myMember();
     if(!acc && await API.hasSession()) needOnboard = true;   // 카카오 인증은 됐는데 회원이 아직 아님
     if(acc){
-      favs = JSON.parse(localStorage.getItem(FKEY())||'[]');
+      favs = acc.favs || [];                                 // 즐겨찾기는 이제 서버(내 계정)에서
       if(openRound){
         picks = await API.getMyPicks(openRound.d, acc.uid);
         myRsvp = await API.getMyRsvp(openRound.d, acc.uid);
@@ -468,7 +472,7 @@ async function bootSession(){
     }
   }catch(e){ /* 오프라인이면 그냥 비로그인으로 둔다 */ }
   try{ serverPast = await API.pastList(); }catch(e){}
-  try{ MEMBERS = await API.list(); }catch(e){}
+  try{ MEMBERS = await API.list(); computeFavCount(); }catch(e){}
   try{ if(acc) await loadPfps([acc.uid]); }catch(e){}
   try{ OWNERS = await API.ownerMap(); }catch(e){}
   try{ NOTICES = await API.noticeList(); }catch(e){}
@@ -683,7 +687,7 @@ const NICK_RE = /^[가-힣]{1,10}$/;   // 닉네임은 한글 1~10자만
 
 async function afterAuth(a){
   acc = a;
-  favs = JSON.parse(localStorage.getItem(FKEY())||'[]');
+  favs = acc.favs || [];
   const anon = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');
   picks = openRound ? await API.getMyPicks(openRound.d, acc.uid) : [];
   myRsvp = openRound ? await API.getMyRsvp(openRound.d, acc.uid) : null;
@@ -692,7 +696,7 @@ async function afterAuth(a){
     try{ await API.setPicks(openRound.d, acc.uid, picks); }catch(e){}
     localStorage.removeItem('botc_picks_anon');
   }
-  try{ MEMBERS = await API.list(); }catch(e){}
+  try{ MEMBERS = await API.list(); computeFavCount(); }catch(e){}
   renderMe(); closeM(); renderGames();
   if(view==='me') renderMePage(); if(view==='sched') renderSched();
 }
@@ -781,13 +785,22 @@ const peopleTxt = g => g.max===null?`${g.min}명 이상`:(g.min===g.max?`${g.min
 const esc = s => s.replace(/'/g,"\\'");
 const byCat = (a,b)=>{const o=c=>CATS.findIndex(x=>x.k===c);return o(a.cat)-o(b.cat);};
 
+/* 즐겨찾기 집계 — 회원들의 favs를 모아 게임별 담은 사람 수. MEMBERS가 갱신될 때 다시 계산 */
+let FAVCOUNT = {};
+function computeFavCount(){
+  FAVCOUNT = {};
+  (MEMBERS||[]).forEach(m=>(m.favs||[]).forEach(n=>{ FAVCOUNT[n]=(FAVCOUNT[n]||0)+1; }));
+}
+function favCount(n){ return FAVCOUNT[n]||0; }
+
 function gameCard(g, mode){
   const i=GAMES.indexOf(g);
   const on = mode==='pick' ? picks.includes(g.n) : favs.includes(g.n);
   const fn = mode==='pick' ? `togPick('${esc(g.n)}')` : `togFav('${esc(g.n)}')`;
+  const fc = mode!=='pick' ? favCount(g.n) : 0;
   return `<div class="game${on?' fav':''}${mode!=='pick'&&crew&&!fits(g)?' dim':''}">
     <div class="info" onclick="openM(${i})">
-      <div class="nm"><span class="star${on?' on':''}" onclick="event.stopPropagation();${fn}">${on?'★':'☆'}</span>${g.n}</div>
+      <div class="nm"><span class="star${on?' on':''}" onclick="event.stopPropagation();${fn}">${on?'★':'☆'}</span>${fc?`<span class="favn">${fc}</span>`:''}${g.n}</div>
       <div class="meta"><b>${peopleTxt(g)}</b> · ${g.t}분</div>
       <div class="desc">${g.d}</div>
       <div class="badges">
@@ -824,7 +837,8 @@ function renderGames(){
   if(cat!=='all') list=list.filter(g=>g.cat===cat);
   if(q){const s=q.toLowerCase();list=list.filter(g=>(g.n+g.d+g.r+g.lv+g.own+(isStaff()?ownerName(g):'')).toLowerCase().includes(s));}
   const sort=document.getElementById('sort').value;
-  if(sort==='people') list.sort((a,b)=>(b.max===null?99:b.max)-(a.max===null?99:a.max));
+  if(sort==='popular') list.sort((a,b)=>favCount(b.n)-favCount(a.n)||a.n.localeCompare(b.n,'ko'));
+  else if(sort==='people') list.sort((a,b)=>(b.max===null?99:b.max)-(a.max===null?99:a.max));
   else if(sort==='short') list.sort((a,b)=>a.t-b.t);
   else if(sort==='name') list.sort((a,b)=>a.n.localeCompare(b.n,'ko'));
   else list.sort((a,b)=>byCat(a,b)||(b.max===null?99:b.max)-(a.max===null?99:a.max));
@@ -903,14 +917,20 @@ function closeAsk(){ document.getElementById('ask').style.display='none'; askYes
 function okAsk(){ const f=askYes; closeAsk(); if(f) f(); }
 
 function togFav(n){
+  if(!acc){ askNick('login'); return; }   // 서버에 담아야 인기순 집계가 되므로 로그인 필요
   const on = favs.includes(n);
   ask(on ? `<b>${n}</b><br>즐겨찾기를 해제할까요?`
          : `<b>${n}</b><br>즐겨찾기에 추가할까요?`,
-      ()=>{
+      async ()=>{
         favs = on ? favs.filter(f=>f!==n) : [...favs,n];
-        localStorage.setItem(FKEY(),JSON.stringify(favs));
+        // 내 MEMBERS 항목도 바로 갱신해서 집계·별 개수가 즉시 반영되게
+        const me = MEMBERS.find(m=>m.uid===acc.uid); if(me) me.favs = favs.slice();
+        acc.favs = favs.slice();
+        computeFavCount();
         renderGames();
         if(view==='me') renderMePage();
+        try{ await API.setFavs(acc.uid, favs); }
+        catch(e){ /* 저장 실패해도 화면은 유지, 다음 새로고침 때 서버값으로 맞춰짐 */ }
       });
 }
 

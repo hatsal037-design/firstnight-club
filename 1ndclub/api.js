@@ -18,6 +18,7 @@ function rowToAcc(row, payname){
     admin: row.is_admin, role: row.role || undefined,
     scribe: row.scribe, scribeReady: row.scribe_ready, scribeHello: row.scribe_hello,
     joined: row.joined, joinedAt: row.joined_at, no: row.no,
+    favs: row.favs || [],
     payname: payname !== undefined ? payname : row.member_private?.payname,
   };
 }
@@ -78,6 +79,11 @@ API.rename = async function(acc, newNick){
 API.list = async function(){
   const { data } = await T('members').select('*, member_private(payname)').order('no');
   return (data||[]).map(r=>rowToAcc(r));
+};
+/* 즐겨찾기 — 본인 행의 favs만 갱신 (RLS가 본인 행으로 제한) */
+API.setFavs = async function(uid, arr){
+  const { error } = await T('members').update({ favs: arr }).eq('id', uid);
+  throwErr(error, '즐겨찾기 저장 실패');
 };
 /* 관리 조작 — 전부 서버 RPC가 관리자 여부를 재검증한다 */
 API.adminSetRole   = async function(uid, role){ const {error}=await sb.rpc('admin_set_role',{p_mid:uid,p_role:role}); throwErr(error,'등급 변경 실패'); };
