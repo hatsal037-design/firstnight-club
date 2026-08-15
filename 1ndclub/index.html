@@ -152,9 +152,67 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
       padding:1px 6px;margin-right:6px;vertical-align:2px}
 .empty{text-align:center;color:var(--sub);font-size:13px;padding:40px 20px;line-height:1.7}
 
-.rd{background:var(--surface);border:1px solid var(--line);border-radius:6px;
-    padding:14px;margin:0 14px 9px}
-.rd.open{border-color:var(--red);box-shadow:3px 3px 0 rgba(232,50,60,.5)}
+/* 티켓 규격 — 폭 358 고정, 중앙 배치(늘어나지 않음) */
+.rd{width:358px;max-width:calc(100% - 24px);margin:0 auto 16px}
+/* ══ 티켓 스킨 — 일정 카드를 승차권처럼 ══ */
+.rd{position:relative;border-radius:0;overflow:hidden;
+    clip-path:polygon(14px 0,100% 0,100% 100%,0 100%,0 14px);
+    background:#1d1b22 url(tk_card.jpg?v2) center/cover;
+    border:none;padding:14px 108px 14px 16px;box-shadow:0 4px 9px rgba(0,0,0,.4)}
+.rd::before{content:'';position:absolute;left:8px;right:8px;top:8px;bottom:8px;pointer-events:none;
+    border:1px solid rgba(232,50,60,.34)}
+/* 절취선 + 스터브 */
+.rd::after{content:'';position:absolute;right:98px;top:0;bottom:0;width:2px;pointer-events:none;
+    background:repeating-linear-gradient(180deg,rgba(255,255,255,.3) 0 5px,transparent 5px 10px)}
+.rd .stub{position:absolute;right:0;top:0;bottom:0;width:98px;
+    background:rgba(0,0,0,.28);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.rd .stub .lb{font-size:7px;letter-spacing:1.5px;font-weight:800;color:#6e5f68}
+.rd .stub .wax{width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,.6))}
+.rd .stub .wtx{position:absolute;font-family:'Do Hyeon',sans-serif;font-size:11px;color:rgba(255,225,225,.94);
+    text-shadow:0 1px 1px rgba(70,0,6,.9);text-align:center;line-height:1.1;margin-top:-2px}
+.rd .stub .wtx small{display:block;font-family:ui-monospace,monospace;font-size:6px;opacity:.85}
+/* 대기 상태 홀로그램 */
+.rd .stub .holo{width:56px;height:56px;border-radius:50%;border:2.5px dashed #6e5f68;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#b39aa4;
+    background:linear-gradient(120deg,#241f28,#332c38 50%,#241f28)}
+.rd .stub .holo i{position:absolute;inset:0;font-style:normal;
+    background:linear-gradient(115deg,transparent 25%,rgba(255,255,255,.6) 45%,rgba(180,220,255,.35) 50%,transparent 70%);
+    animation:tshim 2.4s linear infinite}
+@keyframes tshim{0%{transform:translateX(-70%)}100%{transform:translateX(70%)}}
+@media (prefers-reduced-motion:reduce){.rd .stub .holo i{animation:none}}
+/* 상단 라벨 */
+.rd .bpl{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:2.5px;font-weight:800;color:#B8A88E;
+    display:block;margin-bottom:5px}
+/* 모집중 강조 */
+.rd.open{box-shadow:0 5px 12px rgba(0,0,0,.45),0 0 0 1.5px rgba(232,50,60,.55)}
+.rd.open::before{border-color:rgba(232,50,60,.6)}
+/* 지난 회차 — 크기는 동일, 톤만 낮춤 */
+.rd.past{opacity:.7}
+.rd.past.mine{opacity:1}
+.rd .pl{padding-right:0}
+/* 아코디언 — 티켓 아래로 열리는 상세 */
+.rd{cursor:pointer;transition:transform 160ms var(--spring)}
+.rd.on{margin-bottom:0}
+.rd:active{transform:translateY(1px)}
+.rd .expand{position:absolute;right:112px;bottom:8px;font-size:15px;color:var(--sub);
+  transition:transform 220ms var(--spring);line-height:1}
+.rd.on .expand{transform:rotate(90deg)}
+.rdx{display:none;width:358px;max-width:calc(100% - 24px);margin:0 auto 16px;padding:14px 16px 15px;color:var(--ink);
+  background:linear-gradient(180deg,#1a1820,#151319);
+  border:1px solid #2b2833;border-top:none;
+  box-shadow:0 5px 10px rgba(0,0,0,.35)}
+.rdx .ad{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:0}
+.rdx .ad+.ad{margin-top:4px}
+.rdx .nt{font-size:12px;color:var(--sub);line-height:1.65;background:rgba(255,255,255,.03);
+  border-left:2px solid rgba(232,50,60,.5);padding:8px 10px;margin-top:9px}
+.rdx .b{background:#221f29;border-color:#332f3d}
+.rdx .tags{margin-top:9px}
+.rdx.show{display:block;animation:rdxopen 220ms ease-out}
+@keyframes rdxopen{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
+.rdx .btns{margin-top:11px}
+.rdx .nt{margin-top:0}
+
+
 .rd .top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .rd .dt{font-family:'Do Hyeon',sans-serif;font-size:19px;letter-spacing:-.3px}
 .rd .tm{font-size:12.5px;color:var(--sub)}
@@ -171,13 +229,14 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
 .rd .ad{font-size:11.5px;color:var(--sub);margin-top:3px;line-height:1.55}
 .rd .nt{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6;
         border-left:3px solid var(--line);padding-left:9px}
-.rd .btns{display:flex;gap:6px;margin-top:11px}
-.rd .b{flex:1;text-align:center;font-size:12px;font-weight:600;padding:9px 0;border-radius:5px;
+.rd .btns,.rdx .btns{display:flex;gap:6px;margin-top:11px}
+.rd .b,.rdx .b{flex:1;text-align:center;font-size:12px;font-weight:600;padding:9px 0;border-radius:5px;
        background:var(--surface2);border:1px solid var(--line);text-decoration:none;color:var(--ink);cursor:pointer}
-.rd .b.p{background:var(--red);border-color:var(--red);color:#fff}
-.monthlab{font-family:'Jua',sans-serif;font-size:13px;color:var(--sub);margin:16px 18px 8px}
+.rd .b.p,.rdx .b.p{background:var(--red);border-color:var(--red);color:#fff}
+.monthlab{font-family:'Jua',sans-serif;font-size:13px;color:var(--sub);
+  width:358px;max-width:calc(100% - 24px);margin:20px auto 9px;padding-left:4px}
 .pastmore{text-align:center;font-size:12px;color:var(--sub);border:1px dashed var(--line);
-          border-radius:8px;margin:14px 14px 0;padding:11px 0;cursor:pointer}
+          border-radius:8px;width:358px;max-width:calc(100% - 24px);margin:14px auto 0;padding:11px 0;cursor:pointer}
 .pastmore:active{background:var(--surface2)}
 /* 참석 여부 */
 .rsvp{margin-top:12px;background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:12px 13px}
@@ -201,13 +260,12 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
             font-size:22px;font-weight:700;color:#fff;flex:none;font-family:'Do Hyeon',sans-serif}
 .pfcard .nm3{font-family:'Do Hyeon',sans-serif;font-size:21px}
 .pfcard .sb3{font-size:11.5px;color:var(--sub);margin-top:2px}
-.rd.past{opacity:.5}
-.rd.past.mine{opacity:1;border-color:#3d4a5c}
+
 .rd.past .dt{color:var(--sub)}
 .rd.past.mine .dt{color:var(--ink)}
 .mineflag{font-size:9.5px;font-weight:700;border-radius:3px;padding:3px 7px;
           background:#2b3648;color:#a9c4e0;border:1px solid #3d4a5c}
-.nowline{display:flex;align-items:center;gap:10px;margin:22px 18px 12px}
+.nowline{display:flex;align-items:center;gap:10px;width:358px;max-width:calc(100% - 24px);margin:24px auto 16px}
 .nowline::before,.nowline::after{content:'';height:1px;background:var(--red);flex:1;opacity:.55}
 .nowline span{font-family:'Jua',sans-serif;font-size:12px;color:var(--red-lite);white-space:nowrap}
 .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
@@ -968,7 +1026,11 @@ function renderSched(){
     const mine = mineOf(p), open = mine || canRecord();
     const m=p.d.slice(0,7);
     if(m!==lastM){ html+=`<div class="monthlab">${+p.d.slice(5,7)}월 · ${p.d.slice(0,4)}</div>`; lastM=m; }
-    html+=`<div class="rd past${mine?' mine':''}">
+    html+=`<div class="rd past${mine?' mine':''}" onclick="toggleDetail(this)">
+      <div class="stub">${mine
+        ? `<img class="wax" src="stamp_wax.png" alt=""><div class="wtx">첫밤行<small>${p.d.slice(5).replace('-','.')}</small></div>`
+        : `<div class="lb">USED</div>`}</div>
+      <span class="bpl">TÜNEL BOARDING PASS · USED</span>
       <div class="top">
         <span class="dt">${fmt(p.d)} <span style="font-size:14px">(${p.dow})</span></span>
         <span class="tm">${p.s}~${p.e}</span>
@@ -976,6 +1038,9 @@ function renderSched(){
               :`<span class="st done">${p.kind==='flash'?'번개':(p.r?p.r+'회차':'정모')}</span>`}
       </div>
       <div class="pl">${p.place}${open&&p.people?.length?` · ${p.people.length}명`:''}</div>
+      <span class="expand">›</span>
+    </div>
+    <div class="rdx">
       ${open?`
         ${p.memo?`<div class="nt">${p.memo}</div>`:''}
         ${(p.played||[]).length?`<div class="tags">${p.played.map(g=>`<span class="tg">${g}</span>`).join('')}</div>`:''}
@@ -983,7 +1048,7 @@ function renderSched(){
           <span class="b" onclick="openPast('${p.d}')">자세히 보기</span>
           ${canRecord()?`<span class="b" onclick="editPast('${p.d}')">✏️ 편집</span>`:''}
         </div>`
-      :`<div class="ad" style="margin-top:7px">참석하지 않은 모임이에요</div>`}
+      :`<div class="ad">참석하지 않은 모임이에요</div>`}
     </div>`;
   });
 
@@ -994,7 +1059,13 @@ function renderSched(){
   upcoming.forEach(r=>{
     const m=r.d.slice(5,7);
     if(m!==lastM){ html+=`<div class="monthlab">${+m}월</div>`; lastM=m; }
-    html+=`<div class="rd ${r.st}">
+    html+=`<div class="rd ${r.st}" onclick="toggleDetail(this)">
+      <div class="stub">${r.st==='open'
+        ? (myRsvp==='yes'
+            ? `<img class="wax" src="stamp_wax.png" alt="" onclick="event.stopPropagation();setRsvp('yes')"><div class="wtx">첫밤行<small>${r.d.slice(5).replace('-','.')}</small></div><div class="lb">STAMPED</div>`
+            : `<div class="holo" onclick="event.stopPropagation();setRsvp('yes')">참석<i></i></div><div class="lb">STAMP HERE</div>`)
+        : `<div class="lb">예정</div>`}</div>
+      <span class="bpl">TÜNEL BOARDING PASS</span>
       <div class="top">
         <span class="dt">${fmt(r.d)} <span style="font-size:14px">(${r.dow})</span></span>
         <span class="tm">${r.s}~${r.e} · ${r.h}시간</span>
@@ -1003,6 +1074,9 @@ function renderSched(){
           : `<span class="st ${r.st}">${r.st==='open'?'모집중':'예정'}</span>`}
       </div>
       <div class="pl">${r.place}${r.cap?` · 최대 ${r.cap}명`:''}</div>
+      <span class="expand">›</span>
+    </div>
+    <div class="rdx${r.st==='open'?' open':''}">
       ${r.addr?`<div class="ad">${r.addr}</div>`:''}
       ${r.note?`<div class="nt">${r.note}</div>`:''}
       ${r.st==='open'&&r.fee?`<div class="ad" style="margin-top:6px">참가비 ${r.fee}</div>`:''}
@@ -1017,6 +1091,7 @@ function renderSched(){
         <span class="b" onclick="saveCal()">📅 캘린더에 저장</span>
         <a class="b" href="${googleCal()}" target="_blank" rel="noopener">구글 캘린더</a>
       </div>`:''}
+      ${canRecord()?`<div class="ad" style="margin-top:9px;opacity:.6">예정 회차 수정은 schedule.js에서 · 끝난 뒤 지난 모임으로 옮기면 여기서 편집돼요</div>`:''}
       </div>`;
   });
 
@@ -1041,6 +1116,14 @@ function renderSched(){
   } else {
     watchPastLoader();
   }
+}
+document.addEventListener('click', e=>{ if(e.target.closest('.rdx')) e.stopPropagation(); }, true);
+function toggleDetail(el){
+  const x = el.nextElementSibling;
+  if(!x || !x.classList.contains('rdx')) return;
+  const willOpen = !x.classList.contains('show');
+  document.querySelectorAll('.rdx.show').forEach(o=>{o.classList.remove('show'); o.previousElementSibling?.classList.remove('on')});
+  if(willOpen){ x.classList.add('show'); el.classList.add('on'); }
 }
 let schedScrolled = false;
 
