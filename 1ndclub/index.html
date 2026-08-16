@@ -1042,6 +1042,7 @@ function renderSched(){
     </div>
     <div class="rdx">
       ${open?`
+        ${p.auto&&!p.memo?`<div class="ad">아직 기록을 안 채운 회차예요${canRecord()?' · 편집으로 채워주세요':''}</div>`:''}
         ${p.memo?`<div class="nt">${p.memo}</div>`:''}
         ${(p.played||[]).length?`<div class="tags">${p.played.map(g=>`<span class="tg">${g}</span>`).join('')}</div>`:''}
         <div class="btns">
@@ -1337,10 +1338,16 @@ function canSeeOwner(g){
   return false;
 }
 
+/* 참여자 항목 → 회원 찾기. 이름 문자열로 기록됐어도 그 닉네임(옛 닉 포함)을
+   쓰는 회원이 있으면 회원으로 본다 — 나중에 가입해도 자동으로 연결된다 */
+function pMember(x){
+  if(typeof x === 'object') return MEMBERS.find(m=>m.uid===x.uid) || null;
+  return MEMBERS.find(m=>m.nick===x || (m.aliases||[]).includes(x)) || null;
+}
 function pName(x){
-  if(typeof x === 'string') return x;
-  const m = MEMBERS.find(m=>m.uid===x.uid);
-  return m ? m.nick : (x.label || '(탈퇴한 회원)');
+  const m = pMember(x);
+  if(m) return m.nick;
+  return typeof x === 'string' ? x : (x.label || '(탈퇴한 회원)');
 }
 function pIsMe(x){
   if(!acc) return false;
@@ -1348,9 +1355,9 @@ function pIsMe(x){
   return myNames().includes(x);
 }
 function pTag(x){
-  return typeof x === 'object'
-    ? `<span class="tg m">@${pName(x)}</span>`
-    : `<span class="tg p">${x}</span>`;
+  const m = pMember(x);
+  return m ? `<span class="tg m">@${m.nick}</span>`
+           : `<span class="tg p">${pName(x)}</span>`;
 }
 
 /* ══ 프로필 (썸네일 + 카드) ══ */
@@ -1645,9 +1652,15 @@ async function jaToggleOff(){
 
 /* ══ 지난정모 ══ */
 function pastList(){
-  /* 씨앗(past.js) → 로컬 편집(구버전 호환) → 서버 기록 순으로 겹쳐 쓴다. 서버가 최종. */
+  /* 날짜가 지난 예정 회차(schedule.js)는 자동으로 지난 목록으로 내려온다.
+     그 위에 씨앗(past.js) → 로컬 편집(구버전 호환) → 서버 기록 순으로 겹쳐 쓴다. 서버가 최종. */
   const by = {};
-  PAST.forEach(p=>by[p.d]={...p});
+  ROUNDS.filter(r=>new Date(r.d) < TODAY).forEach(r=>{
+    by[r.d] = { r:r.r, d:r.d, dow:r.dow, s:r.s, e:r.e, kind:'round',
+                place:r.place, n:null, fee:r.fee||'', played:[], people:[],
+                after:'', memo:'', auto:true };
+  });
+  PAST.forEach(p=>by[p.d]={...(by[p.d]||{}),...p});
   Object.entries(edits).forEach(([d,v])=>by[d]={...(by[d]||{}),...v});
   serverPast.forEach(p=>by[p.d]={...(by[p.d]||{}),...p});
   return Object.values(by).sort((a,b)=>b.d.localeCompare(a.d));
