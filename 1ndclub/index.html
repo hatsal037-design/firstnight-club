@@ -1118,7 +1118,7 @@ function renderSched(){
     watchPastLoader();
   }
 }
-document.addEventListener('click', e=>{ if(e.target.closest('.rdx')) e.stopPropagation(); }, true);
+/* 상세 패널은 티켓의 형제 요소라 클릭이 티켓으로 번지지 않는다 — 따로 막을 필요 없음 */
 function toggleDetail(el){
   const x = el.nextElementSibling;
   if(!x || !x.classList.contains('rdx')) return;
