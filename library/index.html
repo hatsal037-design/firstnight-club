@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>도서관 — 투넬</title>
+<meta name="description" content="책모임, 자기계발 스터디, AI 나눔회 — 같이 읽고 같이 굴려보는 칸. 투넬 도서관 노선.">
+<meta property="og:title" content="도서관 — 투넬">
+<meta property="og:description" content="책모임, 자기계발 스터디, AI 나눔회 — 같이 읽고 같이 굴려보는 칸">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Nanum+Gothic+Coding&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#26282B;          /* 잉크 챠콜블랙 */
+  --char:#3A3F45;         /* 챠콜 */
+  --paper:#FAFAF7;        /* 종이 */
+  --grey:#F4F5F3;         /* 라이트그레이 */
+  --line:#DDE3DC;
+  --sub:#6B7178;
+  --hi:#FFE45C;           /* 형광펜 옐로 */
+  --w:358px;              /* 투넬 공통 콘텐츠 폭 */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Pretendard',system-ui,sans-serif;background:var(--paper);color:var(--ink);
+  -webkit-font-smoothing:antialiased;padding-bottom:60px}
+.wrap{width:var(--w);max-width:calc(100% - 24px);margin:0 auto}
+
+/* ── 헤더 ── */
+header{background:var(--grey);border-bottom:1px solid var(--line);padding:26px 0 22px;margin-bottom:22px}
+.plat{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:2.4px;
+  font-weight:800;color:var(--sub);text-transform:uppercase}
+.plat i{font-style:normal;width:19px;height:19px;border-radius:3px;background:var(--char);color:#fff;
+  display:grid;place-items:center;font-size:11px;font-family:'Nanum Gothic Coding',monospace}
+h1{font-size:31px;letter-spacing:-1.2px;margin-top:11px;line-height:1.15}
+h1 em{font-style:normal;background:linear-gradient(180deg,transparent 62%,var(--hi) 62%)}
+.tag{font-size:13px;color:var(--sub);margin-top:9px;line-height:1.65}
+.back{display:inline-block;font-size:11.5px;color:var(--sub);text-decoration:none;margin-bottom:3px}
+.back:hover{color:var(--ink)}
+
+/* ── 섹션 ── */
+.lab{font-size:10px;letter-spacing:2.2px;font-weight:800;color:var(--sub);
+  margin:26px 0 11px;display:flex;align-items:center;gap:9px}
+.lab::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* ── 명찰 티켓 ── */
+.badge{position:relative;background:#fff;border:1px solid var(--line);border-radius:9px;
+  box-shadow:0 2px 6px rgba(38,40,43,.05);overflow:hidden;margin-bottom:16px}
+.badge .clip{height:26px;background:var(--grey);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center}
+.badge .clip::before{content:'';width:62px;height:7px;border-radius:4px;
+  background:var(--paper);border:1px solid var(--line)}
+.badge .body{padding:15px 17px 16px;display:flex;gap:13px}
+.badge .main{flex:1;min-width:0}
+.bpl{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:2.4px;font-weight:800;color:#A6ADA2}
+.when{display:flex;align-items:baseline;gap:8px;margin-top:6px;flex-wrap:wrap}
+.when b{font-size:23px;letter-spacing:-.8px}
+.when span{font-size:12.5px;color:var(--sub)}
+.what{font-size:14.5px;font-weight:700;margin-top:8px;letter-spacing:-.3px}
+.where{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6}
+.rows{margin-top:12px;border-top:1px dashed var(--line);padding-top:11px;
+  display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px}
+.rows dt{color:var(--sub)}
+.rows dd{font-family:'Nanum Gothic Coding',monospace}
+/* 명찰 오른쪽 — 상태 스탬프 */
+.badge .stub{width:74px;flex:none;border-left:1px dashed var(--line);padding-left:13px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.stamp{width:62px;height:62px;border-radius:50%;border:2px solid var(--char);color:var(--char);
+  display:grid;place-items:center;font-size:12px;font-weight:800;transform:rotate(-8deg);
+  letter-spacing:-.5px;line-height:1.25;text-align:center}
+.stamp.full{border-color:#B9433F;color:#B9433F}
+.stamp.open{border-style:dashed;border-color:#A6ADA2;color:#A6ADA2}
+.slb{font-size:7px;letter-spacing:1.6px;color:#A6ADA2;font-weight:800}
+.act{display:block;text-align:center;font-size:13px;font-weight:700;text-decoration:none;
+  color:var(--ink);background:var(--hi);border-radius:7px;padding:12px 0;margin-top:2px}
+.act.off{background:var(--grey);color:var(--sub);border:1px solid var(--line);cursor:default}
+
+/* ── 소개 ── */
+.card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:16px 17px}
+.card h2{font-size:15px;letter-spacing:-.4px;margin-bottom:9px}
+.card p{font-size:13px;line-height:1.75;color:#3F454B}
+.card p+p{margin-top:9px}
+.card .hi{background:linear-gradient(180deg,transparent 62%,var(--hi) 62%)}
+ul.pt{margin-top:11px;list-style:none;display:flex;flex-direction:column;gap:7px}
+ul.pt li{font-size:12.5px;color:#3F454B;line-height:1.6;padding-left:15px;position:relative}
+ul.pt li::before{content:'';position:absolute;left:0;top:8px;width:6px;height:6px;
+  border-radius:50%;background:var(--hi);border:1px solid #E3C93B}
+
+.note{font-size:11.5px;color:var(--sub);line-height:1.7;margin-top:12px;
+  background:var(--grey);border-radius:7px;padding:12px 14px}
+footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:11px;color:#98A0A6;text-align:center;line-height:1.8}
+footer a{color:#98A0A6}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="back" href="../">‹ 투넬 노선 안내</a>
+    <div class="plat"><i>6</i> Platform · Library</div>
+    <h1>도서관 — <em>같이 읽고<br>같이 굴려보는 칸</em></h1>
+    <p class="tag">책모임, 자기계발 스터디, AI 나눔회.<br>혼자 보면 저장만 하고 끝나는 것들을 꺼내 놓는 자리예요.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="lab">다가오는 모임</div>
+
+  <article class="badge">
+    <div class="clip"></div>
+    <div class="body">
+      <div class="main">
+        <div class="bpl">TÜNEL BOARDING PASS · LIBRARY</div>
+        <div class="when"><b>8/17</b><span>월 · 11:00~14:00</span></div>
+        <div class="what">AI 나눔회 1회차 — 진짜 쓰는 사람들의 AI 수다회</div>
+        <div class="where">시디즈 성수 커뮤니티룸<br>서울 성동구 아차산로 78 1층 (성수역 도보 2분)</div>
+        <dl class="rows">
+          <dt>참가비</dt><dd>10,000원</dd>
+          <dt>정원</dt><dd>9 / 9명</dd>
+          <dt>모집</dt><dd>동행클럽 소모임</dd>
+        </dl>
+      </div>
+      <div class="stub">
+        <div class="stamp full">모집<br>마감</div>
+        <div class="slb">FULL</div>
+      </div>
+    </div>
+  </article>
+  <span class="act off">신청이 마감됐어요</span>
+
+  <div class="lab">어떤 자리인가요</div>
+
+  <div class="card">
+    <h2>강의 말고, 서로 보여주는 자리</h2>
+    <p>AI 강의와 프롬프트 모음집은 저장만 해두고 정작 내 일에는 못 써먹는 경우가 많아요.
+       강의 대신 직접 굴려보기 시작하니 오히려 쓸 만한 것들이 나왔고,
+       <span class="hi">다른 사람은 자기 일에서 어떻게 쓰는지</span>가 제일 궁금해져서 만든 자리예요.</p>
+    <ul class="pt">
+      <li>발표가 아니라, 노트북 펴놓고 보여주면서 수다 떠는 분위기</li>
+      <li>툴은 안 가려요 — 클로드·지피티·제미나이·힉스필드 무엇이든</li>
+      <li>닉네임으로만 불러요. 직업이나 나이는 묻지 않아요</li>
+      <li>자기소개 타임 없음, 친목 강요 없음, 끝나면 쿨하게 해산</li>
+    </ul>
+    <p style="margin-top:12px">보여줄 걸 하나 들고 오시면 제일 좋고, 없어도 괜찮아요.
+       아직 초보라 줍줍만 하고 싶은 분도 환영이에요.</p>
+  </div>
+
+  <div class="note">
+    도서관 노선은 이제 막 문을 열었어요. 앞으로 책모임과 스터디도 이 칸에서 함께 굴러갑니다.
+    다음 회차 소식은 투넬 노선 안내에서 이어서 알려드릴게요.
+  </div>
+
+  <footer>
+    투넬 · TÜNEL — 일상에서 취향으로 가는 터널<br>
+    <a href="../">노선 안내로 돌아가기</a>
+  </footer>
+
+</main>
+</body>
+</html>

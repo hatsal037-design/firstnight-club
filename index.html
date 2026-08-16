@@ -143,14 +143,18 @@ a.train:active .carbody{transform:translateX(10px)}
 .t4 .ds{color:#5b6c8f}
 
 /* T5 — 서재: 양장본 (딥그린 가죽 + 금박 이중선) */
-.t5 .carbody{background:var(--line5);border:2px solid var(--brass);
-             box-shadow:inset 0 0 0 4px var(--line5), inset 0 0 0 5.5px rgba(212,178,106,.7),
-                        0 5px 0 rgba(32,54,43,.4)}
-.t5 .lb{background:var(--brass);font-family:'Noto Serif KR',serif}
-.t5 .nm{font-family:'Noto Serif KR',serif;font-weight:900;color:#F0E6C8;font-size:18px}
-.t5 .st{border:1.5px solid #D4B26A;color:#E8D9A8}
-.t5 .windows i{background:#FDF8ED;border:1px solid #D4B26A;border-radius:3px 3px 6px 6px}
-.t5 .ds{color:#BCD3C2}
+/* T5 — 도서관: 모던 오피스 (챠콜 + 라이트그레이 + 형광펜 옐로) */
+.t5 .carbody{background:#F4F5F3;border:1.5px solid #DDE3DC;border-left:5px solid #3A3F45;
+             box-shadow:0 4px 10px rgba(38,40,43,.10);position:relative}
+.t5 .lb{background:#3A3F45;color:#fff;font-family:'Pretendard',sans-serif;font-weight:800}
+.t5 .nm{font-family:'Pretendard',sans-serif;font-weight:800;color:#26282B;font-size:18px;letter-spacing:-.6px}
+/* 형광펜은 글자 폭만큼만 — flex item이라 배경 대신 인라인 span에 칠한다 */
+.t5 .nm i{font-style:normal;background:linear-gradient(180deg,transparent 60%,#FFE45C 60%);
+  box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.t5 .st{background:#FFE45C;color:#3A3F45;border:none;font-weight:800}
+.t5 .windows i{background:#fff;border:1px solid #DDE3DC;border-radius:4px}
+.t5 .ds{color:#6B7178;padding-right:58px}
+.t5 .arrow{position:absolute;right:16px;bottom:13px;color:#3A3F45;font-size:16px;font-weight:800}
 
 /* T7 — 공방: 크라프트 공작 (종이 + 스티치 테두리) */
 .t7 .carbody{background:#F3E7D2;border:2px dashed var(--line7);box-shadow:0 5px 0 rgba(90,60,110,.16)}
@@ -264,19 +268,20 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </div>
 
-  <div class="train t5 soon">
+  <a class="train t5" href="library/">
     <div class="carbody">
       <div class="carhead">
         <div class="lb">T5</div>
-        <div class="nm">서재</div>
-        <span class="st">제본중</span>
+        <div class="nm"><i>도서관</i></div>
+        <span class="st">운행중</span>
       </div>
-      <div class="windows"><i>📖</i><i>☕</i><i>✒️</i><i>🌿</i></div>
-      <div class="ds">책모임, 자기계발 스터디 — 같이 읽고 성장하는 노선</div>
+      <div class="windows"><i>📖</i><i>💻</i><i>✒️</i><i>☕</i></div>
+      <div class="ds">책모임, 자기계발 스터디, AI 나눔회 — 같이 읽고 같이 굴려보는 노선</div>
+      <span class="arrow">탑승 ›</span>
     </div>
     <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
     <div class="track"></div>
-  </div>
+  </a>
 
   <div class="train t6 soon">
     <div class="carbody">
