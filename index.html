@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://tunel.kr/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Song+Myung&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 /* ═══ 투넬 메트로 — 빈티지 이스탄불 트램 세계관 ═══
@@ -26,6 +26,7 @@
   --brass:#B08D3E; --brass-deep:#8A6B2B;
   --line3:#23566B; --line1:#D98A1F; --line6:#1FA8C9;
   --line4:#2E64D8; --line5:#20563F; --line7:#8A5BA5;
+  --thr-wine:#7A1F3D; --thr-dark:#1F1418; --thr-amber:#D98E32; --thr-jade:#2F6B5A; --thr-cream:#EFDCCB;
   --spring:cubic-bezier(0.32,0.72,0,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -88,84 +89,95 @@ a.train:active .carbody{transform:translateX(10px)}
        background:repeating-linear-gradient(90deg, rgba(58,42,30,.5) 0 16px, rgba(58,42,30,.12) 16px 26px)}
 
 /* T2 — 첫밤 클럽: 다크 네오브루탈리즘 (첫 밤의 어둠) */
-.t2 .carbody{background:#131318;border:2px solid var(--red);box-shadow:5px 5px 0 rgba(179,22,30,.5)}
-.t2 .lb{background:var(--red);font-family:'Do Hyeon',sans-serif}
-.t2 .nm{font-family:'Do Hyeon',sans-serif;color:#eceef2}
-.t2 .st{background:var(--red);color:#fff}
-.t2 .windows i{background:#1d1d25;border:1px solid #34343f;color:#B3161E;text-shadow:0 0 8px rgba(232,50,60,.8)}
-.t2 .ds{color:#8b93a1;padding-right:58px}
-.t2 .arrow{position:absolute;right:16px;bottom:13px;color:var(--red);font-size:16px;font-weight:800}
+.ln-night .carbody{background:#131318;border:2px solid var(--red);box-shadow:5px 5px 0 rgba(179,22,30,.5)}
+.ln-night .lb{background:var(--red);font-family:'Do Hyeon',sans-serif}
+.ln-night .nm{font-family:'Do Hyeon',sans-serif;color:#eceef2}
+.ln-night .st{background:var(--red);color:#fff}
+.ln-night .windows i{background:#1d1d25;border:1px solid #34343f;color:#B3161E;text-shadow:0 0 8px rgba(232,50,60,.8)}
+.ln-night .ds{color:#8b93a1;padding-right:58px}
+.ln-night .arrow{position:absolute;right:16px;bottom:13px;color:var(--red);font-size:16px;font-weight:800}
 
 /* T3 — 소풍: 폴라로이드 스크랩북 (크라프트지 + 기울어진 사진 + 손글씨) */
-.t3 .carbody{background:#E9DFC8;border:1.5px solid #D6C7A6;box-shadow:0 5px 0 rgba(107,88,68,.15)}
-.t3 .lb{background:var(--line3);font-family:'Noto Serif KR',serif}
-.t3 .nm{font-family:'Nanum Pen Script',cursive;font-weight:400;color:#4a3f33;font-size:27px}
-.t3 .st{background:rgba(255,224,130,.85);color:#7a6430;border-radius:2px;
+.ln-picnic .carbody{background:#E9DFC8;border:1.5px solid #D6C7A6;box-shadow:0 5px 0 rgba(107,88,68,.15)}
+.ln-picnic .lb{background:var(--line3);font-family:'Noto Serif KR',serif}
+.ln-picnic .nm{font-family:'Nanum Pen Script',cursive;font-weight:400;color:#4a3f33;font-size:27px}
+.ln-picnic .st{background:rgba(255,224,130,.85);color:#7a6430;border-radius:2px;
         transform:rotate(-3deg);box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.t3 .windows{gap:11px}
-.t3 .windows i{background:#fff;border:none;border-bottom:9px solid #fff;border-radius:2px;
+.ln-picnic .windows{gap:11px}
+.ln-picnic .windows i{background:#fff;border:none;border-bottom:9px solid #fff;border-radius:2px;
                box-shadow:0 3px 8px rgba(58,42,30,.22);height:34px}
-.t3 .windows i:nth-child(odd){transform:rotate(-2.5deg)}
-.t3 .windows i:nth-child(even){transform:rotate(2deg)}
-.t3 .ds{font-family:'Nanum Pen Script',cursive;font-size:17.5px;color:#6b5844;line-height:1.45}
+.ln-picnic .windows i:nth-child(odd){transform:rotate(-2.5deg)}
+.ln-picnic .windows i:nth-child(even){transform:rotate(2deg)}
+.ln-picnic .ds{font-family:'Nanum Pen Script',cursive;font-size:17.5px;color:#6b5844;line-height:1.45}
 
 /* T1 — 플레이: 레트로팝 (파티 열차) */
-.t1 .carbody{background:#FFE95C;border:3px solid #1a1a1f;box-shadow:6px 6px 0 #1a1a1f;border-radius:10px}
-.t1 .lb{background:#FF6EC7;border:3px solid #1a1a1f;color:#1a1a1f;font-family:'Jua',sans-serif}
-.t1 .nm{font-family:'Jua',sans-serif;color:#1a1a1f;text-shadow:2px 2px 0 rgba(255,110,199,.55)}
-.t1 .st{background:#FF6EC7;border:2px solid #1a1a1f;color:#1a1a1f}
-.t1 .windows i{background:#fff;border:2.5px solid #1a1a1f;border-radius:50% 50% 8px 8px;font-size:14px}
-.t1 .ds{color:#4a441a;font-weight:600}
+.ln-play .carbody{background:#FFE95C;border:3px solid #1a1a1f;box-shadow:6px 6px 0 #1a1a1f;border-radius:10px}
+.ln-play .lb{background:#FF6EC7;border:3px solid #1a1a1f;color:#1a1a1f;font-family:'Jua',sans-serif}
+.ln-play .nm{font-family:'Jua',sans-serif;color:#1a1a1f;text-shadow:2px 2px 0 rgba(255,110,199,.55)}
+.ln-play .st{background:#FF6EC7;border:2px solid #1a1a1f;color:#1a1a1f}
+.ln-play .windows i{background:#fff;border:2.5px solid #1a1a1f;border-radius:50% 50% 8px 8px;font-size:14px}
+.ln-play .ds{color:#4a441a;font-weight:600}
 /* T6 — 사이버: 트론 라이트그리드 (검은 차체에 시안 라이트라인, 오렌지 포인트) */
-.t6 .carbody{background:#04070D;border:2px solid #35C8E8;
+.ln-cyber .carbody{background:#04070D;border:2px solid #35C8E8;
              background-image:linear-gradient(rgba(53,200,232,.06) 1px,transparent 1px),
                               linear-gradient(90deg,rgba(53,200,232,.06) 1px,transparent 1px);
              background-size:20px 20px;
              box-shadow:0 0 16px rgba(53,200,232,.45), inset 0 0 26px rgba(53,200,232,.07)}
-.t6 .lb{background:#04070D;border:2px solid #35C8E8;color:#9FE9FF;
+.ln-cyber .lb{background:#04070D;border:2px solid #35C8E8;color:#9FE9FF;
         font-family:'Do Hyeon',sans-serif;box-shadow:0 0 10px rgba(53,200,232,.8)}
-.t6 .nm{font-family:'Do Hyeon',sans-serif;color:#D8F5FF;text-shadow:0 0 12px rgba(53,200,232,.9)}
-.t6 .st{border:1.5px solid #FF9E36;color:#FFB763;font-family:ui-monospace,monospace;
+.ln-cyber .nm{font-family:'Do Hyeon',sans-serif;color:#D8F5FF;text-shadow:0 0 12px rgba(53,200,232,.9)}
+.ln-cyber .st{border:1.5px solid #FF9E36;color:#FFB763;font-family:ui-monospace,monospace;
         box-shadow:0 0 8px rgba(255,158,54,.35)}
-.t6 .windows i{background:#060B14;border:1px solid #35C8E8;border-radius:3px;
+.ln-cyber .windows i{background:#060B14;border:1px solid #35C8E8;border-radius:3px;
                box-shadow:inset 0 0 10px rgba(53,200,232,.3)}
-.t6 .ds{color:#7FA8B8}
+.ln-cyber .ds{color:#7FA8B8}
 /* T4 — 운동: 스포티 저지 (코발트 + 스피드 스트라이프) */
-.t4 .carbody{background:#fff;border:3px solid var(--line4);box-shadow:4px 4px 0 rgba(46,100,216,.3);
+.ln-sport .carbody{background:#fff;border:3px solid var(--line4);box-shadow:4px 4px 0 rgba(46,100,216,.3);
              position:relative;overflow:hidden}
-.t4 .carbody::after{content:'';position:absolute;top:0;right:-14px;width:86px;height:100%;
+.ln-sport .carbody::after{content:'';position:absolute;top:0;right:-14px;width:86px;height:100%;
              background:repeating-linear-gradient(-55deg,rgba(46,100,216,.13) 0 10px,transparent 10px 22px);
              pointer-events:none}
-.t4 .lb{background:var(--line4);font-family:'Do Hyeon',sans-serif}
-.t4 .nm{font-family:'Do Hyeon',sans-serif;font-style:italic;color:#1c3f8f}
-.t4 .st{background:var(--line4);color:#fff}
-.t4 .windows i{background:#EEF3FE;border:1.5px solid #BCCDF3}
-.t4 .ds{color:#5b6c8f}
+.ln-sport .lb{background:var(--line4);font-family:'Do Hyeon',sans-serif}
+.ln-sport .nm{font-family:'Do Hyeon',sans-serif;font-style:italic;color:#1c3f8f}
+.ln-sport .st{background:var(--line4);color:#fff}
+.ln-sport .windows i{background:#EEF3FE;border:1.5px solid #BCCDF3}
+.ln-sport .ds{color:#5b6c8f}
 
 /* T5 — 서재: 양장본 (딥그린 가죽 + 금박 이중선) */
+/* 4 극장 — 화양연화 (치파오 버건디 · 벨벳 어둠 · 텅스텐 등불) */
+.ln-theater .carbody{background:var(--thr-dark);border:2px solid var(--thr-wine);
+  background-image:radial-gradient(ellipse at 50% -10%, rgba(217,142,50,.20), transparent 60%);
+  box-shadow:0 6px 16px rgba(31,20,24,.35)}
+.ln-theater .lb{background:var(--thr-wine);font-family:'Song Myung',serif;color:var(--thr-cream)}
+.ln-theater .nm{font-family:'Song Myung',serif;color:var(--thr-cream);font-size:19px;letter-spacing:1px}
+.ln-theater .st{background:rgba(217,142,50,.16);color:var(--thr-amber);border:1px solid rgba(217,142,50,.5)}
+.ln-theater .windows i{background:#2A1A20;border:1px solid #4A2530;
+  box-shadow:inset 0 -6px 10px rgba(217,142,50,.14)}
+.ln-theater .ds{color:#C3A392}
+
 /* T5 — 도서관: 모던 오피스 (챠콜 + 라이트그레이 + 형광펜 옐로) */
-.t5 .carbody{background:#F4F5F3;border:1.5px solid #DDE3DC;border-left:5px solid #3A3F45;
+.ln-library .carbody{background:#F4F5F3;border:1.5px solid #DDE3DC;border-left:5px solid #3A3F45;
              box-shadow:0 4px 10px rgba(38,40,43,.10);position:relative}
-.t5 .lb{background:#3A3F45;color:#fff;font-family:'Pretendard',sans-serif;font-weight:800}
-.t5 .nm{font-family:'Pretendard',sans-serif;font-weight:800;color:#26282B;font-size:18px;letter-spacing:-.6px}
+.ln-library .lb{background:#3A3F45;color:#fff;font-family:'Pretendard',sans-serif;font-weight:800}
+.ln-library .nm{font-family:'Pretendard',sans-serif;font-weight:800;color:#26282B;font-size:18px;letter-spacing:-.6px}
 /* 형광펜은 글자 폭만큼만 — flex item이라 배경 대신 인라인 span에 칠한다 */
-.t5 .nm i{font-style:normal;background:linear-gradient(180deg,transparent 60%,#FFE45C 60%);
+.ln-library .nm i{font-style:normal;background:linear-gradient(180deg,transparent 60%,#FFE45C 60%);
   box-decoration-break:clone;-webkit-box-decoration-break:clone}
-.t5 .st{background:#FFE45C;color:#3A3F45;border:none;font-weight:800}
-.t5 .windows i{background:#fff;border:1px solid #DDE3DC;border-radius:4px}
-.t5 .ds{color:#6B7178;padding-right:58px}
-.t5 .arrow{position:absolute;right:16px;bottom:13px;color:#3A3F45;font-size:16px;font-weight:800}
+.ln-library .st{background:#FFE45C;color:#3A3F45;border:none;font-weight:800}
+.ln-library .windows i{background:#fff;border:1px solid #DDE3DC;border-radius:4px}
+.ln-library .ds{color:#6B7178;padding-right:58px}
+.ln-library .arrow{position:absolute;right:16px;bottom:13px;color:#3A3F45;font-size:16px;font-weight:800}
 
 /* T7 — 공방: 크라프트 공작 (종이 + 스티치 테두리) */
-.t7 .carbody{background:#F3E7D2;border:2px dashed var(--line7);box-shadow:0 5px 0 rgba(90,60,110,.16)}
-.t7 .lb{background:var(--line7);font-family:'Jua',sans-serif}
-.t7 .nm{font-family:'Jua',sans-serif;color:#4a3358}
-.t7 .st{border:1.5px dashed var(--line7);color:#7a5495}
-.t7 .windows i{background:#fff;border:1.5px solid #D9C6E8;border-radius:11px}
-.t7 .ds{color:#7d6a55}
+.ln-craft .carbody{background:#F3E7D2;border:2px dashed var(--line7);box-shadow:0 5px 0 rgba(90,60,110,.16)}
+.ln-craft .lb{background:var(--line7);font-family:'Jua',sans-serif}
+.ln-craft .nm{font-family:'Jua',sans-serif;color:#4a3358}
+.ln-craft .st{border:1.5px dashed var(--line7);color:#7a5495}
+.ln-craft .windows i{background:#fff;border:1.5px solid #D9C6E8;border-radius:11px}
+.ln-craft .ds{color:#7d6a55}
 
 .train.soon{opacity:.78}
-.train.t6.soon{opacity:.86}
+.train.ln-cyber.soon{opacity:.86}
 
 /* ── 미니 노선도 ── */
 /* ── 1875 원본 역 사진 액자 ── */
@@ -209,12 +221,12 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
 </header>
 
 <main>
-  <div class="label">노선 안내 · LINES</div>
+  <div class="label">플랫폼 안내 · PLATFORMS</div>
 
-  <div class="train t1 soon">
+  <div class="train ln-play soon">
     <div class="carbody">
       <div class="carhead">
-        <div class="lb">T1</div>
+        <div class="lb">1</div>
         <div class="nm">플레이</div>
         <span class="st">개통준비</span>
       </div>
@@ -225,10 +237,10 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </div>
 
-  <a class="train t2" href="1ndclub/">
+  <a class="train ln-night" href="1ndclub/">
     <div class="carbody">
       <div class="carhead">
-        <div class="lb">T2</div>
+        <div class="lb">2</div>
         <div class="nm">첫밤 사망자 클럽</div>
         <span class="st">운행중</span>
       </div>
@@ -240,10 +252,10 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </a>
 
-  <div class="train t3 soon">
+  <div class="train ln-picnic soon">
     <div class="carbody">
       <div class="carhead">
-        <div class="lb">T3</div>
+        <div class="lb">3</div>
         <div class="nm">소풍</div>
         <span class="st">공사중</span>
       </div>
@@ -254,10 +266,24 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </div>
 
-  <div class="train t4 soon">
+  <div class="train ln-theater soon">
     <div class="carbody">
       <div class="carhead">
-        <div class="lb">T4</div>
+        <div class="lb">4</div>
+        <div class="nm">극장</div>
+        <span class="st">개봉박두</span>
+      </div>
+      <div class="windows"><i>🎬</i><i>🍿</i><i>🎭</i><i>🖼️</i></div>
+      <div class="ds">불 꺼진 극장에서 같이 보고, 불 켜진 골목에서 같이 얘기하는 노선 — 영화·전시·공연</div>
+    </div>
+    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
+    <div class="track"></div>
+  </div>
+
+  <div class="train ln-sport soon">
+    <div class="carbody">
+      <div class="carhead">
+        <div class="lb">5</div>
         <div class="nm">운동</div>
         <span class="st">몸풀기중</span>
       </div>
@@ -268,10 +294,10 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </div>
 
-  <a class="train t5" href="library/">
+  <a class="train ln-library" href="library/">
     <div class="carbody">
       <div class="carhead">
-        <div class="lb">T5</div>
+        <div class="lb">6</div>
         <div class="nm"><i>도서관</i></div>
         <span class="st">운행중</span>
       </div>
@@ -283,10 +309,10 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </a>
 
-  <div class="train t6 soon">
+  <div class="train ln-cyber soon">
     <div class="carbody">
       <div class="carhead">
-        <div class="lb">T6</div>
+        <div class="lb">7</div>
         <div class="nm">사이버</div>
         <span class="st">접속대기</span>
       </div>
@@ -297,10 +323,10 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
     <div class="track"></div>
   </div>
 
-  <div class="train t7 soon">
+  <div class="train ln-craft soon">
     <div class="carbody">
       <div class="carhead">
-        <div class="lb">T7</div>
+        <div class="lb">8</div>
         <div class="nm">공방</div>
         <span class="st">빚는중</span>
       </div>
