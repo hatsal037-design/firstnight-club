@@ -1698,7 +1698,6 @@ function editPast(d){
     <div class="fld"><label>메모</label><textarea id="e_memo" placeholder="그날 어땠는지 한두 줄">${cur.memo||''}</textarea></div>
     <div class="mbtns">
       <button class="mbtn" onclick="savePast()">저장</button>
-      ${d?`<button class="mbtn ghost" onclick="delPast('${d}')">삭제</button>`:''}
     </div>
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
@@ -1827,6 +1826,8 @@ function savePast(){
     closeM(); schedScrolled=true; renderSched();
   })();
 }
+/* 기록 삭제 — 실수로 지우면 되돌릴 수 없어서 화면에서는 뺐다.
+   지워야 할 일이 생기면 past.js/서버에서 직접 정리한다. */
 function delPast(d){
   if(!confirm('이 기록을 지울까요?')) return;
   delete edits[d]; localStorage.setItem(RKEY,JSON.stringify(edits));
