@@ -68,116 +68,164 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .label::before{content:'';width:22px;height:3px;background:var(--red)}
 .label::after{content:'';flex:1;height:1px;background:rgba(58,42,30,.15)}
 
-/* ── 노선 열차 — 카드가 곧 그 노선의 차량. 노선마다 디자인 자체가 다르다 ── */
-.train{display:block;margin-bottom:30px;position:relative}
-a.train{cursor:pointer}
-a.train:active .carbody{transform:translateX(10px)}
-.carbody{border-radius:14px;padding:16px 18px 15px;position:relative;
-         transition:transform 220ms var(--spring)}
-.carhead{display:flex;align-items:center;gap:11px}
-.lb{width:40px;height:40px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:15px;color:#fff}
-.carhead .nm{flex:1;min-width:0;font-size:19px;letter-spacing:-.3px}
-.carhead .st{flex:none;font-size:10px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:6px 12px}
-.windows{display:flex;gap:9px;margin:13px 0 11px}
-.windows i{flex:1;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;font-style:normal}
-.carbody .ds{font-size:12.5px;line-height:1.6}
-.undercar{display:flex;justify-content:space-between;padding:0 36px;margin-top:-9px;position:relative}
-.wheel{width:20px;height:20px;border-radius:50%;background:#2B2B31;border:4px solid #55555e;
-       box-shadow:inset 0 0 0 3px #1c1c21}
-.track{height:5px;margin-top:6px;border-radius:3px;
-       background:repeating-linear-gradient(90deg, rgba(58,42,30,.5) 0 16px, rgba(58,42,30,.12) 16px 26px)}
+/* ── 플랫폼 카드 — 노선마다 그 세계의 실물 물건 ──
+   전단 · 승차권 · 스크랩북 · 간판 · 전광판 · 대출카드 · 터미널 · 태그 */
+:root{--veh:66px}
+.card{display:block;position:relative;margin-bottom:6px;margin-top:calc(var(--veh) * 0.74)}
+.veh{position:absolute;height:var(--veh);width:auto;z-index:3;pointer-events:none;
+  left:-6px;top:calc(var(--veh) * -0.64);filter:drop-shadow(0 6px 9px rgba(58,42,30,.28))}
+.veh.dk{filter:drop-shadow(0 6px 11px rgba(0,0,0,.55))}
+.veh.gl{filter:drop-shadow(0 0 13px rgba(255,190,120,.35)) drop-shadow(0 6px 9px rgba(0,0,0,.5))}
+.veh.cy{filter:drop-shadow(0 0 14px rgba(53,200,232,.5)) drop-shadow(0 6px 9px rgba(0,0,0,.5))}
 
-/* T2 — 첫밤 클럽: 다크 네오브루탈리즘 (첫 밤의 어둠) */
-.ln-night .carbody{background:#131318;border:2px solid var(--red);box-shadow:5px 5px 0 rgba(179,22,30,.5)}
-.ln-night .lb{background:var(--red);font-family:'Do Hyeon',sans-serif}
-.ln-night .nm{font-family:'Do Hyeon',sans-serif;color:#eceef2}
-.ln-night .st{background:var(--red);color:#fff}
-.ln-night .windows i{background:#1d1d25;border:1px solid #34343f;color:#B3161E;text-shadow:0 0 8px rgba(232,50,60,.8)}
-.ln-night .ds{color:#8b93a1;padding-right:58px}
-.ln-night .arrow{position:absolute;right:16px;bottom:13px;color:var(--red);font-size:16px;font-weight:800}
+/* ═══ 1 플레이 — 페스티벌 전단 (리소 인쇄) ═══ */
+.fl{background:#FFE45C;border:2.5px solid #1B1B1B;padding:14px 16px 13px;position:relative;
+  box-shadow:6px 6px 0 #1B1B1B}
+.fl::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.26;
+  background:radial-gradient(circle at 88% 74%, #FF7BAC 0 17%, transparent 18%)}
+.fl .no{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:2.5px;color:#7A6A18;text-align:right}
+.fl .nm{font-family:'Jua',sans-serif;font-size:33px;color:#1B1B1B;line-height:1;margin-top:5px;
+  transform:rotate(-1.2deg);transform-origin:left}
+.fl .ds{font-size:11.5px;color:#4A431A;margin-top:10px;line-height:1.6;position:relative;z-index:2}
+.fl .foot{display:flex;align-items:center;margin-top:12px;position:relative;z-index:2}
+.fl .st{font-family:'Jua',sans-serif;font-size:12px;background:#1B1B1B;color:#FFE45C;padding:4px 11px;
+  transform:rotate(-2deg)}
+.fl .arrow{margin-left:auto;font-family:'Jua',sans-serif;font-size:14px;color:#1B1B1B}
 
-/* T3 — 소풍: 폴라로이드 스크랩북 (크라프트지 + 기울어진 사진 + 손글씨) */
-.ln-picnic .carbody{background:#E9DFC8;border:1.5px solid #D6C7A6;box-shadow:0 5px 0 rgba(107,88,68,.15)}
-.ln-picnic .lb{background:var(--line3);font-family:'Noto Serif KR',serif}
-.ln-picnic .nm{font-family:'Nanum Pen Script',cursive;font-weight:400;color:#4a3f33;font-size:27px}
-.ln-picnic .st{background:rgba(255,224,130,.85);color:#7a6430;border-radius:2px;
-        transform:rotate(-3deg);box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.ln-picnic .windows{gap:11px}
-.ln-picnic .windows i{background:#fff;border:none;border-bottom:9px solid #fff;border-radius:2px;
-               box-shadow:0 3px 8px rgba(58,42,30,.22);height:34px}
-.ln-picnic .windows i:nth-child(odd){transform:rotate(-2.5deg)}
-.ln-picnic .windows i:nth-child(even){transform:rotate(2deg)}
-.ln-picnic .ds{font-family:'Nanum Pen Script',cursive;font-size:17.5px;color:#6b5844;line-height:1.45}
+/* ═══ 2 첫밤 — 야간열차 승차권 ═══ */
+.tk{background:#17141A;border:1px solid #3A2B2E;border-radius:2px;overflow:hidden;display:flex;position:relative;
+  box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 0 60px rgba(217,142,50,.06)}
+.tk::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%, rgba(255,180,90,.14), transparent 58%)}
+.tk .stub{width:44px;flex:none;border-right:1px dashed rgba(232,200,160,.35);
+  background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;padding:8px 0}
+.tk .stub span{writing-mode:vertical-rl;font-family:'Cinzel',serif;font-size:9px;letter-spacing:4px;
+  font-weight:800;color:#C6A87C}
+.tk .body{flex:1;min-width:0;padding:14px 15px 13px}
+.tk .no{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:2px;color:#8A6B4E;text-align:right}
+.tk .nm{font-family:'Do Hyeon',sans-serif;font-size:25px;color:#F0E6DA;margin-top:5px;letter-spacing:-.5px}
+.tk .ds{font-size:11.5px;color:#8E8288;margin-top:7px;line-height:1.6}
+.tk .foot{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:9px;
+  border-top:1px dotted rgba(232,200,160,.22)}
+.tk .st{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:1.5px;
+  color:#E8323C;border:1px solid rgba(232,50,60,.55);padding:3px 8px}
+.tk .arrow{margin-left:auto;font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:#6E6169}
 
-/* T1 — 플레이: 레트로팝 (파티 열차) */
-.ln-play .carbody{background:#FFE95C;border:3px solid #1a1a1f;box-shadow:6px 6px 0 #1a1a1f;border-radius:10px}
-.ln-play .lb{background:#FF6EC7;border:3px solid #1a1a1f;color:#1a1a1f;font-family:'Jua',sans-serif}
-.ln-play .nm{font-family:'Jua',sans-serif;color:#1a1a1f;text-shadow:2px 2px 0 rgba(255,110,199,.55)}
-.ln-play .st{background:#FF6EC7;border:2px solid #1a1a1f;color:#1a1a1f}
-.ln-play .windows i{background:#fff;border:2.5px solid #1a1a1f;border-radius:50% 50% 8px 8px;font-size:14px}
-.ln-play .ds{color:#4a441a;font-weight:600}
-/* T6 — 사이버: 트론 라이트그리드 (검은 차체에 시안 라이트라인, 오렌지 포인트) */
-.ln-cyber .carbody{background:#04070D;border:2px solid #35C8E8;
-             background-image:linear-gradient(rgba(53,200,232,.06) 1px,transparent 1px),
-                              linear-gradient(90deg,rgba(53,200,232,.06) 1px,transparent 1px);
-             background-size:20px 20px;
-             box-shadow:0 0 16px rgba(53,200,232,.45), inset 0 0 26px rgba(53,200,232,.07)}
-.ln-cyber .lb{background:#04070D;border:2px solid #35C8E8;color:#9FE9FF;
-        font-family:'Do Hyeon',sans-serif;box-shadow:0 0 10px rgba(53,200,232,.8)}
-.ln-cyber .nm{font-family:'Do Hyeon',sans-serif;color:#D8F5FF;text-shadow:0 0 12px rgba(53,200,232,.9)}
-.ln-cyber .st{border:1.5px solid #FF9E36;color:#FFB763;font-family:ui-monospace,monospace;
-        box-shadow:0 0 8px rgba(255,158,54,.35)}
-.ln-cyber .windows i{background:#060B14;border:1px solid #35C8E8;border-radius:3px;
-               box-shadow:inset 0 0 10px rgba(53,200,232,.3)}
-.ln-cyber .ds{color:#7FA8B8}
-/* T4 — 운동: 스포티 저지 (코발트 + 스피드 스트라이프) */
-.ln-sport .carbody{background:#fff;border:3px solid var(--line4);box-shadow:4px 4px 0 rgba(46,100,216,.3);
-             position:relative;overflow:hidden}
-.ln-sport .carbody::after{content:'';position:absolute;top:0;right:-14px;width:86px;height:100%;
-             background:repeating-linear-gradient(-55deg,rgba(46,100,216,.13) 0 10px,transparent 10px 22px);
-             pointer-events:none}
-.ln-sport .lb{background:var(--line4);font-family:'Do Hyeon',sans-serif}
-.ln-sport .nm{font-family:'Do Hyeon',sans-serif;font-style:italic;color:#1c3f8f}
-.ln-sport .st{background:var(--line4);color:#fff}
-.ln-sport .windows i{background:#EEF3FE;border:1.5px solid #BCCDF3}
-.ln-sport .ds{color:#5b6c8f}
+/* ═══ 3 소풍 — 스크랩북 ═══ */
+.pl{background:#EFE6D2;border-radius:3px;padding:15px 16px 14px 17px;position:relative;
+  box-shadow:0 3px 0 rgba(107,88,68,.13), 0 10px 18px rgba(107,88,68,.10);
+  background-image:radial-gradient(rgba(160,140,110,.10) 1px, transparent 1px);background-size:5px 5px}
+.pl .tape{position:absolute;right:16px;top:-9px;width:74px;height:21px;transform:rotate(-3.5deg);
+  background:rgba(226,208,166,.85);border-left:1px dashed rgba(150,130,95,.5);
+  border-right:1px dashed rgba(150,130,95,.5);box-shadow:0 1px 3px rgba(107,88,68,.18)}
+.pl .no{font-family:'Noto Serif KR',serif;font-size:10px;letter-spacing:3px;color:#8B7355;text-align:right}
+.pl .nm{font-family:'Nanum Pen Script',cursive;font-size:31px;color:#4A3C2A;line-height:1;margin-top:4px}
+.pl .ds{font-size:11.5px;color:#7A6A55;margin-top:9px;line-height:1.65}
+.pl .foot{display:flex;align-items:center;margin-top:12px}
+.pl .st{font-family:'Nanum Pen Script',cursive;font-size:17px;color:#B3161E;
+  border-bottom:2px solid rgba(179,22,30,.35);padding:0 3px}
+.pl .arrow{margin-left:auto;font-family:'Nanum Pen Script',cursive;font-size:19px;color:#8B7355}
 
-/* T5 — 서재: 양장본 (딥그린 가죽 + 금박 이중선) */
-/* 4 극장 — 화양연화 (치파오 버건디 · 벨벳 어둠 · 텅스텐 등불) */
-.ln-theater .carbody{background:var(--thr-dark);border:2px solid var(--thr-wine);
-  background-image:radial-gradient(ellipse at 50% -10%, rgba(217,142,50,.20), transparent 60%);
-  box-shadow:0 6px 16px rgba(31,20,24,.35)}
-.ln-theater .lb{background:var(--thr-wine);font-family:'Song Myung',serif;color:var(--thr-cream)}
-.ln-theater .nm{font-family:'Song Myung',serif;color:var(--thr-cream);font-size:19px;letter-spacing:1px}
-.ln-theater .st{background:rgba(217,142,50,.16);color:var(--thr-amber);border:1px solid rgba(217,142,50,.5)}
-.ln-theater .windows i{background:#2A1A20;border:1px solid #4A2530;
-  box-shadow:inset 0 -6px 10px rgba(217,142,50,.14)}
-.ln-theater .ds{color:#C3A392}
+/* ═══ 4 극장 — 옛 상영 간판 ═══ */
+.th{background:#1F1418;border:1px solid #55202F;position:relative;overflow:hidden;
+  box-shadow:0 10px 22px rgba(31,20,24,.4)}
+.th::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% -18%, rgba(217,142,50,.30), transparent 62%)}
+/* 상단 전구 줄 */
+.th .bulbs{display:flex;justify-content:space-between;padding:7px 13px 0}
+.th .bulbs i{width:5px;height:5px;border-radius:50%;background:#D98E32;
+  box-shadow:0 0 7px rgba(217,142,50,.9)}
+.th .body{padding:9px 16px 14px;display:flex;flex-direction:row-reverse;gap:13px;position:relative}
+.th .vert{writing-mode:vertical-rl;font-family:'Song Myung',serif;font-size:11px;letter-spacing:5px;
+  color:#2F6B5A;padding-top:2px}
+.th .main{flex:1;min-width:0}
+.th .no{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:3px;color:#8A5B4A;font-weight:800;text-align:right}
+.th .nm{font-family:'Song Myung',serif;font-size:27px;color:#EFDCCB;letter-spacing:3px;margin-top:4px}
+.th .ds{font-size:11.5px;color:#A98C82;margin-top:8px;line-height:1.6}
+.th .foot{display:flex;align-items:center;margin-top:12px;padding-top:9px;
+  border-top:1px solid rgba(122,31,61,.5)}
+.th .st{font-family:'Song Myung',serif;font-size:11px;letter-spacing:2px;color:#D98E32;
+  border:1px solid rgba(217,142,50,.45);padding:3px 10px}
+.th .arrow{margin-left:auto;font-family:'Song Myung',serif;font-size:12px;color:#8A5B4A}
 
-/* T5 — 도서관: 모던 오피스 (챠콜 + 라이트그레이 + 형광펜 옐로) */
-.ln-library .carbody{background:#F4F5F3;border:1.5px solid #DDE3DC;border-left:5px solid #3A3F45;
-             box-shadow:0 4px 10px rgba(38,40,43,.10);position:relative}
-.ln-library .lb{background:#3A3F45;color:#fff;font-family:'Pretendard',sans-serif;font-weight:800}
-.ln-library .nm{font-family:'Pretendard',sans-serif;font-weight:800;color:#26282B;font-size:18px;letter-spacing:-.6px}
-/* 형광펜은 글자 폭만큼만 — flex item이라 배경 대신 인라인 span에 칠한다 */
-.ln-library .nm i{font-style:normal;background:linear-gradient(180deg,transparent 60%,#FFE45C 60%);
-  box-decoration-break:clone;-webkit-box-decoration-break:clone}
-.ln-library .st{background:#FFE45C;color:#3A3F45;border:none;font-weight:800}
-.ln-library .windows i{background:#fff;border:1px solid #DDE3DC;border-radius:4px}
-.ln-library .ds{color:#6B7178;padding-right:58px}
-.ln-library .arrow{position:absolute;right:16px;bottom:13px;color:#3A3F45;font-size:16px;font-weight:800}
+/* ═══ 5 운동 — 경기장 전광판 ═══ */
+.sc{background:#0F1B33;border:2px solid #2E64D8;border-radius:5px;overflow:hidden;
+  box-shadow:0 6px 16px rgba(15,27,51,.35)}
+.sc .bar{background:#2E64D8;padding:5px 13px;display:flex;align-items:center;gap:8px}
+.sc .bar b{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:2.5px;color:#fff;margin-left:auto}
+.sc .bar .dot{width:6px;height:6px;border-radius:50%;background:#FFE45C;
+  box-shadow:0 0 6px #FFE45C}
+.sc .body{padding:13px 15px 14px;position:relative;
+  background-image:radial-gradient(rgba(255,255,255,.055) 1px, transparent 1px);background-size:4px 4px}
+.sc .nm{font-family:'Jua',sans-serif;font-size:26px;color:#EAF1FF;letter-spacing:1px}
+.sc .ds{font-size:11.5px;color:#8FA6CE;margin-top:8px;line-height:1.6}
+.sc .foot{display:flex;align-items:center;margin-top:12px}
+.sc .st{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:1.5px;
+  background:#FFE45C;color:#0F1B33;padding:4px 9px;font-weight:700}
+.sc .arrow{margin-left:auto;font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:#5B7BB8}
 
-/* T7 — 공방: 크라프트 공작 (종이 + 스티치 테두리) */
-.ln-craft .carbody{background:#F3E7D2;border:2px dashed var(--line7);box-shadow:0 5px 0 rgba(90,60,110,.16)}
-.ln-craft .lb{background:var(--line7);font-family:'Jua',sans-serif}
-.ln-craft .nm{font-family:'Jua',sans-serif;color:#4a3358}
-.ln-craft .st{border:1.5px dashed var(--line7);color:#7a5495}
-.ln-craft .windows i{background:#fff;border:1.5px solid #D9C6E8;border-radius:11px}
-.ln-craft .ds{color:#7d6a55}
+/* ═══ 6 도서관 — 대출카드 ═══ */
+.lb{background:#FBFBF9;border:1px solid #D8DED6;border-radius:3px;overflow:hidden;
+  box-shadow:0 2px 5px rgba(38,40,43,.07)}
+.lb .punch{height:22px;background:#F1F3EF;border-bottom:1px solid #E1E6DE;
+  display:flex;align-items:center;justify-content:flex-end;gap:15px;padding:0 15px}
+.lb .punch i{width:7px;height:7px;border-radius:50%;background:#DDE3DC;
+  box-shadow:inset 0 1px 2px rgba(38,40,43,.18)}
+.lb .body{padding:13px 16px 14px}
+.lb .no{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:2.5px;color:#98A0A6;text-align:right}
+.lb .nm{font-size:22px;font-weight:800;letter-spacing:-.7px;color:#26282B;margin-top:4px;display:inline-block}
+.lb .nm i{font-style:normal;background:linear-gradient(180deg,transparent 62%,#FFE45C 62%)}
+.lb .ds{font-size:11.5px;color:#6B7178;margin-top:8px;line-height:1.65}
+.lb .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:12px;
+  background:#E1E6DE;border:1px solid #E1E6DE}
+.lb .grid div{background:#fff;height:19px;display:grid;place-items:center;
+  font-family:'Nanum Gothic Coding',monospace;font-size:8px;color:#B6BDB4}
+.lb .grid div.on{background:#FFF9DD;color:#8A7A2E}
+.lb .foot{display:flex;align-items:center;margin-top:11px}
+.lb .st{font-size:9.5px;font-weight:800;letter-spacing:1.2px;background:#FFE45C;color:#3A3F45;padding:4px 9px}
+.lb .arrow{margin-left:auto;font-size:12px;color:#3A3F45;font-weight:800}
 
-.train.soon{opacity:.78}
-.train.ln-cyber.soon{opacity:.86}
+/* ═══ 7 사이버 — 터미널 화면 ═══ */
+.tm{background:#04070D;border:1px solid #1FA8C9;border-radius:5px;overflow:hidden;position:relative;
+  box-shadow:0 0 20px rgba(31,168,201,.26), inset 0 0 26px rgba(31,168,201,.09)}
+.tm::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg, rgba(53,200,232,.055) 0 1px, transparent 1px 3px)}
+.tm .bar{background:#0A1620;border-bottom:1px solid rgba(31,168,201,.35);padding:6px 11px;
+  display:flex;align-items:center;gap:6px}
+.tm .bar i{width:7px;height:7px;border-radius:50%;background:#1B3A46}
+.tm .bar b{font-family:'Nanum Gothic Coding',monospace;font-size:8.5px;letter-spacing:1.5px;
+  color:#4E8FA3;margin-left:5px}
+.tm .body{padding:12px 14px 14px}
+.tm .no{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:1.5px;color:#3E7F94;text-align:right}
+.tm .nm{font-family:'DungGeunMo','Nanum Gothic Coding',monospace;font-size:24px;color:#9FE9FF;margin-top:5px;
+  text-shadow:0 0 11px rgba(53,200,232,.75)}
+.tm .nm::after{content:'_';animation:blink 1.1s steps(1) infinite;color:#69D3A4}
+@keyframes blink{50%{opacity:0}}
+.tm .ds{font-family:'Nanum Gothic Coding',monospace;font-size:10.5px;color:#69D3A4;margin-top:9px;line-height:1.7}
+.tm .foot{display:flex;align-items:center;margin-top:12px}
+.tm .st{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:1.5px;color:#FFB763;
+  border:1px solid #FF9E36;padding:3px 8px}
+.tm .arrow{margin-left:auto;font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:#3E7F94}
+
+/* ═══ 8 공방 — 크라프트 태그 ═══ */
+.cf{background:#E4CBB0;border-radius:4px;padding:14px 34px 14px 16px;position:relative;
+  box-shadow:0 3px 0 rgba(122,67,34,.16), 0 9px 16px rgba(122,67,34,.12);
+  background-image:repeating-linear-gradient(90deg, rgba(140,95,60,.055) 0 2px, transparent 2px 6px)}
+.cf .hole{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  width:13px;height:13px;border-radius:50%;background:var(--cream);
+  box-shadow:inset 0 1px 3px rgba(122,67,34,.45)}
+.cf .string{position:absolute;right:5px;top:calc(50% - 1px);width:14px;height:2px;
+  background:#B08D6A;transform:rotate(24deg);border-radius:2px}
+.cf .no{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:2.5px;color:#8A5C39;text-align:right}
+.cf .nm{font-size:24px;font-weight:800;color:#5E3418;margin-top:4px;letter-spacing:-.5px}
+.cf .ds{font-size:11.5px;color:#7C5637;margin-top:8px;line-height:1.65}
+.cf .foot{display:flex;align-items:center;margin-top:12px;padding-top:10px;
+  border-top:1px dashed rgba(122,67,34,.35)}
+.cf .st{font-size:10px;font-weight:800;letter-spacing:1px;color:#A15C2E;
+  border:1.5px solid #C87F4F;border-radius:3px;padding:3px 9px;transform:rotate(-3deg)}
+.cf .arrow{margin-left:auto;font-size:12px;color:#8A5C39;font-weight:700}
+
+.card.soon{opacity:.9}
 
 /* ── 미니 노선도 ── */
 /* ── 1875 원본 역 사진 액자 ── */
@@ -223,119 +271,105 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
 <main>
   <div class="label">플랫폼 안내 · PLATFORMS</div>
 
-  <div class="train ln-play soon">
-    <div class="carbody">
-      <div class="carhead">
-        <div class="lb">1</div>
-        <div class="nm">플레이</div>
-        <span class="st">개통준비</span>
-      </div>
-      <div class="windows"><i>🍻</i><i>🏖️</i><i>🎳</i><i>🪩</i></div>
-      <div class="ds">한강 맥주파티, 풀파티, 술게임 밤 — 요즘 식으로 노는 모임</div>
+  <a class="card soon">
+    <img class="veh" src="v/A2_bus.webp" alt="">
+    <div class="fl">
+      <div class="no">PLATFORM 01</div>
+      <div class="nm">플레이</div>
+      <div class="ds">한강 맥주파티, 풀파티, 술게임 밤 — 요즘 식으로 노는 노선</div>
+      <div class="foot"><span class="st">개통준비</span><span class="arrow">타러 가기 ›</span></div>
     </div>
-    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
-    <div class="track"></div>
-  </div>
+  </a>
 
-  <a class="train ln-night" href="1ndclub/">
-    <div class="carbody">
-      <div class="carhead">
-        <div class="lb">2</div>
+  <a class="card" href="1ndclub/">
+    <img class="veh gl" src="v/A3_night.webp" alt="">
+    <div class="tk">
+      <div class="stub"><span>TÜNEL</span></div>
+      <div class="body">
+        <div class="no">PLATFORM 02 · 첫밤행</div>
         <div class="nm">첫밤 사망자 클럽</div>
-        <span class="st">운행중</span>
+        <div class="ds">맨날 첫 밤에 죽는 사람들의 마피아·보드게임 모임 · 게임 도감 · 정모 일정</div>
+        <div class="foot"><span class="st">운행중</span><span class="arrow">승차 ▸</span></div>
       </div>
-      <div class="windows"><i>🔪</i><i>🌙</i><i>🃏</i><i>🕯️</i></div>
-      <div class="ds">맨날 첫 밤에 죽는 사람들의 마피아·보드게임 모임 · 게임 도감 · 정모 일정</div>
-      <span class="arrow">탑승 ›</span>
     </div>
-    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
-    <div class="track"></div>
   </a>
 
-  <div class="train ln-picnic soon">
-    <div class="carbody">
-      <div class="carhead">
-        <div class="lb">3</div>
-        <div class="nm">소풍</div>
-        <span class="st">공사중</span>
-      </div>
-      <div class="windows"><i>📷</i><i>🌿</i><i>⛰️</i><i>🧺</i></div>
+  <a class="card soon">
+    <img class="veh" src="v/A4_picnic.webp" alt="">
+    <div class="pl">
+      <div class="tape"></div>
+      <div class="no">P L A T F O R M &nbsp;0 3</div>
+      <div class="nm">소풍</div>
       <div class="ds">카메라 들고 떠나는 골목 산책, 여행, 당일 소풍 — 사진·여행·소풍 통합 노선</div>
+      <div class="foot"><span class="st">공사중</span><span class="arrow">타러 가기 ›</span></div>
     </div>
-    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
-    <div class="track"></div>
-  </div>
-
-  <div class="train ln-theater soon">
-    <div class="carbody">
-      <div class="carhead">
-        <div class="lb">4</div>
-        <div class="nm">극장</div>
-        <span class="st">개봉박두</span>
-      </div>
-      <div class="windows"><i>🎬</i><i>🍿</i><i>🎭</i><i>🖼️</i></div>
-      <div class="ds">불 꺼진 극장에서 같이 보고, 불 켜진 골목에서 같이 얘기하는 노선 — 영화·전시·공연</div>
-    </div>
-    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
-    <div class="track"></div>
-  </div>
-
-  <div class="train ln-sport soon">
-    <div class="carbody">
-      <div class="carhead">
-        <div class="lb">5</div>
-        <div class="nm">운동</div>
-        <span class="st">몸풀기중</span>
-      </div>
-      <div class="windows"><i>🏃</i><i>🏸</i><i>⚽</i><i>🏆</i></div>
-      <div class="ds">러닝, 배드민턴, 풋살, 운동회 — 땀 흘리며 노는 노선</div>
-    </div>
-    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
-    <div class="track"></div>
-  </div>
-
-  <a class="train ln-library" href="library/">
-    <div class="carbody">
-      <div class="carhead">
-        <div class="lb">6</div>
-        <div class="nm"><i>도서관</i></div>
-        <span class="st">운행중</span>
-      </div>
-      <div class="windows"><i>📖</i><i>💻</i><i>✒️</i><i>☕</i></div>
-      <div class="ds">책모임, 자기계발 스터디, AI 나눔회 — 같이 읽고 같이 굴려보는 노선</div>
-      <span class="arrow">탑승 ›</span>
-    </div>
-    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
-    <div class="track"></div>
   </a>
 
-  <div class="train ln-cyber soon">
-    <div class="carbody">
-      <div class="carhead">
-        <div class="lb">7</div>
-        <div class="nm">사이버</div>
-        <span class="st">접속대기</span>
+  <a class="card soon">
+    <img class="veh dk" src="v/A10_theater.webp" alt="">
+    <div class="th">
+      <div class="bulbs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="vert">上映中</div>
+        <div class="main">
+          <div class="no">PLATFORM 04</div>
+          <div class="nm">극장</div>
+          <div class="ds">불 꺼진 극장에서 같이 보고, 불 켜진 골목에서 같이 얘기하는 노선 — 영화·전시·공연</div>
+          <div class="foot"><span class="st">개봉박두</span><span class="arrow">입장 ›</span></div>
+        </div>
       </div>
-      <div class="windows"><i>👾</i><i>💣</i><i>🦎</i><i>🎧</i></div>
-      <div class="ds">덕몽어스, 크레이지아케이드, 온라인 파티게임 — 접속해서 노는 노선</div>
     </div>
-    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
-    <div class="track"></div>
-  </div>
+  </a>
 
-  <div class="train ln-craft soon">
-    <div class="carbody">
-      <div class="carhead">
-        <div class="lb">8</div>
-        <div class="nm">공방</div>
-        <span class="st">빚는중</span>
+  <a class="card soon">
+    <img class="veh" src="v/A5_sport.webp" alt="">
+    <div class="sc">
+      <div class="bar"><b>PLATFORM 05 — TÜNEL ARENA</b><span class="dot"></span></div>
+      <div class="body">
+        <div class="nm">운동</div>
+        <div class="ds">러닝, 배드민턴, 풋살, 운동회 — 땀 흘리며 노는 노선</div>
+        <div class="foot"><span class="st">몸풀기중</span><span class="arrow">출전 ›</span></div>
       </div>
-      <div class="windows"><i>🏺</i><i>🧶</i><i>🖌️</i><i>🎨</i></div>
-      <div class="ds">원데이 클래스, 공예, 만들기 체험 — 손으로 빚는 노선</div>
     </div>
-    <div class="undercar"><div class="wheel"></div><div class="wheel"></div><div class="wheel"></div></div>
-    <div class="track"></div>
-  </div>
+  </a>
+
+  <a class="card" href="library/">
+    <img class="veh" src="v/A6_library.webp" alt="">
+    <div class="lb">
+      <div class="punch"><i></i><i></i><i></i><i></i></div>
+      <div class="body">
+        <div class="no">PLATFORM 06</div>
+        <div class="nm"><i>도서관</i></div>
+        <div class="ds">책모임, 자기계발 스터디, AI 나눔회 — 같이 읽고 같이 굴려보는 노선</div>
+        <div class="grid"><div class="on">8/17</div><div></div><div></div><div></div></div>
+        <div class="foot"><span class="st">운행중</span><span class="arrow">탑승 ›</span></div>
+      </div>
+    </div>
+  </a>
+
+  <a class="card soon">
+    <img class="veh cy" src="v/A7_cyber.webp" alt="">
+    <div class="tm">
+      <div class="bar"><i></i><i></i><i></i><b>tunel://platform-07</b></div>
+      <div class="body">
+        <div class="no">$ connect --line cyber</div>
+        <div class="nm">사이버</div>
+        <div class="ds">&gt; 덕몽어스, 크레이지아케이드, 온라인 파티게임<br>&gt; 접속해서 노는 노선</div>
+        <div class="foot"><span class="st">접속대기</span><span class="arrow">[ENTER] ›</span></div>
+      </div>
+    </div>
+  </a>
+
+  <a class="card soon">
+    <img class="veh" src="v/A8_craft.webp" alt="">
+    <div class="cf">
+      <div class="string"></div><div class="hole"></div>
+      <div class="no">PLATFORM 08</div>
+      <div class="nm">공방</div>
+      <div class="ds">원데이 클래스, 공예, 만들기 체험 — 손으로 빚는 노선</div>
+      <div class="foot"><span class="st">빚는중</span><span class="arrow">작업실로 ›</span></div>
+    </div>
+  </a>
 
   <div class="relic">
     <div class="frame">
