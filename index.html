@@ -45,18 +45,21 @@ header{position:relative;overflow:hidden;padding:calc(52px + env(safe-area-inset
         filter:sepia(.3) saturate(1) brightness(1)}
 .heroov{position:absolute;inset:0;
         background:linear-gradient(180deg, rgba(244,235,217,.42), rgba(244,235,217,.86) 75%, var(--cream))}
-header > .arch, header > .tagline{position:relative}
-.arch{
-  display:inline-block;background:var(--paper);
-  border:3px solid var(--red);border-bottom-width:6px;
-  border-radius:130px 130px 12px 12px;
-  padding:30px 46px 20px;
-  box-shadow:0 6px 0 rgba(58,42,30,.14);
-}
-.arch .nm{font-family:'Noto Serif KR',serif;font-weight:900;font-size:40px;letter-spacing:10px;padding-left:10px}
-.arch .en{font-size:11px;letter-spacing:5px;color:var(--brass);font-weight:700;margin-top:5px}
-.arch .est{font-size:10px;color:var(--wood-soft);margin-top:9px;letter-spacing:1.5px;
-           border-top:1px solid #E3D5B8;padding-top:8px}
+header > .rig, header > .en, header > .est, header > .tagline{position:relative}
+/* 역 천장에 사슬로 매단 황동 명판 */
+.rig{position:relative;display:inline-block;padding-top:36px;max-width:300px;width:78%}
+.rail{position:absolute;left:50%;top:0;transform:translateX(-50%);width:74%;height:5px;border-radius:2px;
+      background:linear-gradient(180deg,#C7A45C,#8A6B2B 55%,#6B5220);
+      box-shadow:0 1px 2px rgba(58,42,30,.35)}
+.chain{position:absolute;top:4px;width:3px;height:34px;
+       background:repeating-linear-gradient(180deg,#C9A55E 0 5px,#7E6127 5px 7px)}
+.chain.l{left:24%}
+.chain.r{right:24%}
+.plate{display:block;width:100%;height:auto;transform:rotate(-.5deg);
+       filter:drop-shadow(0 9px 12px rgba(58,42,30,.34))}
+.en{font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:5px;color:var(--brass);
+    font-weight:800;margin-top:15px}
+.est{font-size:9.5px;color:var(--wood-soft);letter-spacing:1.5px;margin-top:7px}
 .tagline{margin-top:18px;font-size:14.5px;color:var(--wood-soft);letter-spacing:-.2px}
 .tagline b{color:var(--wood);font-weight:700}
 
@@ -260,11 +263,14 @@ footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-heigh
 <header>
   <div class="herobg" aria-hidden="true"></div>
   <div class="heroov" aria-hidden="true"></div>
-  <div class="arch">
-    <div class="nm">투 넬</div>
-    <div class="en">T Ü N E L · S E O U L</div>
-    <div class="est">EST. İSTANBUL 1875 — SEOUL 2026</div>
+  <div class="rig">
+    <div class="rail" aria-hidden="true"></div>
+    <div class="chain l" aria-hidden="true"></div>
+    <div class="chain r" aria-hidden="true"></div>
+    <img class="plate" src="v/G1_arch.webp" alt="TÜNEL" width="919" height="420">
   </div>
+  <div class="en">T Ü N E L · S E O U L</div>
+  <div class="est">EST. İSTANBUL 1875 — SEOUL 2026</div>
   <div class="tagline">일상에서 취향으로 가는 터널 — <b>골라서 타세요</b></div>
 </header>
 
