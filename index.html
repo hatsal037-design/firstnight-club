@@ -33,18 +33,22 @@
 html{-webkit-font-smoothing:antialiased}
 body{
   font-family:'Pretendard',-apple-system,'Apple SD Gothic Neo',sans-serif;
-  color:var(--wood); background:var(--cream); min-height:100vh;
-  background-image:repeating-linear-gradient(90deg, rgba(58,42,30,.028) 0 1px, transparent 1px 9px);
+  color:#E2DBCE; background:#232125; min-height:100vh;
   display:flex; flex-direction:column;
 }
+/* 킹스크로스 회색 벽돌 — 화면에 고정, 스크롤과 무관하게 잘고 촘촘하게 */
+body::before{content:'';position:fixed;inset:0;z-index:-1;
+  background:url(v/bg_brick.webp) center/cover}
 a{text-decoration:none;color:inherit}
 
 /* ── 아치 역명판 헤더 (C안: 트램·인파 사진 + 세피아 + 크림 오버레이) ── */
 header{position:relative;overflow:hidden;padding:calc(52px + env(safe-area-inset-top)) 20px 26px;text-align:center}
 .herobg{position:absolute;inset:0;background:url(hero_tram.jpg) center 30%/cover;
-        filter:sepia(.3) saturate(1) brightness(1)}
+        filter:sepia(.3) saturate(.9) brightness(.92);
+        -webkit-mask-image:linear-gradient(180deg,#000 58%,transparent);
+        mask-image:linear-gradient(180deg,#000 58%,transparent)}
 .heroov{position:absolute;inset:0;
-        background:linear-gradient(180deg, rgba(244,235,217,.42), rgba(244,235,217,.86) 75%, var(--cream))}
+        background:linear-gradient(180deg, rgba(24,22,26,.34), rgba(24,22,26,.10) 55%, transparent)}
 header > .rig, header > .en, header > .est, header > .tagline{position:relative}
 /* 역 천장에 사슬로 매단 황동 명판 */
 .rig{position:relative;display:inline-block;padding-top:36px;max-width:300px;width:78%}
@@ -59,17 +63,18 @@ header > .rig, header > .en, header > .est, header > .tagline{position:relative}
        filter:drop-shadow(0 9px 12px rgba(58,42,30,.34))}
 .en{font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:5px;color:var(--brass);
     font-weight:800;margin-top:15px}
-.est{font-size:9.5px;color:var(--wood-soft);letter-spacing:1.5px;margin-top:7px}
-.tagline{margin-top:18px;font-size:14.5px;color:var(--wood-soft);letter-spacing:-.2px}
-.tagline b{color:var(--wood);font-weight:700}
+.est{font-size:9.5px;color:#A79E8F;letter-spacing:1.5px;margin-top:7px}
+.tagline{margin-top:18px;font-size:14.5px;color:#CFC7B8;letter-spacing:-.2px;
+  text-shadow:0 1px 6px rgba(24,22,26,.6)}
+.tagline b{color:#F2EAD9;font-weight:700}
 
 main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 
 /* ── 구간 라벨 ── */
 .label{display:flex;align-items:center;gap:10px;margin:26px 4px 14px;
-       font-size:12px;font-weight:800;letter-spacing:3px;color:var(--wood-soft)}
+       font-size:12px;font-weight:800;letter-spacing:3px;color:#D9D2C4}
 .label::before{content:'';width:22px;height:3px;background:var(--red)}
-.label::after{content:'';flex:1;height:1px;background:rgba(58,42,30,.15)}
+.label::after{content:'';flex:1;height:1px;background:rgba(244,235,217,.20)}
 
 /* ── 플랫폼 카드 — 노선마다 그 세계의 실물 물건 ──
    전단 · 승차권 · 스크랩북 · 간판 · 전광판 · 대출카드 · 터미널 · 태그 */
@@ -237,7 +242,7 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
               border-radius:6px;padding:10px 10px 12px;box-shadow:0 6px 0 rgba(58,42,30,.18);
               transform:rotate(-1deg);max-width:340px}
 .relic img{display:block;width:100%;border-radius:3px;filter:sepia(.35) contrast(.98)}
-.relic .cap{font-size:10.5px;color:var(--wood-soft);margin-top:9px;letter-spacing:.5px;line-height:1.6}
+.relic .cap{font-size:10.5px;color:#BCB3A2;margin-top:9px;letter-spacing:.5px;line-height:1.6}
 .relic .cap b{color:var(--wood);font-family:'Noto Serif KR',serif}
 
 /* ── 종착역(비전) ── */
@@ -255,7 +260,7 @@ footer{text-align:center;padding:30px 20px calc(26px + env(safe-area-inset-botto
        border:2.5px solid var(--brass-deep);display:flex;align-items:center;justify-content:center;
        font-family:'Noto Serif KR',serif;font-weight:900;font-size:20px;color:#4A3813;
        box-shadow:0 3px 6px rgba(58,42,30,.3), inset 0 2px 3px rgba(255,255,255,.45)}
-footer .ft{font-size:10.5px;color:var(--wood-soft);letter-spacing:1px;line-height:1.8}
+footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 </style>
 </head>
 <body>
