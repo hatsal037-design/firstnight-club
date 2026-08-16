@@ -21,7 +21,7 @@ create table public.members (
   aliases jsonb not null default '[]',
   no int unique,
   is_admin boolean not null default false,
-  role text check (role in ('staff')),
+  role text check (role is null or role in ('staff','banned')),   -- staff 운영진 · banned 정지
   scribe boolean not null default false,
   scribe_ready boolean not null default false,
   scribe_hello boolean not null default false,
@@ -100,9 +100,16 @@ create table public.crush (
 
 -- ═══ 도우미 함수 (정책에서 "나는 누구인가" 판별용) ═══
 
+/* 정지(role='banned') 회원은 "아무도 아님"으로 답한다 —
+   조회 정책은 그대로 열려 있고, 쓰기 정책은 전부 막힌다 */
 create or replace function public.my_member_id() returns uuid
 language sql stable security definer set search_path = public as
-$$ select id from members where auth_id = auth.uid() $$;
+$$ select id from members
+   where auth_id = auth.uid() and role is distinct from 'banned' $$;
+
+create or replace function public.my_is_banned() returns boolean
+language sql stable security definer set search_path = public as
+$$ select coalesce((select role = 'banned' from members where auth_id = auth.uid()), false) $$;
 
 create or replace function public.my_is_admin() returns boolean
 language sql stable security definer set search_path = public as
@@ -315,5 +322,6 @@ end $$;
 grant execute on function
   public.my_member_id, public.my_is_admin, public.my_is_staff, public.my_can_record,
   public.claim_my_account, public.signup_member,
-  public.admin_set_role, public.admin_set_scribe, public.admin_update_member, public.admin_delete_member
+  public.admin_set_role, public.admin_set_scribe, public.admin_update_member, public.admin_delete_member,
+  public.my_is_banned
 to authenticated;

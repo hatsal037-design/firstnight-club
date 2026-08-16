@@ -376,6 +376,20 @@ nav .nb.on,nav .nb.on .tx{color:var(--red)}
 .mem .tag.staff{background:#2b3648;color:#a9c4e0}
 .mem .tag.scribe{background:#3d3320;color:#ffd98e}
 .mem .tag.ready{background:var(--surface2);color:var(--sub);border:1px dashed var(--line)}
+.mem .tag.ban{background:#3d1d20;color:#ffa9ad}
+.banbox{width:358px;max-width:calc(100% - 24px);margin:14px auto 0;padding:12px 14px;
+  background:#2a1519;border:1px solid #4a2429;border-radius:7px;
+  font-size:12px;line-height:1.65;color:#ffb3b7}
+.mem.ban{opacity:.62}
+/* 등급 선택 */
+.ropts{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.ropt{display:flex;align-items:flex-start;gap:10px;padding:12px 13px;cursor:pointer;
+  background:var(--surface2);border:1px solid var(--line);border-radius:7px}
+.ropt input{margin-top:2px;accent-color:var(--red);width:16px;height:16px;flex:none}
+.ropt b{display:block;font-size:13.5px;font-weight:700}
+.ropt span{display:block;font-size:11.5px;color:var(--sub);line-height:1.55;margin-top:3px}
+.ropt.on{border-color:var(--red);background:rgba(232,50,60,.09)}
+.ropt.danger.on{border-color:#c0454c;background:rgba(192,69,76,.13)}
 .mem .sub2{font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6}
 .mem .btns{display:flex;gap:6px;margin-top:10px}
 .mem .b{flex:1;text-align:center;font-size:11.5px;font-weight:600;padding:8px 0;border-radius:5px;
@@ -1096,7 +1110,11 @@ function renderSched(){
       </div>`;
   });
 
-  document.getElementById('schedTop').innerHTML = canRecord()
+  const banned = acc?.role==='banned';
+  document.getElementById('schedTop').innerHTML = banned
+    ? `<div class="banbox">활동이 정지된 계정이에요. 일정과 기록은 볼 수 있지만
+         참석 신청·게임 고르기·기록 작성은 할 수 없어요. 궁금한 점은 진행자에게 말씀해주세요.</div>`
+    : canRecord()
     ? `<div class="adminbox" style="margin:14px 14px 0">
          <div class="at">${isAdmin()?'🔧 관리자':isStaff()?'🔧 운영진':'📜 서기'}</div>
          <div class="row" style="color:var(--sub)">지난 모임의 참여자와 한 게임을 기록할 수 있어요.</div>
@@ -1956,11 +1974,11 @@ async function renderMembers(){
     ${agg}
     <div class="notice">오픈톡방 닉네임은 단톡방 대조·참가비 확인용이에요. 참가자에게는 안 보입니다.</div>
     <div style="margin-top:12px">${MEMS.map((m,i)=>`
-      <div class="mem${m.admin?' adm':''}">
+      <div class="mem${m.admin?' adm':''}${m.role==='banned'?' ban':''}">
         <div class="top">
           <span class="nm">${m.nick}</span>
           <span class="pn">${m.payname||'톡방닉 없음'}</span>
-          ${m.admin?'<span class="tag">관리자</span>':m.role==='staff'?'<span class="tag staff">운영진</span>':m.scribe?'<span class="tag scribe">서기</span>':m.scribeReady?'<span class="tag ready">서기 대기</span>':''}
+          ${m.admin?'<span class="tag">관리자</span>':m.role==='banned'?'<span class="tag ban">정지</span>':m.role==='staff'?'<span class="tag staff">운영진</span>':m.scribe?'<span class="tag scribe">서기</span>':m.scribeReady?'<span class="tag ready">서기 대기</span>':''}
         </div>
         <div class="sub2">
           가입 ${(m.joined||'').replace(/-/g,'.')} · 참석 ${cntOf(m)}번
@@ -1969,7 +1987,7 @@ async function renderMembers(){
         </div>
         <div class="btns">
           <span class="b" onclick="memEdit(${i})">✏️ 수정</span>
-          ${isAdmin()&&!m.admin?`<span class="b" onclick="memToggleStaff(${i})">${m.role==='staff'?'🛠 운영진 해제':'🛠 운영진 지정'}</span>`:''}
+          ${isAdmin()&&!m.admin?`<span class="b" onclick="memRole(${i})">${m.role==='banned'?'⛔ 정지됨':m.role==='staff'?'🛠 운영진':'👤 일반'} ▾</span>`:''}
           ${isAdmin()&&!m.admin&&m.scribeReady&&!m.scribe?`<span class="b" onclick="memScribe(${i},true)">📜 서기 승인</span>`:''}
           ${isAdmin()&&!m.admin&&m.scribe?`<span class="b" onclick="memScribe(${i},false)">📜 서기 해제</span>`:''}
           ${isAdmin()&&!m.admin?`<span class="b d" onclick="memDel(${i})">삭제</span>`:''}
@@ -2016,13 +2034,43 @@ async function memScribe(i, on){
   try{ await API.adminSetScribe(MEMS[i].uid, on); renderMembers(); }
   catch(e){ alert('저장에 실패했어요: '+e.message); }
 }
-async function memToggleStaff(i){
+/* 등급 변경 — 일반 / 운영진 / 정지 중에서 고른다 */
+const ROLE_OPTS = [
+  { v:'',       t:'일반 회원', d:'모임에 참여하는 보통 회원이에요.' },
+  { v:'staff',  t:'운영진',   d:'회원 목록과 게임 소유자를 볼 수 있고 기록을 남길 수 있어요.' },
+  { v:'banned', t:'정지',     d:'로그인은 되지만 참석 신청·게임 고르기·기록 작성이 모두 막혀요.' },
+];
+function memRole(i){
   if(!isAdmin()) return;
   const m=MEMS[i];
   if(m.admin) return;
+  const cur = m.role || '';
+  document.getElementById('modal').innerHTML=`
+    <h2>${m.nick} 등급</h2>
+    <div class="mdesc">언제든 되돌릴 수 있어요.</div>
+    <div class="ropts">
+      ${ROLE_OPTS.map(o=>`
+        <label class="ropt${o.v===cur?' on':''}${o.v==='banned'?' danger':''}">
+          <input type="radio" name="mrole" value="${o.v}"${o.v===cur?' checked':''}>
+          <div><b>${o.t}</b><span>${o.d}</span></div>
+        </label>`).join('')}
+    </div>
+    <div class="mbtns"><button class="mbtn" onclick="memRoleSave(${i})">저장</button></div>
+    <button class="mclose" onclick="closeM()">닫기</button>`;
+  document.getElementById('ov').style.display='flex';
+  document.querySelectorAll('.ropt input').forEach(r=>r.addEventListener('change',()=>{
+    document.querySelectorAll('.ropt').forEach(l=>l.classList.toggle('on', l.querySelector('input').checked));
+  }));
+}
+async function memRoleSave(i){
+  if(!isAdmin()) return;
+  const m=MEMS[i];
+  const v = document.querySelector('.ropt input:checked')?.value ?? '';
+  if((m.role||'') === v){ closeM(); return; }
+  if(v==='banned' && !confirm(`${m.nick} 회원을 정지할까요?\n로그인은 되지만 참석·기록·게임 고르기가 막혀요.`)) return;
   try{
-    await API.adminSetRole(m.uid, m.role==='staff' ? null : 'staff');
-    renderMembers();
+    await API.adminSetRole(m.uid, v || null);
+    closeM(); renderMembers();
   }catch(e){ alert('저장에 실패했어요: '+e.message); }
 }
 
