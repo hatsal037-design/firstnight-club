@@ -125,34 +125,20 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .mm select{font-size:10.5px;background:#26232A;color:#CFC7B8;border:1px solid #4A453E;
   border-radius:6px;padding:4px 6px;font-family:inherit}
 
-/* ── 상단 메뉴바 — 황동 명패 버튼 ── */
-.topnav{position:sticky;top:0;z-index:50;display:flex;justify-content:center;gap:9px;
+/* ── 상단 메뉴바 — 글자 + 경면 리디드 몰딩 구분선 ── */
+.topnav{position:sticky;top:0;z-index:50;
   background:rgba(18,17,20,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  border-bottom:1px solid rgba(176,141,62,.4);padding:10px 12px 11px;
-  box-shadow:0 4px 14px rgba(0,0,0,.35)}
-.tn{flex:none;position:relative;font-family:inherit;font-size:12.5px;font-weight:800;
-  letter-spacing:-.2px;padding:9px 17px;cursor:pointer;border-radius:7px;
-  /* 묵은 황동 — 비활성 */
-  color:#D9C79A;
-  background:
-    repeating-linear-gradient(95deg, rgba(255,255,255,.045) 0 1px, transparent 1px 3px),
-    linear-gradient(170deg, #6B5A33, #4E4126 45%, #3E3420 62%, #57482A);
-  border:1px solid #2A2416;
-  box-shadow:inset 0 1px 0 rgba(255,235,180,.28), inset 0 -1.5px 2px rgba(0,0,0,.5),
-             0 2px 4px rgba(0,0,0,.5);
-  text-shadow:0 -1px 0 rgba(0,0,0,.55), 0 1px 0 rgba(255,240,200,.12)}
+  box-shadow:0 6px 16px rgba(0,0,0,.45)}
+.tnrow{display:flex;justify-content:center;gap:26px;padding:12px 12px 9px}
+.tn{flex:none;position:relative;background:none;border:none;font-family:inherit;
+  font-size:13px;font-weight:800;letter-spacing:-.2px;color:#9A9184;cursor:pointer;
+  padding:0 2px 4px;transition:color 140ms}
+.tn.on{color:#F2EAD9}
+.tn.on::after{content:'';position:absolute;left:-2px;right:-2px;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,#E8C36B,transparent)}
 .tn:active{transform:translateY(1px)}
-.tn.on{
-  /* 닦아낸 경면 황동 — 활성 */
-  color:#3A2A10;
-  background:
-    linear-gradient(115deg, transparent 32%, rgba(255,255,255,.5) 44%, rgba(255,255,255,.14) 52%, transparent 62%),
-    repeating-linear-gradient(95deg, rgba(255,255,255,.06) 0 1px, transparent 1px 3px),
-    linear-gradient(170deg, #F3DD9E, #D9B565 42%, #B08D3E 65%, #E2C177);
-  border-color:#7E6127;
-  box-shadow:inset 0 1.5px 0 rgba(255,250,225,.85), inset 0 -2px 3px rgba(122,90,30,.55),
-             0 2px 7px rgba(0,0,0,.55), 0 0 14px rgba(217,181,101,.22);
-  text-shadow:0 1px 0 rgba(255,246,214,.55)}
+/* 실사 몰딩 — 리디드(조지안 황동 도어플레이트) */
+.tnbar{height:30px;background:url(v/ss1_reed.webp) center/100% 100% no-repeat}
 .hview{display:none}
 .hview.on{display:block}
 .bnote{font-size:11px;color:#8F887B;line-height:1.7;margin:12px 8px 0}
@@ -407,9 +393,12 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 </header>
 
 <nav class="topnav" id="topnav">
-  <button class="tn on" data-v="plat">플랫폼</button>
-  <button class="tn" data-v="sched">전체일정</button>
-  <button class="tn" data-v="me">마이페이지</button>
+  <div class="tnrow">
+    <button class="tn on" data-v="plat">플랫폼</button>
+    <button class="tn" data-v="sched">전체일정</button>
+    <button class="tn" data-v="me">마이페이지</button>
+  </div>
+  <div class="tnbar" aria-hidden="true"></div>
 </nav>
 
 <main>
