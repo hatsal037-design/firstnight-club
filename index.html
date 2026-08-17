@@ -69,8 +69,26 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .label::before{content:'';width:22px;height:3px;background:var(--red)}
 .label::after{content:'';flex:1;height:1px;background:rgba(244,235,217,.20)}
 
+/* ── 상단 메뉴바 ── */
+.topnav{position:sticky;top:0;z-index:50;display:flex;justify-content:center;gap:4px;
+  background:rgba(20,19,23,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border-bottom:1.5px solid rgba(176,141,62,.45);padding:0 12px}
+.tn{flex:none;background:none;border:none;color:#9A9184;font-family:inherit;
+  font-size:13.5px;font-weight:700;letter-spacing:-.2px;padding:13px 16px 11px;cursor:pointer;
+  border-bottom:2.5px solid transparent;margin-bottom:-1.5px}
+.tn.on{color:#F2EAD9;border-bottom-color:var(--brass)}
+.hview{display:none}
+.hview.on{display:block}
+.bnote{font-size:11px;color:#8F887B;line-height:1.7;margin:12px 8px 0}
+.melinks{margin-top:14px;display:flex;flex-direction:column;gap:9px}
+.mel{display:block;background:#1C1A1F;border:1px solid #35313A;border-radius:9px;
+  padding:12px 15px;text-decoration:none}
+.mel b{display:block;font-size:13.5px;color:#E9E2D2;font-weight:700}
+.mel span{display:block;font-size:10.5px;color:#8F887B;margin-top:3px}
+.mel:active{background:#232027}
+
 /* ── 정기승차권 (내 계정) ── */
-.pass{margin:18px 4px 0;background:linear-gradient(135deg,#221F24,#1A181C);
+.pass{margin:0 4px;background:linear-gradient(135deg,#221F24,#1A181C);
   border:1.5px solid var(--brass);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden}
 .pass::before{content:'';position:absolute;right:-22px;top:-22px;width:88px;height:88px;border-radius:50%;
   border:1.5px dashed rgba(176,141,62,.35)}
@@ -312,20 +330,14 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   <div class="tagline">일상에서 취향으로 가는 터널 — <b>골라서 타세요</b></div>
 </header>
 
+<nav class="topnav" id="topnav">
+  <button class="tn on" data-v="plat">플랫폼</button>
+  <button class="tn" data-v="sched">전체일정</button>
+  <button class="tn" data-v="me">마이페이지</button>
+</nav>
+
 <main>
-  <div class="pass off" id="pass" style="display:none">
-    <div class="pk">TÜNEL COMMUTER PASS</div>
-    <div class="prow"><span class="pnick" id="pNick"></span><span class="pno" id="pNo"></span></div>
-    <div class="psub" id="pSub"></div>
-    <div class="pbtns" id="pBtns"></div>
-  </div>
-
-  <div class="label">발차 안내 · DEPARTURES</div>
-  <div class="board">
-    <div class="bhead"><i></i>ALL LINES · 다가오는 모임</div>
-    <div id="boardRows"><div class="bempty">시각표를 불러오는 중…</div></div>
-  </div>
-
+<section class="hview on" id="v-plat">
   <div class="label">플랫폼 안내 · PLATFORMS</div>
 
   <a class="card soon">
@@ -442,6 +454,31 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
        종착역은 <b>모임들이 돌아가며 쓰는 우리만의 공간</b> —<br>
        예약한 시간에 문이 열리는 아지트예요.</p>
   </div>
+</section>
+
+<section class="hview" id="v-sched">
+  <div class="label">발차 안내 · DEPARTURES</div>
+  <div class="board">
+    <div class="bhead"><i></i>ALL LINES · 다가오는 모임</div>
+    <div id="boardRows"><div class="bempty">시각표를 불러오는 중…</div></div>
+  </div>
+  <p class="bnote">각 노선의 일정이 한 시각표에 모여요. 줄을 누르면 그 노선으로 이동합니다.</p>
+</section>
+
+<section class="hview" id="v-me">
+  <div class="label">정기승차권 · MY PASS</div>
+  <div class="pass off" id="pass" style="display:none">
+    <div class="pk">TÜNEL COMMUTER PASS</div>
+    <div class="prow"><span class="pnick" id="pNick"></span><span class="pno" id="pNo"></span></div>
+    <div class="psub" id="pSub"></div>
+    <div class="pbtns" id="pBtns"></div>
+  </div>
+  <p class="bnote">회원번호는 투넬 통합이에요. 노선별 활동 기록은 각 노선의 "내 활동"에서 볼 수 있어요.</p>
+  <div class="melinks">
+    <a class="mel" href="1ndclub/#me"><b>첫밤 사망자 클럽</b><span>내 활동 · 참석 기록 · 게임 찜</span></a>
+    <a class="mel" href="library/"><b>도서관</b><span>AI 나눔회 · 다음 회차 소식</span></a>
+  </div>
+</section>
 </main>
 
 <footer>
@@ -465,6 +502,21 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 <script src="1ndclub/schedule.js?v=hub1"></script>
 <script src="library/schedule.js?v=hub1"></script>
 <script>
+/* ══ 탭 전환 — 해시로 기억 (#plat/#sched/#me) ══ */
+(function(){
+  const views = ['plat','sched','me'];
+  function go(v){
+    if(!views.includes(v)) v='plat';
+    document.querySelectorAll('.hview').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
+    document.querySelectorAll('.tn').forEach(x=>x.classList.toggle('on', x.dataset.v===v));
+    if(('#'+v)!==location.hash) history.replaceState(null,'','#'+v);
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.tn').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
+  window.addEventListener('hashchange',()=>go(location.hash.slice(1)));
+  go(location.hash.slice(1));
+})();
+
 /* ══ 통합 발차 시각표 — 각 노선의 schedule.js를 그대로 읽는다 ══ */
 (function(){
   const TODAY = new Date(); TODAY.setHours(0,0,0,0);
@@ -482,7 +534,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   rows.sort((a,b)=>a.d.localeCompare(b.d));
   const el = document.getElementById('boardRows');
   if(!rows.length){ el.innerHTML = '<div class="bempty">예정된 모임이 아직 없어요</div>'; return; }
-  el.innerHTML = rows.slice(0,6).map(r=>`
+  el.innerHTML = rows.slice(0,12).map(r=>`
     <a class="brow" href="${r.href}">
       <span class="bt">${+r.d.slice(5,7)}/${+r.d.slice(8)} ${r.dow}<small>${r.s}</small></span>
       <span class="bl ${r.cls}">${r.line}</span>
