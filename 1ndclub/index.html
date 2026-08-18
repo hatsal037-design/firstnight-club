@@ -44,11 +44,17 @@ body{
 button,a,input,select,textarea{font-family:inherit;color:inherit}
 a{color:var(--red-lite)}
 
-header{padding:calc(16px + env(safe-area-inset-top)) 18px 11px;display:flex;align-items:flex-start;gap:10px}
-header h1{font-family:'Do Hyeon',sans-serif;font-size:24px;letter-spacing:-.5px;line-height:1.25;flex:1}
+header{padding:calc(16px + env(safe-area-inset-top)) 14px 11px;display:flex;align-items:center;gap:8px}
+/* 투넬 로고 — 누르면 중앙역(허브)으로. 좌우 폭을 같게 잡아 제목이 화면 가운데 온다 */
+.hublogo{flex:none;width:38px;display:block;line-height:0;transition:transform 120ms}
+.hublogo img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.hublogo:active{transform:scale(.92)}
+header .hright{flex:none;min-width:38px;display:flex;align-items:center;justify-content:flex-end;gap:10px}
+header h1{font-family:'Do Hyeon',sans-serif;font-size:22px;letter-spacing:-.5px;line-height:1.25;
+  flex:1;min-width:0;text-align:center}
 header h1 .r{color:var(--red)}
 header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-family:'Pretendard',sans-serif}
-.me{flex:none;text-align:right;font-size:11px;color:var(--sub);line-height:1.5;cursor:pointer;padding-top:4px}
+.me{flex:none;text-align:right;font-size:10.5px;color:var(--sub);line-height:1.5;cursor:pointer;padding-top:4px}
 .bell{position:relative;font-size:20px;cursor:pointer;line-height:1}
 .bell .dot{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;background:var(--red);
   color:#fff;border-radius:999px;font-size:10px;font-weight:700;display:flex;align-items:center;
@@ -417,10 +423,11 @@ footer a{color:#7a8290}
 <body>
 
 <header>
+  <a class="hublogo" href="../" title="투넬 중앙역으로"><img src="../v/logo_coin.webp" alt="투넬" width="34" height="34"></a>
   <h1>첫밤 사망자 <span class="r">클럽</span>
     <div class="sub" id="hsub"></div>
   </h1>
-  <div style="display:flex;align-items:center;gap:12px">
+  <div class="hright">
     <div class="bell" id="bell" onclick="openNotices()" style="display:none">🔔<span class="dot" id="bellDot" style="display:none"></span></div>
     <div class="me" id="meBox" onclick="askNick()"></div>
   </div>
