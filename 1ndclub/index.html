@@ -106,15 +106,11 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
   box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 0 60px rgba(217,142,50,.06)}
 .tk::before{content:'';position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse at 18% 0%, rgba(255,180,90,.14), transparent 58%)}
-.tk .stub{width:44px;flex:none;order:2;border-left:1px dashed rgba(232,200,160,.35);
-  background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;padding:8px 0}
-.tk .stub span{writing-mode:vertical-rl;font-family:'Cinzel',serif;font-size:9px;letter-spacing:4px;
-  font-weight:800;color:#C6A87C}
-.tk .tbody{flex:1;min-width:0;padding:14px 15px 14px}
+.tk .tbody{flex:1;min-width:0;padding:14px 16px 13px}
 .tk .no{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:2px;color:#8A6B4E;text-align:right}
 .tk .nm{font-family:'Do Hyeon',sans-serif;font-size:25px;color:#F0E6DA;margin-top:5px;letter-spacing:-.5px}
-.tk .lead{font-size:12px;color:#B9AEA6;margin-top:8px;line-height:1.7}
-.tk .more{margin-top:11px;padding-top:10px;border-top:1px dotted rgba(232,200,160,.22)}
+.tk .lead{font-size:12px;color:#B9AEA6;margin-top:7px;line-height:1.7}
+.tk .more{margin-top:10px;padding-top:9px;border-top:1px dotted rgba(232,200,160,.2)}
 .tk .more summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
   font-size:11px;color:#9A8F7A;letter-spacing:-.2px}
 .tk .more summary::-webkit-details-marker{display:none}
@@ -125,11 +121,6 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
 .tk .how div{font-size:11.5px;color:#8E8288;line-height:1.6;padding-left:13px;position:relative}
 .tk .how div::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;
   background:rgba(232,50,60,.7)}
-.tk .meta{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:10px;
-  border-top:1px dotted rgba(232,200,160,.22)}
-.tk .st{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:1.5px;
-  color:#E8323C;border:1px solid rgba(232,50,60,.55);padding:3px 8px}
-.tk .cnt{margin-left:auto;font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:#6E6169}
 
 /* 하단 탭 — 중앙역 상단바와 같은 어휘: 황동 리디드 몰딩 + 글자 */
 nav{position:sticky;top:0;z-index:1500;margin-top:18px;
@@ -492,7 +483,6 @@ footer a{color:#7a8290}
 <div class="lhero">
   <img class="veh" src="../v/A3_night.webp" alt="">
   <div class="tk">
-    <div class="stub"><span>TÜNEL</span></div>
     <div class="tbody">
       <div class="no">PLATFORM 02 · 첫밤행</div>
       <div class="nm">첫밤 사망자 클럽</div>
@@ -507,12 +497,9 @@ footer a{color:#7a8290}
           <div>끝나면 근처에서 2차. 부담 없이 먼저 가셔도 됩니다</div>
           <div>참가비는 공간 대여비를 나눠 내는 정도예요 (회차당 1만원 안팎)</div>
           <div>모집은 문토와 오픈채팅으로 열려요. 정모일정에서 신청할 수 있어요</div>
+          <div id="hsub"></div>
         </div>
       </details>
-      <div class="meta">
-        <span class="st">운행중</span>
-        <span class="cnt" id="hsub"></span>
-      </div>
     </div>
   </div>
 </div>
@@ -684,8 +671,8 @@ function renderMe(){
   document.getElementById('meBox').innerHTML = acc
     ? `<span class="nk">${acc.nick}</span>${att?`<span class="attmini">${att}회</span>`:''}${isAdmin()?'<br><span class="adm">관리자</span>':acc.role==='staff'?'<br><span class="adm staff">운영진</span>':''}`
     : `<span class="nk">로그인 ›</span>`;
-  document.getElementById('hsub').innerHTML =
-    `보유 게임 ${GAMES.filter(g=>g.have!==false).length}종 · 잡아둔 회차 ${upcoming.length}개`;
+  document.getElementById('hsub').textContent =
+    `지금 보유 게임 ${GAMES.filter(g=>g.have!==false).length}종 · 잡아둔 회차 ${upcoming.length}개`;
   document.getElementById('navMembers').style.display = isStaff() ? '' : 'none';
   renderBell();
 }
