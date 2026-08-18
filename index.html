@@ -424,7 +424,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     <div class="tk">
       <div class="stub"><span>TÜNEL</span></div>
       <div class="body">
-        <div class="no">PLATFORM 02 · 첫밤행</div>
+        <div class="no">PLATFORM 02</div>
         <div class="nm">첫밤 사망자 클럽</div>
         <div class="ds">맨날 첫 밤에 죽는 사람들의 마피아·보드게임 모임 · 게임 도감 · 정모 일정</div>
         <div class="foot"><span class="st">운행중</span><span class="arrow">승차 ▸</span></div>
@@ -462,7 +462,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   <a class="card soon">
     <img class="veh" src="v/A5_sport.webp" alt="">
     <div class="sc">
-      <div class="bar"><b>PLATFORM 05 — TÜNEL ARENA</b><span class="dot"></span></div>
+      <div class="bar"><b>PLATFORM 05</b><span class="dot"></span></div>
       <div class="body">
         <div class="nm">운동</div>
         <div class="ds">러닝, 배드민턴, 풋살, 운동회 — 땀 흘리며 노는 노선</div>
@@ -657,18 +657,18 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   const up = [], past = [];
   (typeof ROUNDS!=='undefined'?ROUNDS:[]).forEach(r=>{
     const it = { d:r.d, dow:r.dow, s:r.s, e:r.e, cls:'night', href:'1ndclub/#sched',
-      label:'PLATFORM 02 · 첫밤행', name:(r.r?r.r+'회차 정모':'정모'), place:r.place,
+      label:'PLATFORM 02', name:(r.r?r.r+'회차 정모':'정모'), place:r.place,
       st:r.st==='open'?'모집중':'예정' };
     (new Date(r.d) < TODAY ? past : up).push(it);
   });
   (typeof PAST!=='undefined'?PAST:[]).forEach(pm=>{
     past.push({ d:pm.d, dow:pm.dow, s:pm.s, e:pm.e, cls:'night', href:'1ndclub/#sched',
-      label:'PLATFORM 02 · 첫밤행', name:(pm.r?pm.r+'회차 정모':(pm.kind==='flash'?'번개':'정모')),
+      label:'PLATFORM 02', name:(pm.r?pm.r+'회차 정모':(pm.kind==='flash'?'번개':'정모')),
       place:pm.place + (pm.n?` · ${pm.n}명`:''), st:'USED' });
   });
   (typeof LIB_EVENTS!=='undefined'?LIB_EVENTS:[]).forEach(v=>{
     const it = { d:v.d, dow:v.dow, s:v.s, e:v.e, cls:'lib', href:'library/',
-      label:'PLATFORM 06 · 도서관', name:v.name, place:v.place,
+      label:'PLATFORM 06', name:v.name, place:v.place,
       st:(new Date(v.d)<TODAY||v.st==='done')?'USED':(v.st==='open'?'모집중':'예정') };
     (new Date(v.d) < TODAY || v.st==='done' ? past : up).push(it);
   });
