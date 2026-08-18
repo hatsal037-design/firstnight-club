@@ -30,7 +30,7 @@
   --line:#33333f; --ink:#e9ecf1; --sub:#8b93a1;
   --red:#e8323c; --red-lite:#ff4757;
   --spring:cubic-bezier(0.32,0.72,0,1);
-  --nav:calc(60px + env(safe-area-inset-bottom));
+  --nav:calc(66px + env(safe-area-inset-bottom));
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-font-smoothing:antialiased}
@@ -84,13 +84,22 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
        font-size:14px;color:var(--ink);letter-spacing:-.5px;margin:18px 18px 9px}
 .label::before{content:'';width:5px;height:.85em;background:var(--red);border-radius:2px;flex:none}
 
-nav{position:fixed;left:0;right:0;bottom:0;z-index:1500;display:flex;
-    background:rgba(23,23,28,.94);backdrop-filter:blur(12px);
-    border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-nav .nb{flex:1;text-align:center;padding:10px 0 9px;cursor:pointer;color:var(--sub)}
-nav .nb .ic{font-size:18px;line-height:1.1;display:block}
-nav .nb .tx{font-size:10px;font-weight:700;margin-top:3px;display:block;letter-spacing:-.4px}
-nav .nb.on,nav .nb.on .tx{color:var(--red)}
+/* 하단 탭 — 중앙역 상단바와 같은 어휘: 황동 리디드 몰딩 + 글자 */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:1500;
+    background:rgba(18,17,20,.94);backdrop-filter:blur(12px);
+    padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -6px 16px rgba(0,0,0,.45)}
+nav .moulding{height:20px;background:url(../v/ss1_reed.webp) center/100% 100% no-repeat;
+    filter:brightness(.86) saturate(.95)}
+nav .nbrow{display:flex;justify-content:center;gap:22px;padding:11px 12px 10px}
+nav .nb{flex:none;position:relative;cursor:pointer;color:var(--sub);
+    font-family:'Do Hyeon',sans-serif;font-weight:400;font-size:14.5px;letter-spacing:-.3px;
+    padding:0 2px 4px;transition:color 140ms}
+nav .nb .ic{display:none}
+nav .nb .tx{display:inline}
+nav .nb.on{color:var(--red)}
+nav .nb.on::after{content:'';position:absolute;left:-2px;right:-2px;bottom:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--red),transparent)}
+nav .nb:active{transform:translateY(1px)}
 
 .view{display:none}
 .view.on{display:block}
@@ -474,10 +483,13 @@ footer a{color:#7a8290}
 <section class="view" id="v-members"><div id="memBody"></div></section>
 
 <nav>
-  <div class="nb on" data-v="games" onclick="setView('games')"><span class="ic">🎲</span><span class="tx">게임 도감</span></div>
-  <div class="nb" data-v="sched" onclick="setView('sched')"><span class="ic">📅</span><span class="tx">정모일정</span></div>
-  <div class="nb" data-v="me"    onclick="setView('me')"><span class="ic">🔪</span><span class="tx">내 활동</span></div>
-  <div class="nb" data-v="members" id="navMembers" style="display:none" onclick="setView('members')"><span class="ic">👥</span><span class="tx">회원관리</span></div>
+  <div class="moulding" aria-hidden="true"></div>
+  <div class="nbrow">
+    <div class="nb on" data-v="games" onclick="setView('games')"><span class="tx">게임 도감</span></div>
+    <div class="nb" data-v="sched" onclick="setView('sched')"><span class="tx">정모일정</span></div>
+    <div class="nb" data-v="me"    onclick="setView('me')"><span class="tx">내 활동</span></div>
+    <div class="nb" data-v="members" id="navMembers" style="display:none" onclick="setView('members')"><span class="tx">회원관리</span></div>
+  </div>
 </nav>
 
 <div class="overlay" id="ov" style="display:none" onclick="if(event.target===this)closeM()">
