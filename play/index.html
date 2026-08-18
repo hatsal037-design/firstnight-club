@@ -8,7 +8,7 @@
 <meta property="og:title" content="어른이 놀이터 — 투넬">
 <meta property="og:description" content="한강에 돗자리 펴고 맥주 한 잔. 다 커서 다시 놉니다">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Cinzel:wght@600;800&family=Nanum+Gothic+Coding&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Dongle:wght@700&family=Cinzel:wght@600;800&family=Nanum+Gothic+Coding&display=swap" rel="stylesheet">
 <style>
 :root{
   --green:#2FA24B;        /* 생초록 */
@@ -44,7 +44,7 @@ body{font-family:'Pretendard',system-ui,sans-serif;background:var(--paper);color
   background:radial-gradient(circle at 90% 78%, var(--yellow) 0 15%, transparent 16%)}
 .fl .no{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:2.5px;
   color:#CFEDC2;text-align:right}
-.fl .nm{font-family:'Bagel Fat One',cursive;font-size:28px;color:var(--ink);line-height:1.15;margin-top:5px;
+.fl .nm{font-family:'Dongle',sans-serif;font-weight:700;font-size:44px;color:var(--ink);line-height:.95;margin-top:2px;
   transform:rotate(-1.2deg);transform-origin:left}
 .fl .lead{font-size:12.5px;color:#123A1F;line-height:1.75;margin-top:11px;position:relative;z-index:2}
 .fl .more{margin-top:11px;padding-top:10px;border-top:2px dashed rgba(14,42,22,.25);position:relative;z-index:2}
@@ -76,20 +76,27 @@ nav .nb.on::after{content:'';position:absolute;left:-3px;right:-3px;bottom:0;hei
   margin:26px 0 11px;display:flex;align-items:center;gap:9px}
 .lab::after{content:'';flex:1;height:1px;background:var(--line)}
 
-/* 일정 티켓 — 전단 계열 */
-.tkt{background:#fff;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);
-  padding:14px 16px 14px;margin-bottom:14px;position:relative;overflow:hidden}
-.tkt::after{content:'';position:absolute;right:-14px;bottom:-14px;width:74px;height:74px;border-radius:50%;
-  background:var(--yellow);opacity:.5;mix-blend-mode:multiply}
-.tkt .when{display:flex;align-items:baseline;gap:9px;position:relative;z-index:2}
-.tkt .when b{font-family:'Bagel Fat One',cursive;font-size:20px}
-.tkt .when span{font-size:12px;color:var(--sub)}
-.tkt .st{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:1px;
-  background:var(--ink);color:var(--yellow);padding:3px 8px}
-.tkt .what{font-size:15px;font-weight:800;margin-top:9px;letter-spacing:-.3px;position:relative;z-index:2}
-.tkt .where{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;position:relative;z-index:2}
-.tkt .note{font-size:11.5px;color:#1B5C2C;margin-top:9px;padding-top:9px;
-  border-top:2px dashed rgba(14,42,22,.2);line-height:1.6;position:relative;z-index:2}
+/* 일정 티켓 — 투넬 공통 규격 (본체 + 절취선 + 세로 스터브), 스킨은 초록 전단 */
+.tkt{display:flex;width:100%;margin:0 auto 14px;
+  text-decoration:none;position:relative;overflow:hidden;
+  background:var(--green);border:2px solid var(--ink);box-shadow:5px 5px 0 var(--ink)}
+.tkt::after{content:'';position:absolute;right:34px;bottom:-16px;width:74px;height:74px;border-radius:50%;
+  background:var(--yellow);opacity:.34;mix-blend-mode:multiply;pointer-events:none}
+.tkt .tbody{flex:1;min-width:0;padding:13px 15px 12px;position:relative;z-index:2}
+.tkt .tstub{width:40px;flex:none;order:2;display:flex;align-items:center;justify-content:center;
+  border-left:2px dashed rgba(14,42,22,.4);background:rgba(255,228,92,.2)}
+.tkt .tstub span{writing-mode:vertical-rl;font-family:'Cinzel',serif;font-size:8px;
+  letter-spacing:3px;font-weight:800;color:var(--ink)}
+.tkt .tno{font-family:'Nanum Gothic Coding',monospace;font-size:8.5px;letter-spacing:1.5px;
+  color:#CFEDC2;text-align:right}
+.tkt .trow{display:flex;align-items:baseline;gap:8px;margin-top:3px}
+.tkt .td{font-family:'Dongle',sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--ink)}
+.tkt .tt{font-size:11px;color:#1B5C2C}
+.tkt .tst{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:1px;
+  background:var(--ink);color:var(--yellow);padding:3px 7px}
+.tkt .tp{font-size:11.5px;color:#123A1F;margin-top:6px;line-height:1.6}
+.tkt .tnote{font-size:11px;color:#1B5C2C;margin-top:8px;padding-top:8px;
+  border-top:2px dashed rgba(14,42,22,.25);line-height:1.6}
 
 .card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:16px 17px}
 .card h2{font-size:15px;letter-spacing:-.4px;margin-bottom:9px}
@@ -203,14 +210,17 @@ setView((location.hash||'#sched').slice(1));
   const el = document.getElementById('schedList');
   if(!list.length){ el.innerHTML = '<p class="note">아직 잡힌 모임이 없어요.</p>'; return; }
   el.innerHTML = list.map(v=>{
-    const when = v.d==='TBD'
-      ? `<b>날짜 조율 중</b>`
-      : `<b>${+v.d.slice(5,7)}/${+v.d.slice(8)}</b><span>${v.dow} · ${v.s}~${v.e}</span>`;
+    const day  = v.d==='TBD' ? '날짜 조율 중' : `${+v.d.slice(5,7)}/${+v.d.slice(8)}`;
+    const time = v.d==='TBD' ? '' : `${v.dow} · ${v.s}~${v.e}`;
     return `<div class="tkt">
-      <div class="when">${when}<span class="st">${v.st==='open'?'모집중':'예정'}</span></div>
-      <div class="what">${v.name}</div>
-      <div class="where">${v.place}</div>
-      ${v.note?`<div class="note">${v.note}</div>`:''}
+      <span class="tbody">
+        <span class="tno">PLATFORM 01</span>
+        <span class="trow"><span class="td">${day}</span><span class="tt">${time}</span>
+          <span class="tst">${v.st==='open'?'모집중':'예정'}</span></span>
+        <span class="tp">${v.name} · ${v.place}</span>
+        ${v.note?`<span class="tnote">${v.note}</span>`:''}
+      </span>
+      <span class="tstub"><span>TÜNEL</span></span>
     </div>`;
   }).join('');
 })();
