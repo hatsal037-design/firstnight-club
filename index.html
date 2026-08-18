@@ -92,6 +92,14 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .tkt.night .td{color:#F0E6DA;font-family:'Do Hyeon',sans-serif;font-weight:400}
 .tkt.night .tt,.tkt.night .tp{color:#8E8288}
 .tkt.night .tst{color:#FF8B92;border:1px solid rgba(232,50,60,.5)}
+/* 어른이 놀이터 — 초록 전단 */
+.tkt.play{background:#2FA24B;border:2px solid #102817;box-shadow:4px 4px 0 #102817;border-radius:0}
+.tkt.play .tstub{border-left:2px dashed rgba(14,42,22,.35);background:rgba(255,228,92,.18)}
+.tkt.play .tstub span{color:#0E2A16}
+.tkt.play .tno{color:#CFEDC2}
+.tkt.play .td{color:#0E2A16;font-family:'Bagel Fat One',cursive;font-weight:400;font-size:17px}
+.tkt.play .tt,.tkt.play .tp{color:#123A1F}
+.tkt.play .tst{background:#0E2A16;color:#FFE45C}
 /* 도서관 — 컨퍼런스 명찰 */
 .tkt.lib{background:#FBFBF9;border:1px solid #D8DED6;border-radius:6px;
   box-shadow:0 3px 9px rgba(38,40,43,.14)}
@@ -409,7 +417,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 <section class="hview" id="v-plat">
   <div class="label">플랫폼 안내 · PLATFORMS</div>
 
-  <a class="card soon">
+  <a class="card" href="play/">
     <img class="veh" src="v/A2_bus.webp" alt="">
     <div class="fl">
       <div class="no">PLATFORM 01</div>
@@ -547,6 +555,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   <div class="melinks">
     <a class="mel" href="1ndclub/#me"><b>첫밤 사망자 클럽</b><span>내 활동 · 참석 기록 · 게임 찜</span></a>
     <a class="mel" href="library/"><b>낭만 스터디</b><span>AI 나눔회 · 다음 회차 소식</span></a>
+    <a class="mel" href="play/"><b>어른이 놀이터</b><span>한강 번개 · 다음 회차 소식</span></a>
   </div>
   <div id="memAdmin" style="display:none">
     <div class="label" style="margin-top:26px">회원 관리 · MEMBERS</div>
@@ -577,6 +586,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="1ndclub/schedule.js?v=hub1"></script>
 <script src="1ndclub/past.js?v=hub1"></script>
+<script src="play/schedule.js?v=hub1"></script>
 <script src="library/schedule.js?v=hub1"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
@@ -666,6 +676,14 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       label:'PLATFORM 02', name:(pm.r?pm.r+'회차 정모':(pm.kind==='flash'?'번개':'정모')),
       place:pm.place + (pm.n?` · ${pm.n}명`:''), st:'USED' });
   });
+  (typeof PLAY_EVENTS!=='undefined'?PLAY_EVENTS:[]).forEach(v=>{
+    if(v.st==='done') return;
+    const tbd = v.d==='TBD';
+    if(!tbd && new Date(v.d) < TODAY){ past.push({ d:v.d, dow:v.dow, s:v.s, e:v.e, cls:'play',
+      href:'play/', label:'PLATFORM 01', name:v.name, place:v.place, st:'USED' }); return; }
+    up.push({ d: tbd ? '9999-12-31' : v.d, dow:v.dow, s:v.s, e:v.e, cls:'play', href:'play/',
+      label:'PLATFORM 01', name:v.name, place:v.place, st:'예정', tbd });
+  });
   (typeof LIB_EVENTS!=='undefined'?LIB_EVENTS:[]).forEach(v=>{
     const it = { d:v.d, dow:v.dow, s:v.s, e:v.e, cls:'lib', href:'library/',
       label:'PLATFORM 06', name:v.name, place:v.place,
@@ -680,8 +698,8 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     <a class="tkt ${x.cls}${isPast?' past':''}" href="${x.href}">
       <span class="tbody">
         <span class="tno">${x.label}${isPast?' · USED':''}</span>
-        <span class="trow"><span class="td">${+x.d.slice(5,7)}/${+x.d.slice(8)} <small style="font-size:12px">(${x.dow})</small></span>
-          <span class="tt">${x.s}${x.e?'~'+x.e:''}</span>
+        <span class="trow"><span class="td">${x.tbd ? '날짜 조율 중' : (+x.d.slice(5,7))+'/'+(+x.d.slice(8))+' '}${x.tbd?'':`<small style="font-size:12px">(${x.dow})</small>`}</span>
+          <span class="tt">${x.tbd ? '' : x.s + (x.e?'~'+x.e:'')}</span>
           <span class="tst">${x.st}</span></span>
         <span class="tp">${x.name} · ${x.place}</span>
       </span>

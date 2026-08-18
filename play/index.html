@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>어른이 놀이터 — 투넬</title>
+<meta name="description" content="한강에 돗자리 펴고 맥주 한 잔. 수건돌리기부터 물총까지, 다 커서 다시 노는 모임. 투넬 1번 플랫폼.">
+<meta property="og:title" content="어른이 놀이터 — 투넬">
+<meta property="og:description" content="한강에 돗자리 펴고 맥주 한 잔. 다 커서 다시 놉니다">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Cinzel:wght@600;800&family=Nanum+Gothic+Coding&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#2FA24B;        /* 생초록 */
+  --green-deep:#1B7A36;
+  --ink:#0E2A16;          /* 잉크 진초록 */
+  --yellow:#FFE45C;       /* 리소 겹침 노랑 */
+  --paper:#F4F3EA;
+  --line:#D7D8C8;
+  --sub:#5E6B5C;
+  --w:358px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Pretendard',system-ui,sans-serif;background:var(--paper);color:var(--ink);
+  -webkit-font-smoothing:antialiased;padding-bottom:60px}
+.wrap{width:var(--w);max-width:calc(100% - 24px);margin:0 auto}
+
+/* ══ 노선 공통 구조 ①중앙역 ②히어로 ③메뉴바 ④콘텐츠 ══ */
+.station{display:flex;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px 0}
+.station a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+  background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 8px}
+.station a:active{transform:translateY(1px)}
+.station img{width:26px;height:26px;object-fit:contain;display:block}
+.station b{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2.4px;font-weight:800;color:#8A6B2B}
+.station i{font-style:normal;font-size:10.5px;color:var(--sub);letter-spacing:-.2px}
+
+/* 히어로 — 허브의 초록 전단이 그대로 온다 */
+.lhero{position:relative;width:var(--w);max-width:calc(100% - 24px);margin:56px auto 0}
+.lhero .veh{position:absolute;left:-6px;top:-42px;height:66px;width:auto;z-index:3;pointer-events:none;
+  filter:drop-shadow(0 6px 9px rgba(14,42,22,.3))}
+.fl{background:var(--green);border:2.5px solid var(--ink);padding:15px 17px 15px;position:relative;
+  box-shadow:6px 6px 0 var(--ink)}
+.fl::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.26;
+  background:radial-gradient(circle at 90% 78%, var(--yellow) 0 15%, transparent 16%)}
+.fl .no{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:2.5px;
+  color:#CFEDC2;text-align:right}
+.fl .nm{font-family:'Bagel Fat One',cursive;font-size:28px;color:var(--ink);line-height:1.15;margin-top:5px;
+  transform:rotate(-1.2deg);transform-origin:left}
+.fl .lead{font-size:12.5px;color:#123A1F;line-height:1.75;margin-top:11px;position:relative;z-index:2}
+.fl .more{margin-top:11px;padding-top:10px;border-top:2px dashed rgba(14,42,22,.25);position:relative;z-index:2}
+.fl .more summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;font-weight:700;color:#1B5C2C}
+.fl .more summary::-webkit-details-marker{display:none}
+.fl .more .chev{display:inline-block;font-size:12px;line-height:1;transition:transform 200ms}
+.fl .more[open] .chev{transform:rotate(180deg)}
+.fl .more[open] summary{margin-bottom:10px}
+.fl .how{display:flex;flex-direction:column;gap:7px}
+.fl .how div{font-size:12px;color:#123A1F;line-height:1.6;padding-left:15px;position:relative}
+.fl .how div::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;
+  border-radius:50%;background:var(--yellow);border:1.5px solid var(--ink)}
+
+/* 메뉴바 */
+nav{position:sticky;top:0;z-index:50;display:flex;flex-direction:column;margin-top:20px;
+  background:rgba(244,243,234,.95);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);box-shadow:0 6px 14px rgba(14,42,22,.07)}
+nav .nbrow{display:flex;justify-content:center;gap:22px;padding:11px 12px 10px}
+nav .nb{flex:none;position:relative;cursor:pointer;color:var(--sub);
+  font-size:13.5px;font-weight:800;letter-spacing:-.2px;padding:0 2px 4px}
+nav .nb.on{color:var(--ink)}
+nav .nb.on::after{content:'';position:absolute;left:-3px;right:-3px;bottom:0;height:3px;background:var(--green)}
+.view{display:none}
+.view.on{display:block}
+
+/* 섹션 */
+.lab{font-size:10px;letter-spacing:2.2px;font-weight:800;color:var(--sub);
+  margin:26px 0 11px;display:flex;align-items:center;gap:9px}
+.lab::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* 일정 티켓 — 전단 계열 */
+.tkt{background:#fff;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);
+  padding:14px 16px 14px;margin-bottom:14px;position:relative;overflow:hidden}
+.tkt::after{content:'';position:absolute;right:-14px;bottom:-14px;width:74px;height:74px;border-radius:50%;
+  background:var(--yellow);opacity:.5;mix-blend-mode:multiply}
+.tkt .when{display:flex;align-items:baseline;gap:9px;position:relative;z-index:2}
+.tkt .when b{font-family:'Bagel Fat One',cursive;font-size:20px}
+.tkt .when span{font-size:12px;color:var(--sub)}
+.tkt .st{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:1px;
+  background:var(--ink);color:var(--yellow);padding:3px 8px}
+.tkt .what{font-size:15px;font-weight:800;margin-top:9px;letter-spacing:-.3px;position:relative;z-index:2}
+.tkt .where{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;position:relative;z-index:2}
+.tkt .note{font-size:11.5px;color:#1B5C2C;margin-top:9px;padding-top:9px;
+  border-top:2px dashed rgba(14,42,22,.2);line-height:1.6;position:relative;z-index:2}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:16px 17px}
+.card h2{font-size:15px;letter-spacing:-.4px;margin-bottom:9px}
+.card p{font-size:13px;line-height:1.75;color:#2B3A2E}
+.card p+p{margin-top:9px}
+.card .hi{background:linear-gradient(180deg,transparent 60%,var(--yellow) 60%)}
+ul.pt{margin-top:11px;list-style:none;display:flex;flex-direction:column;gap:7px}
+ul.pt li{font-size:12.5px;color:#2B3A2E;line-height:1.6;padding-left:15px;position:relative}
+ul.pt li::before{content:'';position:absolute;left:0;top:8px;width:6px;height:6px;
+  border-radius:50%;background:var(--yellow);border:1.5px solid var(--ink)}
+.note{font-size:11.5px;color:var(--sub);line-height:1.7;margin-top:12px;
+  background:#EDEDE2;border-radius:7px;padding:12px 14px}
+footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:11px;color:#8A9188;text-align:center;line-height:1.8}
+footer a{color:#8A9188}
+</style>
+</head>
+<body>
+
+<div class="station">
+  <a href="../" title="투넬 중앙역으로">
+    <img src="../v/sq1_line.webp" alt="투넬" width="26" height="26">
+    <b>TÜNEL</b><i>중앙역</i>
+  </a>
+</div>
+
+<div class="lhero">
+  <img class="veh" src="../v/A2_bus.webp" alt="">
+  <div class="fl">
+    <div class="no">PLATFORM 01</div>
+    <div class="nm">어른이 놀이터</div>
+    <p class="lead">한강에 돗자리 펴고 맥주 한 잔. 어릴 때 하던 유치한 놀이를
+      다 커서 술 한 잔 들고 다시 합니다. 크게 모여서 그날 하루 실컷 놀고 헤어져요.</p>
+    <details class="more">
+      <summary>자세히 <span class="chev">⌄</span></summary>
+      <div class="how">
+        <div>야외에서 크게 모이는 게 기본이에요. 인원이 많을수록 재밌는 놀이 위주로 준비합니다</div>
+        <div>수건돌리기·무궁화꽃·물총·눈치게임처럼 준비물이 거의 없는 것들이요</div>
+        <div>닉네임으로만 불러요. 직업이나 나이는 묻지 않습니다</div>
+        <div>밝을 때 몸 쓰는 놀이를 하고, 어두워지면 둘러앉아 카드게임과 치맥으로 넘어가요</div>
+        <div>혼자 신청해서 혼자 오셔도 됩니다. 대부분 그렇게 와요</div>
+        <div>중간에 먼저 가셔도 되고, 늦게 합류하셔도 됩니다</div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<nav>
+  <div class="nbrow">
+    <div class="nb on" data-v="sched" onclick="setView('sched')">일정</div>
+    <div class="nb" data-v="about" onclick="setView('about')">소개</div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section class="view on" id="v-sched">
+  <div class="lab">다가오는 모임</div>
+  <div id="schedList"></div>
+  <div class="note">
+    날짜가 정해지면 이 자리와 투넬 중앙역 전체일정에 함께 올라와요.
+    비 오면 실내 보드게임카페로 옮기거나 다음 주로 미룹니다.
+  </div>
+</section>
+
+<section class="view" id="v-about">
+  <div class="lab">어떤 자리인가요</div>
+  <div class="card">
+    <h2>다 커서 다시 노는 자리</h2>
+    <p>수건돌리기, 무궁화꽃이 피었습니다, 물총. 초등학교 운동장에서 하던 것들이에요.
+      그걸 <span class="hi">어른이 되어 맥주 한 잔 들고 다시 하면</span> 이상하게 더 재밌습니다.</p>
+    <p>잘하고 못하고가 없는 놀이만 골라요. 규칙이 세 줄을 넘지 않고,
+      늦게 합류해도 바로 낄 수 있는 것들이요.</p>
+    <ul class="pt">
+      <li>야외에서 크게 모여요 — 인원이 많을수록 재밌는 놀이 위주</li>
+      <li>닉네임으로만. 자기소개 타임 없고 친목 강요 없어요</li>
+      <li>혼자 와도 됩니다. 대부분 혼자 신청해서 혼자 와요</li>
+      <li>먼저 가셔도 되고 늦게 오셔도 됩니다</li>
+    </ul>
+    <p style="margin-top:12px">준비물은 저희가 챙겨요. 돗자리와 게임 도구는 준비돼 있으니
+      마실 것만 들고 오시면 됩니다.</p>
+  </div>
+  <div class="note">
+    어른이 놀이터는 이제 막 문을 여는 중이에요.
+    첫 모임은 한강 수건돌리기 맥주 파티로 준비하고 있습니다.
+  </div>
+</section>
+
+  <footer>
+    투넬 · TÜNEL — 일상에서 취향으로 가는 터널<br>
+    <a href="../">중앙역으로 돌아가기</a>
+  </footer>
+
+</main>
+
+<script src="schedule.js?v=1"></script>
+<script>
+function setView(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
+  document.querySelectorAll('.nb').forEach(x=>x.classList.toggle('on', x.dataset.v===v));
+  history.replaceState(null,'','#'+v);
+}
+setView((location.hash||'#sched').slice(1));
+
+/* 일정 — 날짜 미정(TBD)도 예정으로 보여준다 */
+(function(){
+  const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+  const list = (typeof PLAY_EVENTS!=='undefined'?PLAY_EVENTS:[])
+    .filter(v=> v.st!=='done' && (v.d==='TBD' || new Date(v.d) >= TODAY))
+    .sort((a,b)=> (a.d==='TBD') - (b.d==='TBD') || a.d.localeCompare(b.d));
+  const el = document.getElementById('schedList');
+  if(!list.length){ el.innerHTML = '<p class="note">아직 잡힌 모임이 없어요.</p>'; return; }
+  el.innerHTML = list.map(v=>{
+    const when = v.d==='TBD'
+      ? `<b>날짜 조율 중</b>`
+      : `<b>${+v.d.slice(5,7)}/${+v.d.slice(8)}</b><span>${v.dow} · ${v.s}~${v.e}</span>`;
+    return `<div class="tkt">
+      <div class="when">${when}<span class="st">${v.st==='open'?'모집중':'예정'}</span></div>
+      <div class="what">${v.name}</div>
+      <div class="where">${v.place}</div>
+      ${v.note?`<div class="note">${v.note}</div>`:''}
+    </div>`;
+  }).join('');
+})();
+</script>
+</body>
+</html>
