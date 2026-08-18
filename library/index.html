@@ -50,8 +50,14 @@ body{font-family:'Pretendard',system-ui,sans-serif;background:var(--paper);color
   display:grid;place-items:center;font-size:11px;font-family:'Nanum Gothic Coding',monospace}
 .lhero h1{font-size:26px;letter-spacing:-1px;margin-top:8px}
 .lhero .lead{font-size:12.5px;color:#3F454B;line-height:1.75;margin-top:9px}
-.lhero .how{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);
-  display:flex;flex-direction:column;gap:7px}
+.lhero .more{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line)}
+.lhero .more summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;color:var(--sub);letter-spacing:-.2px}
+.lhero .more summary::-webkit-details-marker{display:none}
+.lhero .more .chev{display:inline-block;font-size:12px;line-height:1;transition:transform 200ms}
+.lhero .more[open] .chev{transform:rotate(180deg)}
+.lhero .more[open] summary{color:var(--ink);margin-bottom:10px}
+.lhero .how{display:flex;flex-direction:column;gap:7px}
 .lhero .how div{font-size:12px;color:#3F454B;line-height:1.6;padding-left:15px;position:relative}
 .lhero .how div::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;
   border-radius:50%;background:var(--hi);border:1px solid #E3C93B}
@@ -65,7 +71,7 @@ nav .nb{flex:none;position:relative;cursor:pointer;color:var(--sub);
   font-size:13.5px;font-weight:800;letter-spacing:-.2px;padding:0 2px 4px}
 nav .nb.on{color:var(--ink)}
 nav .nb.on::after{content:'';position:absolute;left:-3px;right:-3px;bottom:0;height:3px;background:var(--hi)}
-nav .moulding{height:18px;order:2;background:url(../v/ss1_reed.webp) center/100% 100% no-repeat}
+nav{border-bottom:1px solid var(--line)}
 .view{display:none}
 .view.on{display:block}
 .plat{display:inline-flex;align-items:center;gap:8px;font-size:10px;letter-spacing:2.4px;
@@ -150,12 +156,17 @@ footer a{color:#98A0A6}
       <h1>도서관</h1>
       <p class="lead">같이 읽고 같이 굴려보는 칸이에요. 책모임과 자기계발 스터디,
         그리고 AI 나눔회처럼 각자 해보던 걸 꺼내 놓는 자리가 여기서 열립니다.</p>
-      <div class="how">
-        <div>한 회차 3시간 안팎, 성수·합정 같은 접근 좋은 공간을 빌려 10명 안팎으로 모여요</div>
-        <div>발표가 아니라 노트북 펴놓고 보여주면서 수다 떠는 분위기예요</div>
-        <div>닉네임으로만 불러요. 직업이나 나이는 묻지 않습니다</div>
-        <div>모집은 동행클럽 소모임으로 열려요 — 일정 탭에서 신청 링크를 확인하세요</div>
-      </div>
+      <details class="more">
+        <summary>자세히 <span class="chev">⌄</span></summary>
+        <div class="how">
+          <div>한 회차 3시간 안팎, 성수·합정 같은 접근 좋은 공간을 빌려 10명 안팎으로 모여요</div>
+          <div>발표가 아니라 노트북 펴놓고 보여주면서 수다 떠는 분위기예요</div>
+          <div>툴은 안 가려요 — 클로드·지피티·제미나이·힉스필드 무엇이든</div>
+          <div>닉네임으로만 불러요. 직업이나 나이는 묻지 않습니다</div>
+          <div>보여줄 걸 하나 들고 오시면 좋고, 없어도 괜찮아요</div>
+          <div>모집은 동행클럽 소모임으로 열려요 — 일정 탭에서 신청 링크를 확인하세요</div>
+        </div>
+      </details>
     </div>
   </div>
 </div>
@@ -165,7 +176,6 @@ footer a{color:#98A0A6}
     <div class="nb on" data-v="sched" onclick="setView('sched')">일정</div>
     <div class="nb" data-v="about" onclick="setView('about')">소개</div>
   </div>
-  <div class="moulding" aria-hidden="true"></div>
 </nav>
 
 <main class="wrap">

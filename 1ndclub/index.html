@@ -114,8 +114,14 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
 .tk .no{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:2px;color:#8A6B4E;text-align:right}
 .tk .nm{font-family:'Do Hyeon',sans-serif;font-size:25px;color:#F0E6DA;margin-top:5px;letter-spacing:-.5px}
 .tk .lead{font-size:12px;color:#B9AEA6;margin-top:8px;line-height:1.7}
-.tk .how{margin-top:11px;padding-top:10px;border-top:1px dotted rgba(232,200,160,.22);
-  display:flex;flex-direction:column;gap:6px}
+.tk .more{margin-top:11px;padding-top:10px;border-top:1px dotted rgba(232,200,160,.22)}
+.tk .more summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;color:#9A8F7A;letter-spacing:-.2px}
+.tk .more summary::-webkit-details-marker{display:none}
+.tk .more .chev{display:inline-block;font-size:12px;line-height:1;transition:transform 200ms}
+.tk .more[open] .chev{transform:rotate(180deg)}
+.tk .more[open] summary{color:#C6A87C;margin-bottom:9px}
+.tk .how{display:flex;flex-direction:column;gap:6px}
 .tk .how div{font-size:11.5px;color:#8E8288;line-height:1.6;padding-left:13px;position:relative}
 .tk .how div::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;
   background:rgba(232,50,60,.7)}
@@ -129,8 +135,7 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
 nav{position:sticky;top:0;z-index:1500;margin-top:18px;
     background:rgba(18,17,20,.94);backdrop-filter:blur(12px);
     box-shadow:0 6px 16px rgba(0,0,0,.45)}
-nav .moulding{height:20px;background:url(../v/ss1_reed.webp) center/100% 100% no-repeat;
-    filter:brightness(.86) saturate(.95);order:2}
+nav{border-bottom:1px solid rgba(232,200,160,.14)}
 nav .nbrow{display:flex;justify-content:center;gap:22px;padding:11px 12px 10px}
 nav{display:flex;flex-direction:column}
 nav .nb{flex:none;position:relative;cursor:pointer;color:var(--sub);
@@ -493,12 +498,17 @@ footer a{color:#7a8290}
       <div class="nm">첫밤 사망자 클럽</div>
       <div class="lead">맨날 첫 밤에 죽는 사람들이 모여 마피아와 보드게임을 합니다.
         잘하는 사람만 오는 자리가 아니라, 죽어도 재밌게 죽는 자리예요.</div>
-      <div class="how">
-        <div>한 회차 4~6시간, 대여 공간을 빌려 12명 안팎으로 모여요</div>
-        <div>진행자가 룰을 다 알려주니 처음 오셔도 그날 바로 합니다</div>
-        <div>그날 할 게임은 미리 다같이 골라요 — 게임 도감에서 찜하면 집계돼요</div>
-        <div>끝나면 근처에서 2차. 부담 없이 먼저 가셔도 됩니다</div>
-      </div>
+      <details class="more">
+        <summary>자세히 <span class="chev">⌄</span></summary>
+        <div class="how">
+          <div>한 회차 4~6시간, 대여 공간을 빌려 12명 안팎으로 모여요</div>
+          <div>진행자가 룰을 다 알려주니 처음 오셔도 그날 바로 합니다</div>
+          <div>그날 할 게임은 미리 다같이 골라요 — 게임 도감에서 찜하면 집계돼요</div>
+          <div>끝나면 근처에서 2차. 부담 없이 먼저 가셔도 됩니다</div>
+          <div>참가비는 공간 대여비를 나눠 내는 정도예요 (회차당 1만원 안팎)</div>
+          <div>모집은 문토와 오픈채팅으로 열려요. 정모일정에서 신청할 수 있어요</div>
+        </div>
+      </details>
       <div class="meta">
         <span class="st">운행중</span>
         <span class="cnt" id="hsub"></span>
@@ -508,7 +518,6 @@ footer a{color:#7a8290}
 </div>
 
 <nav>
-  <div class="moulding" aria-hidden="true"></div>
   <div class="nbrow">
     <div class="nb on" data-v="games" onclick="setView('games')"><span class="tx">게임 도감</span></div>
     <div class="nb" data-v="sched" onclick="setView('sched')"><span class="tx">정모일정</span></div>
