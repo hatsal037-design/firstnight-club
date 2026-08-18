@@ -25,15 +25,49 @@ body{font-family:'Pretendard',system-ui,sans-serif;background:var(--paper);color
   -webkit-font-smoothing:antialiased;padding-bottom:60px}
 .wrap{width:var(--w);max-width:calc(100% - 24px);margin:0 auto}
 
-/* ── 헤더 ── */
-header{background:var(--grey);border-bottom:1px solid var(--line);padding:20px 0 22px;margin-bottom:22px}
-/* 로고(좌) · 제목(중앙) · 여백(우) — 제목이 화면 가운데 온다 */
-.hrow{display:flex;align-items:center;gap:8px}
-.hublogo{flex:none;width:38px;display:block;line-height:0;transition:transform 120ms}
-.hublogo img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(38,40,43,.28))}
-.hublogo:active{transform:scale(.92)}
-.hmid{flex:1;min-width:0;text-align:center}
-.hpad{flex:none;width:38px}
+/* ══ 노선 공통 구조 ══
+   ① 중앙역 버튼 ② 이 노선 히어로 카드 ③ 메뉴바 ④ 콘텐츠 */
+.station{display:flex;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px 0}
+.station a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+  background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 8px}
+.station a:active{transform:translateY(1px)}
+.station img{width:26px;height:26px;object-fit:contain;display:block}
+.station b{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2.4px;font-weight:800;color:#8A6B2B}
+.station i{font-style:normal;font-size:10.5px;color:var(--sub);letter-spacing:-.2px}
+
+/* 노선 히어로 — 허브의 명찰 카드가 그대로 온다 */
+.lhero{position:relative;width:var(--w);max-width:calc(100% - 24px);margin:22px auto 0}
+.lhero .card2{background:#fff;border:1px solid var(--line);border-radius:9px;overflow:hidden;
+  box-shadow:0 3px 12px rgba(38,40,43,.10)}
+.lhero .clip{height:26px;background:var(--grey);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center}
+.lhero .clip::before{content:'';width:62px;height:7px;border-radius:4px;
+  background:var(--paper);border:1px solid var(--line)}
+.lhero .in{padding:15px 17px 16px}
+.lhero .plat{display:inline-flex;align-items:center;gap:8px;font-size:10px;letter-spacing:2.4px;
+  font-weight:800;color:var(--sub);text-transform:uppercase}
+.lhero .plat i{font-style:normal;width:19px;height:19px;border-radius:3px;background:var(--char);color:#fff;
+  display:grid;place-items:center;font-size:11px;font-family:'Nanum Gothic Coding',monospace}
+.lhero h1{font-size:26px;letter-spacing:-1px;margin-top:8px}
+.lhero .lead{font-size:12.5px;color:#3F454B;line-height:1.75;margin-top:9px}
+.lhero .how{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);
+  display:flex;flex-direction:column;gap:7px}
+.lhero .how div{font-size:12px;color:#3F454B;line-height:1.6;padding-left:15px;position:relative}
+.lhero .how div::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;
+  border-radius:50%;background:var(--hi);border:1px solid #E3C93B}
+
+/* 메뉴바 — 중앙역과 같은 어휘, 도서관 무드 */
+nav{position:sticky;top:0;z-index:50;display:flex;flex-direction:column;margin-top:20px;
+  background:rgba(250,250,247,.95);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 6px 14px rgba(38,40,43,.10)}
+nav .nbrow{display:flex;justify-content:center;gap:22px;padding:11px 12px 10px}
+nav .nb{flex:none;position:relative;cursor:pointer;color:var(--sub);
+  font-size:13.5px;font-weight:800;letter-spacing:-.2px;padding:0 2px 4px}
+nav .nb.on{color:var(--ink)}
+nav .nb.on::after{content:'';position:absolute;left:-3px;right:-3px;bottom:0;height:3px;background:var(--hi)}
+nav .moulding{height:18px;order:2;background:url(../v/ss1_reed.webp) center/100% 100% no-repeat}
+.view{display:none}
+.view.on{display:block}
 .plat{display:inline-flex;align-items:center;gap:8px;font-size:10px;letter-spacing:2.4px;
   font-weight:800;color:var(--sub);text-transform:uppercase}
 .plat i{font-style:normal;width:19px;height:19px;border-radius:3px;background:var(--char);color:#fff;
@@ -101,22 +135,42 @@ footer a{color:#98A0A6}
 </head>
 <body>
 
-<header>
-  <div class="wrap">
-    <div class="hrow">
-      <a class="hublogo" href="../" title="투넬 중앙역으로"><img src="../v/sq1_line.webp" alt="투넬" width="34" height="34"></a>
-      <div class="hmid">
-        <div class="plat"><i>6</i> Platform · Library</div>
-        <h1>도서관</h1>
+<div class="station">
+  <a href="../" title="투넬 중앙역으로">
+    <img src="../v/sq1_line.webp" alt="투넬" width="26" height="26">
+    <b>TÜNEL</b><i>중앙역</i>
+  </a>
+</div>
+
+<div class="lhero">
+  <div class="card2">
+    <div class="clip"></div>
+    <div class="in">
+      <div class="plat"><i>6</i> Platform · Library</div>
+      <h1>도서관</h1>
+      <p class="lead">같이 읽고 같이 굴려보는 칸이에요. 책모임과 자기계발 스터디,
+        그리고 AI 나눔회처럼 각자 해보던 걸 꺼내 놓는 자리가 여기서 열립니다.</p>
+      <div class="how">
+        <div>한 회차 3시간 안팎, 성수·합정 같은 접근 좋은 공간을 빌려 10명 안팎으로 모여요</div>
+        <div>발표가 아니라 노트북 펴놓고 보여주면서 수다 떠는 분위기예요</div>
+        <div>닉네임으로만 불러요. 직업이나 나이는 묻지 않습니다</div>
+        <div>모집은 동행클럽 소모임으로 열려요 — 일정 탭에서 신청 링크를 확인하세요</div>
       </div>
-      <span class="hpad"></span>
     </div>
-    <p class="tag">같이 읽고 같이 굴려보는 칸.<br>책모임, 자기계발 스터디, AI 나눔회.</p>
   </div>
-</header>
+</div>
+
+<nav>
+  <div class="nbrow">
+    <div class="nb on" data-v="sched" onclick="setView('sched')">일정</div>
+    <div class="nb" data-v="about" onclick="setView('about')">소개</div>
+  </div>
+  <div class="moulding" aria-hidden="true"></div>
+</nav>
 
 <main class="wrap">
 
+<section class="view on" id="v-sched">
   <div class="lab">다가오는 모임</div>
 
   <article class="badge">
@@ -141,6 +195,9 @@ footer a{color:#98A0A6}
   </article>
   <span class="act off">신청이 마감됐어요</span>
 
+</section>
+
+<section class="view" id="v-about">
   <div class="lab">어떤 자리인가요</div>
 
   <div class="card">
@@ -163,11 +220,21 @@ footer a{color:#98A0A6}
     다음 회차 소식은 투넬 노선 안내에서 이어서 알려드릴게요.
   </div>
 
+</section>
+
   <footer>
     투넬 · TÜNEL — 일상에서 취향으로 가는 터널<br>
     <a href="../">노선 안내로 돌아가기</a>
   </footer>
 
 </main>
+<script>
+function setView(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
+  document.querySelectorAll('.nb').forEach(x=>x.classList.toggle('on', x.dataset.v===v));
+  history.replaceState(null,'','#'+v);
+}
+setView((location.hash||'#sched').slice(1));
+</script>
 </body>
 </html>

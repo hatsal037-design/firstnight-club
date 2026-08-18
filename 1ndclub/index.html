@@ -39,7 +39,7 @@ body{
   color:var(--ink); background:var(--bg);
   background-image:radial-gradient(rgba(255,255,255,.028) 1px, transparent 1px);
   background-size:5px 5px;
-  padding-bottom:calc(var(--nav) + 16px);
+  padding-bottom:40px;
 }
 button,a,input,select,textarea{font-family:inherit;color:inherit}
 a{color:var(--red-lite)}
@@ -84,13 +84,55 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
        font-size:14px;color:var(--ink);letter-spacing:-.5px;margin:18px 18px 9px}
 .label::before{content:'';width:5px;height:.85em;background:var(--red);border-radius:2px;flex:none}
 
+.hbar{position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  display:flex;align-items:center;gap:11px}
+/* ══ 노선 공통 구조 ══
+   ① 최상단 중앙역 버튼 ② 이 노선 히어로 카드(탈것+승차권) ③ 메뉴바 ④ 콘텐츠 */
+.station{position:relative;z-index:5;display:flex;justify-content:center;
+  padding:calc(12px + env(safe-area-inset-top)) 14px 0}
+.station a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
+  background:rgba(255,255,255,.03);border:1px solid #3A342B;border-radius:999px;
+  padding:6px 14px 6px 8px}
+.station a:active{transform:translateY(1px)}
+.station img{width:26px;height:26px;object-fit:contain;display:block}
+.station b{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2.4px;font-weight:800;color:#C9A55E}
+.station i{font-style:normal;font-size:10.5px;color:#8A8375;letter-spacing:-.2px}
+
+/* 노선 히어로 — 허브의 그 카드가 그대로 온다 (탈것은 좌상단에 걸침) */
+.lhero{position:relative;width:358px;max-width:calc(100% - 24px);margin:52px auto 0}
+.lhero .veh{position:absolute;left:-6px;top:-42px;height:66px;width:auto;z-index:3;pointer-events:none;
+  filter:drop-shadow(0 0 13px rgba(255,190,120,.35)) drop-shadow(0 6px 9px rgba(0,0,0,.5))}
+.tk{background:#17141A;border:1px solid #3A2B2E;border-radius:2px;overflow:hidden;display:flex;position:relative;
+  box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 0 60px rgba(217,142,50,.06)}
+.tk::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%, rgba(255,180,90,.14), transparent 58%)}
+.tk .stub{width:44px;flex:none;order:2;border-left:1px dashed rgba(232,200,160,.35);
+  background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;padding:8px 0}
+.tk .stub span{writing-mode:vertical-rl;font-family:'Cinzel',serif;font-size:9px;letter-spacing:4px;
+  font-weight:800;color:#C6A87C}
+.tk .tbody{flex:1;min-width:0;padding:14px 15px 14px}
+.tk .no{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:2px;color:#8A6B4E;text-align:right}
+.tk .nm{font-family:'Do Hyeon',sans-serif;font-size:25px;color:#F0E6DA;margin-top:5px;letter-spacing:-.5px}
+.tk .lead{font-size:12px;color:#B9AEA6;margin-top:8px;line-height:1.7}
+.tk .how{margin-top:11px;padding-top:10px;border-top:1px dotted rgba(232,200,160,.22);
+  display:flex;flex-direction:column;gap:6px}
+.tk .how div{font-size:11.5px;color:#8E8288;line-height:1.6;padding-left:13px;position:relative}
+.tk .how div::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;
+  background:rgba(232,50,60,.7)}
+.tk .meta{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:10px;
+  border-top:1px dotted rgba(232,200,160,.22)}
+.tk .st{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:1.5px;
+  color:#E8323C;border:1px solid rgba(232,50,60,.55);padding:3px 8px}
+.tk .cnt{margin-left:auto;font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:#6E6169}
+
 /* 하단 탭 — 중앙역 상단바와 같은 어휘: 황동 리디드 몰딩 + 글자 */
-nav{position:fixed;left:0;right:0;bottom:0;z-index:1500;
+nav{position:sticky;top:0;z-index:1500;margin-top:18px;
     background:rgba(18,17,20,.94);backdrop-filter:blur(12px);
-    padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -6px 16px rgba(0,0,0,.45)}
+    box-shadow:0 6px 16px rgba(0,0,0,.45)}
 nav .moulding{height:20px;background:url(../v/ss1_reed.webp) center/100% 100% no-repeat;
-    filter:brightness(.86) saturate(.95)}
+    filter:brightness(.86) saturate(.95);order:2}
 nav .nbrow{display:flex;justify-content:center;gap:22px;padding:11px 12px 10px}
+nav{display:flex;flex-direction:column}
 nav .nb{flex:none;position:relative;cursor:pointer;color:var(--sub);
     font-family:'Do Hyeon',sans-serif;font-weight:400;font-size:14.5px;letter-spacing:-.3px;
     padding:0 2px 4px;transition:color 140ms}
@@ -431,16 +473,51 @@ footer a{color:#7a8290}
 </head>
 <body>
 
-<header>
-  <a class="hublogo" href="../" title="투넬 중앙역으로"><img src="../v/sq1_line.webp" alt="투넬" width="34" height="34"></a>
-  <h1>첫밤 사망자 <span class="r">클럽</span>
-    <div class="sub" id="hsub"></div>
-  </h1>
-  <div class="hright">
+<div class="station">
+  <a href="../" title="투넬 중앙역으로">
+    <img src="../v/sq1_line.webp" alt="투넬" width="26" height="26">
+    <b>TÜNEL</b><i>중앙역</i>
+  </a>
+  <div class="hbar">
     <div class="bell" id="bell" onclick="openNotices()" style="display:none">🔔<span class="dot" id="bellDot" style="display:none"></span></div>
     <div class="me" id="meBox" onclick="askNick()"></div>
   </div>
-</header>
+</div>
+
+<div class="lhero">
+  <img class="veh" src="../v/A3_night.webp" alt="">
+  <div class="tk">
+    <div class="stub"><span>TÜNEL</span></div>
+    <div class="tbody">
+      <div class="no">PLATFORM 02 · 첫밤행</div>
+      <div class="nm">첫밤 사망자 클럽</div>
+      <div class="lead">맨날 첫 밤에 죽는 사람들이 모여 마피아와 보드게임을 합니다.
+        잘하는 사람만 오는 자리가 아니라, 죽어도 재밌게 죽는 자리예요.</div>
+      <div class="how">
+        <div>한 회차 4~6시간, 대여 공간을 빌려 12명 안팎으로 모여요</div>
+        <div>진행자가 룰을 다 알려주니 처음 오셔도 그날 바로 합니다</div>
+        <div>그날 할 게임은 미리 다같이 골라요 — 게임 도감에서 찜하면 집계돼요</div>
+        <div>끝나면 근처에서 2차. 부담 없이 먼저 가셔도 됩니다</div>
+      </div>
+      <div class="meta">
+        <span class="st">운행중</span>
+        <span class="cnt" id="hsub"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav>
+  <div class="moulding" aria-hidden="true"></div>
+  <div class="nbrow">
+    <div class="nb on" data-v="games" onclick="setView('games')"><span class="tx">게임 도감</span></div>
+    <div class="nb" data-v="sched" onclick="setView('sched')"><span class="tx">정모일정</span></div>
+    <div class="nb" data-v="me"    onclick="setView('me')"><span class="tx">내 활동</span></div>
+    <div class="nb" data-v="members" id="navMembers" style="display:none" onclick="setView('members')"><span class="tx">회원관리</span></div>
+  </div>
+</nav>
+
+
 <div class="checker"></div>
 
 <!-- 1. 게임 도감 -->
@@ -482,15 +559,6 @@ footer a{color:#7a8290}
 <!-- 5. 회원관리 (관리자 전용) -->
 <section class="view" id="v-members"><div id="memBody"></div></section>
 
-<nav>
-  <div class="moulding" aria-hidden="true"></div>
-  <div class="nbrow">
-    <div class="nb on" data-v="games" onclick="setView('games')"><span class="tx">게임 도감</span></div>
-    <div class="nb" data-v="sched" onclick="setView('sched')"><span class="tx">정모일정</span></div>
-    <div class="nb" data-v="me"    onclick="setView('me')"><span class="tx">내 활동</span></div>
-    <div class="nb" data-v="members" id="navMembers" style="display:none" onclick="setView('members')"><span class="tx">회원관리</span></div>
-  </div>
-</nav>
 
 <div class="overlay" id="ov" style="display:none" onclick="if(event.target===this)closeM()">
   <div class="modal" id="modal"></div>
