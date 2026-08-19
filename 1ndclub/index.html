@@ -567,7 +567,6 @@ footer a{color:#7a8290}
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=sb2"></script>
-<script src="past.js"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -1199,7 +1198,6 @@ function renderSched(){
          <div class="at">${isAdmin()?'🔧 관리자':isStaff()?'🔧 운영진':'📜 서기'}</div>
          <div class="row" style="color:var(--sub)">지난 모임의 참여자와 한 게임을 기록할 수 있어요.</div>
          <button class="abtn" onclick="editPast('')">＋ 지난 모임 추가</button>
-         ${isAdmin()?`<button class="abtn ghost" onclick="exportPast()">📋 past.js 코드 복사</button>`:''}
        </div>` : '';
   document.getElementById('schedList').innerHTML = html;
   renderPicked(); renderRsvp();
@@ -1750,16 +1748,15 @@ async function jaToggleOff(){
 
 /* ══ 지난정모 ══ */
 function pastList(){
-  /* 날짜가 지난 예정 회차(schedule.js)는 자동으로 지난 목록으로 내려온다.
-     그 위에 씨앗(past.js) → 로컬 편집(구버전 호환) → 서버 기록 순으로 겹쳐 쓴다. 서버가 최종. */
+  /* 2026-08-19 — 지난 기록의 출처는 서버(meetings + attendance) 하나다.
+     날짜가 지났는데 아직 기록이 안 들어간 예정 회차만 빈 껍데기로 채워 보여준다.
+     past.js(씨앗)와 로컬 편집본은 서버로 이사를 마쳐서 더 읽지 않는다. */
   const by = {};
   ROUNDS.filter(r=>new Date(r.d) < TODAY).forEach(r=>{
     by[r.d] = { r:r.r, d:r.d, dow:r.dow, s:r.s, e:r.e, kind:'round',
                 place:r.place, n:null, fee:r.fee||'', played:[], people:[],
                 after:'', memo:'', auto:true };
   });
-  PAST.forEach(p=>by[p.d]={...(by[p.d]||{}),...p});
-  Object.entries(edits).forEach(([d,v])=>by[d]={...(by[d]||{}),...v});
   serverPast.forEach(p=>by[p.d]={...(by[p.d]||{}),...p});
   return Object.values(by).sort((a,b)=>b.d.localeCompare(a.d));
 }
@@ -1925,7 +1922,7 @@ function savePast(){
   })();
 }
 /* 기록 삭제 — 실수로 지우면 되돌릴 수 없어서 화면에서는 뺐다.
-   지워야 할 일이 생기면 past.js/서버에서 직접 정리한다. */
+   지워야 할 일이 생기면 서버(meetings)에서 직접 정리한다. */
 function delPast(d){
   if(!confirm('이 기록을 지울까요?')) return;
   delete edits[d]; localStorage.setItem(RKEY,JSON.stringify(edits));
@@ -1933,12 +1930,6 @@ function delPast(d){
     try{ await API.pastDelete(d); serverPast = await API.pastList(); }catch(e){}
     closeM(); schedScrolled=true; renderSched();
   })();
-}
-function exportPast(){
-  const code='const PAST = '+JSON.stringify(pastList(),null,2)+';';
-  navigator.clipboard?.writeText(code).then(
-    ()=>alert('past.js 코드를 복사했어요.\n게임도감 폴더의 past.js 내용을 이걸로 바꾸면 모두에게 반영됩니다.'),
-    ()=>prompt('아래를 복사해 past.js에 붙여넣으세요', code));
 }
 
 /* ══ 마이페이지 ══ */

@@ -105,20 +105,72 @@ API.allPicks = async function(date){   // 운영진만 전체가 보임(RLS). �
   return (data||[]).map(r=>({ uid:r.member_id, games:r.games }));
 };
 
-/* ══ 지난 모임 ══ */
+/* ══ 지난 모임 ══
+   2026-08-19 통합 구조로 이사했다. 저장소는 meetings + attendance (line='botc').
+   앱이 쓰던 모양({d,dow,s,e,r,kind,place,n,fee,played,people,…})은 그대로 유지해서
+   index.html 은 손대지 않는다. 옛 past_meetings 테이블은 백업으로만 남아 있다.
+   설계: 브랜드/통합구조_설계.md */
+const LINE = 'botc';
+
+/* meetings 행 + 참석자 → 앱이 쓰던 지난 모임 모양 */
+function rowToPast(m, atts){
+  const people = (atts||[]).map(a =>
+    a.member_id ? { uid:a.member_id, label:a.who } : (a.guest_name || a.who));
+  return {
+    d:m.d, dow:m.dow, s:m.s, e:m.e,
+    r:m.r ?? null, kind:m.kind === 'regular' ? null : m.kind,
+    place:m.place ?? '', addr:m.addr ?? '', memo:m.memo ?? '',
+    fee:m.fee ?? '', after:m.after ?? '',
+    n: people.length || null,
+    played: (m.data && m.data.played) || [],
+    people,
+    _id: m.id
+  };
+}
+
 API.pastList = async function(){
-  const { data } = await T('past_meetings').select('*');
-  return data || [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const { data: ms } = await sb.from('meetings').select('*')
+    .eq('line', LINE).order('d', { ascending:false });
+  const rows = (ms||[]).filter(m =>
+    m.status === 'done' || (m.status !== 'cancelled' && new Date(m.d) < today));
+  if(!rows.length) return [];
+  const { data: atts } = await sb.from('v_attendance')
+    .select('meeting_id,member_id,guest_name,who')
+    .in('meeting_id', rows.map(m=>m.id));
+  const by = {};
+  (atts||[]).forEach(a => (by[a.meeting_id] = by[a.meeting_id] || []).push(a));
+  return rows.map(m => rowToPast(m, by[m.id]));
 };
+
 API.pastSave = async function(rec){
-  const row = { d:rec.d, dow:rec.dow, s:rec.s, e:rec.e, r:rec.r??null, kind:rec.kind??null,
-                place:rec.place??null, addr:rec.addr??null, memo:rec.memo??null,
-                fee:rec.fee??null, after:rec.after??null,
-                people:rec.people||[], played:rec.played||[] };
-  const { error } = await T('past_meetings').upsert(row);
+  /* 회차 본체 */
+  const row = { line:LINE, d:rec.d, dow:rec.dow ?? null, s:rec.s ?? null, e:rec.e ?? null,
+                r:rec.r ?? null, kind:rec.kind || 'regular',
+                place:rec.place ?? null, addr:rec.addr ?? null, memo:rec.memo ?? null,
+                fee:rec.fee ?? null, after:rec.after ?? null,
+                status:'done', data:{ played: rec.played || [] } };
+  const { data: saved, error } = await sb.from('meetings')
+    .upsert(row, { onConflict:'line,d' }).select('id').single();
   throwErr(error, '기록 저장 실패');
+
+  /* 참석자 — 통째로 다시 쓴다 (편집 화면이 전체 목록을 넘겨준다) */
+  const mid = saved.id;
+  await sb.from('attendance').delete().eq('meeting_id', mid);
+  const rowsA = (rec.people || []).map(p =>
+    typeof p === 'object' && p.uid
+      ? { meeting_id:mid, member_id:p.uid }
+      : { meeting_id:mid, guest_name:String(p) })
+    .filter(r => r.member_id || (r.guest_name && r.guest_name.trim()));
+  if(rowsA.length){
+    const { error: e2 } = await sb.from('attendance').insert(rowsA);
+    throwErr(e2, '참석자 저장 실패');
+  }
 };
-API.pastDelete = async function(d){ await T('past_meetings').delete().eq('d', d); };
+
+API.pastDelete = async function(d){
+  await sb.from('meetings').delete().eq('line', LINE).eq('d', d);
+};
 
 /* ══ 참석 여부 (RSVP) ══ */
 API.setRsvp = async function(date, uid, v){
