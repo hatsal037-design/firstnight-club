@@ -90,12 +90,11 @@ header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-
    ① 최상단 중앙역 버튼 ② 이 노선 히어로 카드(탈것+승차권) ③ 메뉴바 ④ 콘텐츠 */
 .station{position:relative;z-index:5;display:flex;justify-content:center;
   padding:calc(12px + env(safe-area-inset-top)) 14px 0}
-.station a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
-  background:rgba(255,255,255,.03);border:1px solid #3A342B;border-radius:999px;
-  padding:6px 14px 6px 8px}
+.station a{display:inline-flex;align-items:center;gap:9px;text-decoration:none;
+  padding:4px 4px}
 .station a:active{transform:translateY(1px)}
-.station img{width:26px;height:26px;object-fit:contain;display:block}
-.station b{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2.4px;font-weight:800;color:#C9A55E}
+.station img{width:auto;height:26px;object-fit:contain;display:block;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.55))}
 .station i{font-style:normal;font-size:10.5px;color:#8A8375;letter-spacing:-.2px}
 
 /* 노선 히어로 — 허브의 그 카드가 그대로 온다 (탈것은 좌상단에 걸침) */
@@ -471,8 +470,8 @@ footer a{color:#7a8290}
 
 <div class="station">
   <a href="../" title="투넬 중앙역으로">
-    <img src="../v/sq1_line.webp" alt="투넬" width="26" height="26">
-    <b>TÜNEL</b><i>중앙역</i>
+    <img src="../v/plate_tunel.webp" alt="TÜNEL" width="63" height="24">
+    <i>중앙역</i>
   </a>
   <div class="hbar">
     <div class="bell" id="bell" onclick="openNotices()" style="display:none">🔔<span class="dot" id="bellDot" style="display:none"></span></div>

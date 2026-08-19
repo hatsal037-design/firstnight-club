@@ -27,11 +27,11 @@ body{font-family:'Pretendard',system-ui,sans-serif;background:var(--paper);color
 
 /* ══ 노선 공통 구조 ①중앙역 ②히어로 ③메뉴바 ④콘텐츠 ══ */
 .station{display:flex;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px 0}
-.station a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;
-  background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 8px}
+.station a{display:inline-flex;align-items:center;gap:9px;text-decoration:none;
+  padding:4px 4px}
 .station a:active{transform:translateY(1px)}
-.station img{width:26px;height:26px;object-fit:contain;display:block}
-.station b{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2.4px;font-weight:800;color:#8A6B2B}
+.station img{width:auto;height:26px;object-fit:contain;display:block;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.55))}
 .station i{font-style:normal;font-size:10.5px;color:var(--sub);letter-spacing:-.2px}
 
 /* 히어로 — 허브의 초록 전단이 그대로 온다 */
@@ -118,8 +118,8 @@ footer a{color:#8A9188}
 
 <div class="station">
   <a href="../" title="투넬 중앙역으로">
-    <img src="../v/sq1_line.webp" alt="투넬" width="26" height="26">
-    <b>TÜNEL</b><i>중앙역</i>
+    <img src="../v/plate_tunel.webp" alt="TÜNEL" width="63" height="24">
+    <i>중앙역</i>
   </a>
 </div>
 
