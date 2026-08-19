@@ -773,7 +773,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       btns.innerHTML = '<a class="pb" href="1ndclub/">첫밤에서 가입 ›</a>';
       return;
     }
-    const { data: m } = await sb.from('members').select('nick,no,joined,role').eq('id', mid).single();
+    const { data: m } = await sb.from('members').select('nick,no,joined,role,is_admin').eq('id', mid).single();
     if(!m) return loggedOut();
     card.classList.remove('off');
     nick.textContent = m.nick;
