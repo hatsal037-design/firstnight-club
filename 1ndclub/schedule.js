@@ -17,7 +17,8 @@
      after  2차 후보 (없으면 null)
 */
 
-const ROUNDS = [
+/* 폴백 — 서버를 못 읽을 때만 쓰인다. 진짜 일정은 meetings 테이블 */
+var ROUNDS = [
   { r:4, d:'2026-08-29', dow:'토', s:'13:00', e:'19:00', h:6, st:'soon',
     place:'서울갤러리 동그라미방', addr:'서울 중구 세종대로 110',
     mapq:'서울시청 시민청 서울갤러리', cap:null, fee:'',

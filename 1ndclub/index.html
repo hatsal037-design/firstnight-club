@@ -563,10 +563,10 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="api.js?v=sb3"></script>
+<script src="api.js?v=lines1"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
-<script src="schedule.js?v=sb2"></script>
+<script src="schedule.js?v=lines1"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -603,14 +603,25 @@ const myNames = () => acc ? [acc.nick, ...(acc.aliases||[])] : [];
 const FKEY = () => 'botc_fav_' + (acc?.uid||'anon');
 
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-const openRound = ROUNDS.find(r=>r.st==='open');
-const upcoming  = ROUNDS.filter(r=>new Date(r.d) >= TODAY);
+/* 회차는 서버(meetings)가 최종이다. schedule.js 값은 서버를 못 읽을 때만 쓰는 폴백.
+   부팅에서 ROUNDS 를 갈아끼운 뒤 recalcRounds() 로 파생값을 다시 만든다. */
+let openRound = ROUNDS.find(r=>r.st==='open');
+let upcoming  = ROUNDS.filter(r=>new Date(r.d) >= TODAY);
+function recalcRounds(){
+  openRound = ROUNDS.find(r=>r.st==='open');
+  upcoming  = ROUNDS.filter(r=>r.st!=='done' && r.st!=='cancelled' && new Date(r.d) >= TODAY);
+}
 
 /* ══ 세션 ══
    Supabase가 세션을 관리한다. 카카오 로그인에서 돌아오면 세션이 자동으로 잡히고,
    기존 회원이면 claim으로 자동 연결, 처음이면 가입 시트를 띄운다. */
 async function bootSession(){
   let needOnboard = false;
+  /* 회차부터 받아온다 — 아래 로직이 전부 openRound/upcoming 을 본다 */
+  try{
+    const rows = await API.roundsList();
+    if(rows.length){ ROUNDS = rows; recalcRounds(); }
+  }catch(e){ console.warn('회차를 서버에서 못 받아 폴백을 씁니다', e); }
   try{
     acc = await API.myMember();
     if(!acc && await API.hasSession()) needOnboard = true;   // 카카오 인증은 됐는데 회원이 아직 아님

@@ -2,3 +2,7 @@
 1ndclub/index.kvdb.html.bak
 1ndclub/api.kvdb.js.bak
 .DS_Store
+
+# supabase CLI 작업 파일
+.temp/
+supabase/.temp/

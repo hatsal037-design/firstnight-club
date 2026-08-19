@@ -190,7 +190,8 @@ footer a{color:#8A9188}
 
 </main>
 
-<script src="schedule.js?v=1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../tunel.js?v=1"></script>
 <script>
 function setView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
@@ -199,28 +200,31 @@ function setView(v){
 }
 setView((location.hash||'#sched').slice(1));
 
-/* 일정 — 날짜 미정(TBD)도 예정으로 보여준다 */
-(function(){
-  const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-  const list = (typeof PLAY_EVENTS!=='undefined'?PLAY_EVENTS:[])
-    .filter(v=> v.st!=='done' && (v.d==='TBD' || new Date(v.d) >= TODAY))
-    .sort((a,b)=> (a.d==='TBD') - (b.d==='TBD') || a.d.localeCompare(b.d));
+/* 일정 — 서버(meetings)에서 이 노선 것만. 날짜 미정(TBD)도 예정으로 보여준다 */
+(async function(){
   const el = document.getElementById('schedList');
-  if(!list.length){ el.innerHTML = '<p class="note">아직 잡힌 모임이 없어요.</p>'; return; }
-  el.innerHTML = list.map(v=>{
-    const day  = v.d==='TBD' ? '날짜 조율 중' : `${+v.d.slice(5,7)}/${+v.d.slice(8)}`;
-    const time = v.d==='TBD' ? '' : `${v.dow} · ${v.s}~${v.e}`;
-    return `<div class="tkt">
-      <span class="tbody">
-        <span class="tno">PLATFORM 01</span>
-        <span class="trow"><span class="td">${day}</span><span class="tt">${time}</span>
-          <span class="tst">${v.st==='open'?'모집중':'예정'}</span></span>
-        <span class="tp">${v.name} · ${v.place}</span>
-        ${v.note?`<span class="tnote">${v.note}</span>`:''}
-      </span>
-      <span class="tstub"><span>TÜNEL</span></span>
-    </div>`;
-  }).join('');
+  try{
+    const rows = await TUNEL.meetings({ line:'play', status:'upcoming' });
+    if(!rows.length){ el.innerHTML = '<p class="note">아직 잡힌 모임이 없어요.</p>'; return; }
+    el.innerHTML = rows.map(v=>{
+      const tbd  = v.data && v.data.tbd;
+      const day  = tbd ? '날짜 조율 중' : `${+v.d.slice(5,7)}/${+v.d.slice(8)}`;
+      const time = tbd ? '' : `${v.dow||''} · ${v.s||''}~${v.e||''}`;
+      const note = (v.data && v.data.note) || v.memo || '';
+      return `<div class="tkt">
+        <span class="tbody">
+          <span class="tno">PLATFORM 01</span>
+          <span class="trow"><span class="td">${day}</span><span class="tt">${time}</span>
+            <span class="tst">${v.status==='open'?'모집중':'예정'}</span></span>
+          <span class="tp">${TUNEL.title(v)} · ${v.place||''}</span>
+          ${note?`<span class="tnote">${note}</span>`:''}
+        </span>
+        <span class="tstub"><span>TÜNEL</span></span>
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML = '<p class="note">일정을 못 불러왔어요.<br>' + (e.message||'') + '</p>';
+  }
 })();
 </script>
 </body>

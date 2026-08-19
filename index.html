@@ -52,12 +52,15 @@ header{position:relative;overflow:hidden;padding:calc(52px + env(safe-area-inset
         background:linear-gradient(180deg, rgba(24,22,26,.34), rgba(24,22,26,.10) 55%, transparent)}
 header > .rig, header > .en, header > .est, header > .tagline{position:relative}
 /* 회원 관리 바로가기 — 헤더 우측 상단, 관리자에게만 보인다 */
-.mbtn{position:absolute;z-index:6;top:calc(14px + env(safe-area-inset-top));right:15px;
-  border:0;padding:0;background:none;cursor:pointer;line-height:0;transition:transform 120ms}
-.mbtn:active{transform:scale(.9)}
-.mbtn img{height:32px;width:auto;display:block;
+.hbtn{position:absolute;z-index:6;top:calc(14px + env(safe-area-inset-top));
+  border:0;padding:0;background:none;cursor:pointer;transition:transform 120ms;
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.hbtn:active{transform:scale(.9)}
+.hbtn img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;
   filter:drop-shadow(0 0 1.5px rgba(0,0,0,.95)) drop-shadow(0 0 5px rgba(0,0,0,.75))
          drop-shadow(0 2px 6px rgba(0,0,0,.6))}
+.mbtn{right:15px}   /* 회원 · 계정 설정 */
+.nbtn{left:15px}    /* 노선 바로가기 */
 
 /* 역 천장에 사슬로 매단 황동 명판 */
 .rig{position:relative;display:inline-block;max-width:300px;width:78%}
@@ -160,6 +163,18 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
   width:28px;height:28px;border-radius:50%;font-size:15px;line-height:1;cursor:pointer}
 .mdl .x:active{transform:scale(.9)}
 .mdl .bodyw{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 22px}
+/* 노선 바로가기 본문 */
+.navlist a{display:flex;align-items:center;gap:11px;border:1px solid #3A342B;border-radius:9px;
+  padding:11px 13px;margin-bottom:7px}
+.navlist a:active{background:rgba(255,255,255,.04)}
+.navlist .np{flex:none;font-family:'Nanum Gothic Coding',monospace;font-size:10px;
+  letter-spacing:1px;color:#B08D3E;width:22px}
+.navlist .nn{flex:1;min-width:0;font-size:14px;font-weight:700;color:#E9E2D2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navlist .ns{flex:none;font-size:9.5px;font-weight:800;border-radius:3px;padding:3px 7px;
+  background:#2A2630;color:#A79E8F}
+.navlist .ns.on{background:#3A2B15;color:#E8A54B}
+.navlist .soon{opacity:.5}
 /* 계정 설정 본문 */
 .acct .an{font-size:20px;font-weight:800;color:#F2EAD9}
 .acct .ao{font-family:'Nanum Gothic Coding',monospace;font-size:11px;letter-spacing:1.5px;color:#B08D3E;margin-top:5px}
@@ -487,7 +502,10 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 <body>
 
 <header>
-  <button class="mbtn" id="memBtn" style="display:none" title="회원 관리" aria-label="회원 관리">
+  <button class="hbtn nbtn" id="navBtn" title="노선 바로가기" aria-label="노선 바로가기">
+    <img src="v/bars_round.webp" alt="" width="32" height="21">
+  </button>
+  <button class="hbtn mbtn" id="memBtn" style="display:none" title="계정 설정" aria-label="계정 설정">
     <img src="v/mb_satin.webp" alt="" width="24" height="32">
   </button>
   <div class="herobg" aria-hidden="true"></div>
@@ -673,6 +691,17 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     <div class="bodyw" id="acctBody">
       <p class="bnote">불러오는 중…</p>
     </div>
+  </div>
+</div>
+<div class="mdl" id="navMdl" role="dialog" aria-modal="true" aria-label="노선 바로가기">
+  <div class="bd" data-close></div>
+  <div class="sh">
+    <div class="hd">
+      <img src="v/bars_round.webp" alt="" style="height:14px">
+      <b>노선 안내 · LINES</b>
+      <button class="x" data-close aria-label="닫기">✕</button>
+    </div>
+    <div class="bodyw" id="navBody"><p class="bnote">불러오는 중…</p></div>
   </div>
 </div>
 <footer>
@@ -869,6 +898,33 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     acctIn(m);
     if(m.is_admin) initMemAdmin(sb);
   }catch(e){ loggedOut(); }
+})();
+
+/* ══ 노선 바로가기 — 헤더 왼쪽 버튼 ══ */
+(async function(){
+  const mdl = document.getElementById('navMdl');
+  const btn = document.getElementById('navBtn');
+  const body = document.getElementById('navBody');
+  if(!mdl || !btn) return;
+  const open  = () => { mdl.classList.add('on'); document.body.style.overflow='hidden'; };
+  const close = () => { mdl.classList.remove('on'); document.body.style.overflow=''; };
+  mdl.querySelectorAll('[data-close]').forEach(el => el.onclick = close);
+  document.addEventListener('keydown', e => { if(e.key==='Escape' && mdl.classList.contains('on')) close(); });
+  btn.onclick = open;
+  try{
+    const lines = await TUNEL.lines();
+    body.className = 'bodyw navlist';
+    body.innerHTML = lines.map(l => {
+      const live = l.status === '운행중';
+      return `<a href="${l.path}" class="${live?'':'soon'}">
+        <span class="np">${String(l.no).padStart(2,'0')}</span>
+        <span class="nn">${l.name}</span>
+        <span class="ns${live?' on':''}">${l.status}</span>
+      </a>`;
+    }).join('') + '<p class="bnote">플랫폼 번호는 노선이 열린 순서가 아니라 자리 번호예요</p>';
+  }catch(e){
+    body.innerHTML = '<p class="bnote">노선을 못 불러왔어요<br>' + (e.message||'') + '</p>';
+  }
 })();
 
 /* ══ 내 활동 — 모든 노선을 한자리에 (노선 안에서는 그 노선만 본다) ══ */

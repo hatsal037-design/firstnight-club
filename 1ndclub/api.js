@@ -128,6 +128,22 @@ function rowToPast(m, atts){
   };
 }
 
+/* 회차 전체 — 앱이 쓰던 ROUNDS 모양으로 돌려준다 (schedule.js 대체) */
+API.roundsList = async function(){
+  const { data } = await sb.from('meetings').select('*')
+    .eq('line', LINE).order('d', { ascending:true });
+  return (data||[]).map(m => ({
+    r: m.r ?? null, d: m.d, dow: m.dow || '', s: m.s || '', e: m.e || '',
+    h: (m.data && m.data.h) ?? null,
+    st: m.status === 'open' ? 'open' : m.status === 'done' ? 'done'
+        : m.status === 'cancelled' ? 'cancelled' : 'soon',
+    place: m.place || '', addr: m.addr || '',
+    mapq: (m.data && m.data.mapq) || null,
+    cap: (m.data && m.data.cap) ?? null,
+    fee: m.fee || '', note: m.memo || '', after: m.after || null
+  }));
+};
+
 API.pastList = async function(){
   const today = new Date(); today.setHours(0,0,0,0);
   const { data: ms } = await sb.from('meetings').select('*')

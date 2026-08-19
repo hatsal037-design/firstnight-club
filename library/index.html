@@ -136,6 +136,9 @@ ul.pt li::before{content:'';position:absolute;left:0;top:8px;width:6px;height:6p
 footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
   font-size:11px;color:#98A0A6;text-align:center;line-height:1.8}
 footer a{color:#98A0A6}
+.badge.done{opacity:.55;filter:saturate(.85)}
+.badge .stamp.done{background:#E7E9E5;color:#8A9198;border-color:#C9CEC8}
+.badge .stamp.open{background:#FFE45C;color:#3A3F45}
 </style>
 </head>
 <body>
@@ -181,27 +184,7 @@ footer a{color:#98A0A6}
 <section class="view on" id="v-sched">
   <div class="lab">다가오는 모임</div>
 
-  <article class="badge">
-    <div class="clip"></div>
-    <div class="body">
-      <div class="main">
-        <div class="bpl">TÜNEL BOARDING PASS · LIBRARY</div>
-        <div class="when"><b>8/17</b><span>월 · 11:00~14:00</span></div>
-        <div class="what">AI 나눔회 1회차 — 진짜 쓰는 사람들의 AI 수다회</div>
-        <div class="where">시디즈 성수 커뮤니티룸<br>서울 성동구 아차산로 78 1층 (성수역 도보 2분)</div>
-        <dl class="rows">
-          <dt>참가비</dt><dd>10,000원</dd>
-          <dt>정원</dt><dd>9 / 9명</dd>
-          <dt>모집</dt><dd>동행클럽 소모임</dd>
-        </dl>
-      </div>
-      <div class="stub">
-        <div class="stamp full">모집<br>마감</div>
-        <div class="slb">FULL</div>
-      </div>
-    </div>
-  </article>
-  <span class="act off">신청이 마감됐어요</span>
+  <div id="schedList"><p class="note">일정을 불러오는 중…</p></div>
 
 </section>
 
@@ -236,6 +219,8 @@ footer a{color:#98A0A6}
   </footer>
 
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../tunel.js?v=1"></script>
 <script>
 function setView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
@@ -243,6 +228,51 @@ function setView(v){
   history.replaceState(null,'','#'+v);
 }
 setView((location.hash||'#sched').slice(1));
+
+/* 일정 — 서버(meetings)에서 이 노선 것만. 지난 회차는 아래에 흐리게 */
+(async function(){
+  const el = document.getElementById('schedList');
+  const card = (m, past) => {
+    const d = m.data || {};
+    const full = d.cap && d.joined && d.joined >= d.cap;
+    return `<article class="badge${past?' done':''}">
+      <div class="clip"></div>
+      <div class="body">
+        <div class="main">
+          <div class="bpl">TÜNEL BOARDING PASS · LIBRARY</div>
+          <div class="when"><b>${+m.d.slice(5,7)}/${+m.d.slice(8)}</b>
+            <span>${m.dow||''}${m.s?` · ${m.s}~${m.e||''}`:''}</span></div>
+          <div class="what">${TUNEL.title(m)}</div>
+          <div class="where">${m.place||''}${m.addr?`<br>${m.addr}`:''}</div>
+          <dl class="rows">
+            ${m.fee?`<dt>참가비</dt><dd>${m.fee}</dd>`:''}
+            ${d.cap?`<dt>정원</dt><dd>${d.joined??'-'} / ${d.cap}명</dd>`:''}
+            ${d.host?`<dt>모집</dt><dd>${d.host}</dd>`:''}
+          </dl>
+        </div>
+        <div class="stub">
+          <div class="stamp ${past?'done':full?'full':'open'}">${past?'다녀옴':full?'모집<br>마감':'모집<br>중'}</div>
+          <div class="slb">${past?'USED':full?'FULL':'OPEN'}</div>
+        </div>
+      </div>
+    </article>`;
+  };
+  try{
+    const rows = await TUNEL.meetings({ line:'library' });
+    const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
+    const past = rows.filter(TUNEL.isPast);
+    let html = '';
+    html += up.length ? up.map(m=>card(m,false)).join('')
+                      : '<p class="note">다음 회차는 준비 중이에요. 잡히면 여기에 올라옵니다.</p>';
+    if(past.length){
+      html += '<div class="lab" style="margin-top:26px">지난 모임</div>'
+            + past.map(m=>card(m,true)).join('');
+    }
+    el.innerHTML = html;
+  }catch(e){
+    el.innerHTML = '<p class="note">일정을 못 불러왔어요.<br>' + (e.message||'') + '</p>';
+  }
+})();
 </script>
 </body>
 </html>
