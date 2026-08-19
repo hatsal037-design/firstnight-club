@@ -52,12 +52,11 @@ header{position:relative;overflow:hidden;padding:calc(52px + env(safe-area-inset
         background:linear-gradient(180deg, rgba(24,22,26,.34), rgba(24,22,26,.10) 55%, transparent)}
 header > .rig, header > .en, header > .est, header > .tagline{position:relative}
 /* 회원 관리 바로가기 — 헤더 우측 상단, 관리자에게만 보인다 */
-.mbtn{position:absolute;z-index:6;top:calc(15px + env(safe-area-inset-top));right:15px;
-  width:34px;height:34px;border:0;padding:0;cursor:pointer;line-height:0;
-  background:none;transition:transform 120ms}
+.mbtn{position:absolute;z-index:6;top:calc(14px + env(safe-area-inset-top));right:15px;
+  border:0;padding:0;background:none;cursor:pointer;line-height:0;transition:transform 120ms}
 .mbtn:active{transform:scale(.9)}
-.mbtn svg{width:34px;height:34px;display:block;
-  filter:drop-shadow(0 0 2px rgba(0,0,0,.9)) drop-shadow(0 0 6px rgba(0,0,0,.7))
+.mbtn img{height:32px;width:auto;display:block;
+  filter:drop-shadow(0 0 1.5px rgba(0,0,0,.95)) drop-shadow(0 0 5px rgba(0,0,0,.75))
          drop-shadow(0 2px 6px rgba(0,0,0,.6))}
 
 /* 역 천장에 사슬로 매단 황동 명판 */
@@ -411,17 +410,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 
 <header>
   <button class="mbtn" id="memBtn" style="display:none" title="회원 관리" aria-label="회원 관리">
-    <svg viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="brass" x1="0" y1="0" x2="0.35" y2="1">
-          <stop offset="0" stop-color="#FBEBB4"/><stop offset=".32" stop-color="#E0B65C"/>
-          <stop offset=".58" stop-color="#B98A33"/><stop offset=".8" stop-color="#EBCC7E"/>
-          <stop offset="1" stop-color="#96682199"/>
-        </linearGradient>
-      </defs>
-      <circle cx="17" cy="11.4" r="5.9" fill="url(#brass)"/>
-      <path d="M4.6 30.6c0-6.8 5.5-11.3 12.4-11.3s12.4 4.5 12.4 11.3z" fill="url(#brass)"/>
-    </svg>
+    <img src="v/mb_satin.webp" alt="" width="24" height="32">
   </button>
   <div class="herobg" aria-hidden="true"></div>
   <div class="heroov" aria-hidden="true"></div>
