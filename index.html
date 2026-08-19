@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://tunel.kr/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Do+Hyeon&family=Jua&family=Bagel+Fat+One&family=Black+Han+Sans&family=Dongle:wght@700&family=Gugi&family=Nanum+Pen+Script&family=Song+Myung&family=Nanum+Gothic+Coding&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Do+Hyeon&family=Jua&family=Bagel+Fat+One&family=Black+Han+Sans&family=Dongle:wght@700&family=Gugi&family=Nanum+Pen+Script&family=Song+Myung&family=Nanum+Gothic+Coding&family=Gamja+Flower&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
 <style>
@@ -349,22 +349,24 @@ main{overflow:hidden;padding-left:0;padding-right:0}
 .tm .arrow{margin-left:auto;font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:#3E7F94}
 
 /* ═══ 8 공방 — 크라프트 태그 ═══ */
-.cf{background:#E4CBB0;border-radius:4px;padding:14px 34px 14px 16px;position:relative;
-  box-shadow:0 3px 0 rgba(122,67,34,.16), 0 9px 16px rgba(122,67,34,.12);
-  background-image:repeating-linear-gradient(90deg, rgba(140,95,60,.055) 0 2px, transparent 2px 6px)}
-.cf .hole{position:absolute;right:12px;top:50%;transform:translateY(-50%);
-  width:13px;height:13px;border-radius:50%;background:var(--cream);
-  box-shadow:inset 0 1px 3px rgba(122,67,34,.45)}
-.cf .string{position:absolute;right:5px;top:calc(50% - 1px);width:14px;height:2px;
-  background:#B08D6A;transform:rotate(24deg);border-radius:2px}
-.cf .no{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:2.5px;color:#8A5C39;text-align:right}
-.cf .nm{font-size:24px;font-weight:800;color:#5E3418;margin-top:4px;letter-spacing:-.5px}
-.cf .ds{font-size:11.5px;color:#7C5637;margin-top:8px;line-height:1.65}
+.cf{border-radius:4px;padding:14px 34px 14px 16px;position:relative;overflow:hidden;
+  box-shadow:0 3px 0 rgba(60,34,16,.3), 0 9px 16px rgba(0,0,0,.3)}
+.cf .bg{position:absolute;inset:0;z-index:0;background:url(v/wood_pine.webp) center/cover}
+.cf .ink{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg, rgba(90,52,20,.1), rgba(90,52,20,.22))}
+.cf .in{position:relative;z-index:2}
+.cf .hole{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;
+  width:13px;height:13px;border-radius:50%;background:rgba(30,16,6,.55);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,235,205,.25)}
+.cf .no{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:2.5px;color:#7A4A22;text-align:right}
+.cf .nm{font-family:'Gamja Flower',cursive;font-size:28px;font-weight:400;color:#4A2A10;margin-top:4px;
+  letter-spacing:0;text-shadow:0 1px 0 rgba(255,230,180,.45)}
+.cf .ds{font-size:11.5px;color:#5E3A18;margin-top:8px;line-height:1.65}
 .cf .foot{display:flex;align-items:center;margin-top:12px;padding-top:10px;
-  border-top:1px dashed rgba(122,67,34,.35)}
-.cf .st{font-size:10px;font-weight:800;letter-spacing:1px;color:#A15C2E;
-  border:1.5px solid #C87F4F;border-radius:3px;padding:3px 9px;transform:rotate(-3deg)}
-.cf .arrow{margin-left:auto;font-size:12px;color:#8A5C39;font-weight:700}
+  border-top:1px dashed rgba(90,52,20,.4)}
+.cf .st{font-size:10px;font-weight:800;letter-spacing:1px;color:#8A3F12;
+  border:1.5px solid #A9622C;border-radius:3px;padding:3px 9px;transform:rotate(-3deg)}
+.cf .arrow{margin-left:auto;font-size:12px;color:#7A4A22;font-weight:700}
 
 .card.soon{opacity:.9}
 
@@ -515,11 +517,13 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   <a class="card soon">
     <img class="veh" src="v/A8_craft.webp" alt="">
     <div class="cf">
-      <div class="string"></div><div class="hole"></div>
-      <div class="no">PLATFORM 08</div>
-      <div class="nm">뚝딱뚝딱 꼼지락 클럽</div>
-      <div class="ds">원데이 클래스와 공예. 뚝딱 깎고 꼼지락 빚어서 하나 만들어 옵니다</div>
-      <div class="foot"><span class="st">빚는중</span><span class="arrow">작업실로 ›</span></div>
+      <div class="bg"></div><div class="ink"></div><div class="hole"></div>
+      <div class="in">
+        <div class="no">PLATFORM 08</div>
+        <div class="nm">뚝딱뚝딱 꼼지락 클럽</div>
+        <div class="ds">원데이 클래스와 공예. 뚝딱 깎고 꼼지락 빚어서 하나 만들어 옵니다</div>
+        <div class="foot"><span class="st">빚는중</span><span class="arrow">작업실로 ›</span></div>
+      </div>
     </div>
   </a>
 
