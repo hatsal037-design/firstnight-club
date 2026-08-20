@@ -816,7 +816,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=12"></script>
+<script src="tunel.js?v=13"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -946,9 +946,9 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       const useBP = TUNEL.hasSkin(m.line)
         && !(m.status!=='open' && TUNEL._skins[m.line].soonTkt);
       const tk = !useBP ? TUNEL.ticket(m)
-        : m.status==='open'
-          ? TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', stub: TUNEL.stubOpen() })
-          : TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', size:'sm', stub: TUNEL.stubSoon() });
+        : TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)',
+            size: m.kind==='event' ? 'xl' : m.status==='open' ? undefined : 'sm',
+            stub: m.status==='open' ? TUNEL.stubOpen(m) : TUNEL.stubSoon(m) });
       return tk + (m.status==='open' ? TUNEL.signupBar(m) : '')
         + (useBP ? TUNEL.ticketDetail(m,
             { more: m.line_path, moreLabel: m.line==='botc' ? '첫밤 페이지' : '노선 페이지' }) : '');

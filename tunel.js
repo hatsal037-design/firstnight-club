@@ -189,8 +189,11 @@ const TUNEL = {
     botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2',
              ink:'#ECEEF2', lbl:'#B8A88E', rFont:"'Do Hyeon',sans-serif", rMd:21, rSm:16, acc:'#E8756A',
              perf:'rgba(0,0,0,.55)' },
-    /* play(놀이터)는 판지 폐기 — 규격 티켓(.tkt) 디자인 3크기로 확정 (2026-08-20 햇살님).
-       허브 TUNEL.ticket() 이 그린다: 예정·지난=슬림 100 · 모집중=일반 150 · kind=event =이벤트 180 */
+    /* play(놀이터) — 판지 폐기. 톤은 옛 규격 티켓(.tkt.play — 초록판·오프셋 그림자·Bagel Fat One)
+       구조는 공통 규격 그대로 (모따기 14 · 절취선 258 · 스터브 100). flat = 판지 없이 CSS 로 그린다 */
+    play:  { t:'pass', flat:'play', short:'놀이터',
+             ink:'#0E2A16', lbl:'#123A1F', rFont:"'Bagel Fat One',cursive", rMd:21, rSm:16, rXl:25,
+             acc:'#FFE45C', perf:'rgba(14,42,22,.45)' },
     snap:  { t:'pass', short:'나들이', card:'/tk/TK_sopung.jpg', cardSm:'/tk/TK_sopung_slim.jpg',
              ink:'#6B4A52', lbl:'#C4788F', rFont:"'Nanum Pen Script',cursive", rMd:27, rSm:21, acc:'#D9407A',
              perf:'rgba(140,80,100,.4)' },
@@ -248,21 +251,24 @@ const TUNEL = {
       ${close_}`;
     }
 
-    /* 보딩패스형 (첫밤·놀이터·찰칵) */
-    const body  = sm
-      ? `<div class="nm">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
-      : `<div class="nm">${TUNEL.title(m)} · ${m.line_name || ''}</div>
-        <div class="g">
+    /* 보딩패스형 (첫밤·놀이터·찰칵) — xl(180) = 이벤트, 설명 한 줄 추가 */
+    const xl = opt.size === 'xl';
+    const grid = `<div class="g">
           <div><i>DATE</i><b>${dt}</b></div>
           <div><i>TIME</i><b>${m.s || ''}</b></div>
           <div><i>PLACE</i><b>${m.place || ''}</b></div>
         </div>`;
-    return `${open_(`btk${sm ? ' sm' : ''}`)}
-      <img src="${card}" alt="">
+    const body  = sm
+      ? `<div class="nm">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
+      : `<div class="nm">${TUNEL.title(m)} · ${m.line_name || ''}</div>
+        ${xl && m.memo ? `<div class="desc">${m.memo}</div>` : ''}
+        ${grid}`;
+    return `${open_(`btk${sk.flat ? ' ' + sk.flat : ''}${sm ? ' sm' : xl ? ' xl' : ''}`)}
+      ${sk.flat ? '<span class="flat"></span>' : `<img src="${card}" alt="">`}
       <div class="perf" style="background:repeating-linear-gradient(180deg,${sk.perf} 0 5px,transparent 5px 10px)"></div>
       <div class="ov" style="color:${sk.ink}">
         <div class="lbl" style="color:${sk.lbl}">TÜNEL BOARDING PASS</div>
-        <div class="route" style="font-family:${sk.rFont};font-size:${sm ? sk.rSm : sk.rMd}px">
+        <div class="route" style="font-family:${sk.rFont};font-size:${sm ? sk.rSm : xl ? (sk.rXl || sk.rMd) : sk.rMd}px">
           <b>일상</b><span class="d"></span><b style="color:${sk.acc}">${m.data?.dest || m.line_short || sk.short}</b></div>
         ${body}
         <div class="stub">${opt.stub || ''}</div>
@@ -360,7 +366,9 @@ const TUNEL = {
   },
 
   /* 스터브 기성품 — 페이지들이 똑같이 쓰라고 여기 둔다 */
-  stubOpen(){
+  stubOpen(m){
+    if(m && m.line === 'play')
+      return `<div class="gostamp">GO!</div><div class="sl">STAMP HERE</div>`;
     return `<div class="holo2">모집중<i></i></div><div class="sl">BOARDING</div>`;
   },
   stubSoon(){
@@ -410,6 +418,27 @@ div.btk{cursor:pointer}
 .btk .holo2 i{position:absolute;inset:0;font-style:normal;
   background:linear-gradient(115deg,transparent 25%,rgba(255,255,255,.5) 45%,rgba(180,220,255,.3) 50%,transparent 70%);
   animation:tnlshim 2.4s linear infinite}
+.btk.xl{height:180px}
+.btk.xl .lbl{top:15px}
+.btk.xl .route{top:36px}
+.btk.xl .nm{top:78px;font-size:11px}
+.btk .desc{position:absolute;left:20px;top:99px;width:222px;font-size:9.5px;opacity:.7;line-height:1.45}
+.btk.xl .g{top:132px}
+/* ── 놀이터 — 판지 없는 규격 티켓. 초록판 + 진초록 오프셋 그림자 + 노랑 포인트 ── */
+.btk.play{overflow:visible;clip-path:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))}
+.btk.play::before{content:'';position:absolute;inset:0;transform:translate(4px,4px);
+  background:#102817;clip-path:polygon(14px 0,100% 0,100% 100%,0 100%,0 14px)}
+.btk.play .flat{position:absolute;inset:0;background:#102817;
+  clip-path:polygon(14px 0,100% 0,100% 100%,0 100%,0 14px)}
+.btk.play .flat::before{content:'';position:absolute;inset:2px;background:#2FA24B;
+  clip-path:polygon(13px 0,100% 0,100% 100%,0 100%,0 13px)}
+.btk.play .stub{background:rgba(255,228,92,.16)}
+.btk.play .route b:last-child{text-shadow:1px 1px 0 rgba(16,40,23,.85)}
+.btk.play .soon{color:rgba(14,42,22,.55);text-shadow:none}
+.btk.play .sl{color:rgba(14,42,22,.6)}
+.btk.play .gostamp{width:56px;height:56px;border-radius:50%;border:2.5px dashed rgba(14,42,22,.55);
+  display:grid;place-items:center;font-family:'Bagel Fat One',cursive;font-size:16px;color:#0E2A16;
+  transform:rotate(-8deg)}
 .btk.sm{height:100px}
 .btk.sm .lbl{top:15px}
 .btk.sm .route{top:34px}
