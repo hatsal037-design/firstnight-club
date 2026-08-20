@@ -28,6 +28,7 @@
    튀넬(1875, 세계 2번째 지하철)과 이스탄불 노스탤지어 트램 오마주.
    팔레트: 트램 레드 #B3161E · 크림 #F4EBD9 · 다크우드 #3A2A1E · 황동 #B08D3E */
 :root{
+  --tnl-hole:#141317;
   --red:#B3161E; --red-deep:#8E1017;
   --cream:#F4EBD9; --paper:#FDF8ED;
   --wood:#3A2A1E; --wood-soft:#6b5844;
@@ -101,42 +102,6 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .tkt .tt{font-size:11px;opacity:.75}
 .tkt .tst{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:1px;border-radius:3px;padding:3px 7px}
 .tkt .tp{font-size:11.5px;margin-top:5px;opacity:.85}
-/* 모집중 첫밤 티켓 — 확정규격 v3 일반(358×150) 그대로 이식.
-   원본: 시안/티켓_확정규격.html · 규칙: 브랜드/티켓_현황.md (판지는 img+cover, 배경 방식 금지) */
-.btk{position:relative;display:block;width:358px;height:150px;margin:0 auto;overflow:hidden;
-  filter:drop-shadow(0 5px 9px rgba(0,0,0,.45));
-  clip-path:polygon(14px 0,100% 0,100% 100%,0 100%,0 14px)}
-.btk>img{width:100%;height:100%;object-fit:cover;display:block}
-.btk .perf{position:absolute;left:258px;top:0;bottom:0;width:2px;
-  background:repeating-linear-gradient(180deg,rgba(0,0,0,.55) 0 5px,transparent 5px 10px)}
-.btk .perf::before,.btk .perf::after{content:'';position:absolute;left:-5px;width:12px;height:12px;border-radius:50%;
-  background:#141317;box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
-.btk .perf::before{top:-6px}.btk .perf::after{bottom:-6px}
-.btk .ov{position:absolute;inset:0;color:#ECEEF2}
-.btk .lbl{position:absolute;left:20px;top:14px;font-size:7.5px;letter-spacing:2.5px;
-  font-family:'Cinzel',serif;font-weight:800;color:#B8A88E}
-.btk .route{position:absolute;left:20px;top:34px;display:flex;align-items:baseline;gap:8px;width:200px}
-.btk .route b{font-family:'Do Hyeon',sans-serif;font-weight:400;font-size:21px}
-.btk .route .d{flex:1;border-bottom:2px dotted currentColor;opacity:.3;position:relative;top:-5px}
-.btk .nm{position:absolute;left:20px;top:72px;font-size:10.5px;opacity:.8}
-.btk .g{position:absolute;left:20px;top:100px;display:grid;gap:1px 9px;width:222px;
-  grid-template-columns:.9fr .8fr 1.3fr}
-.btk .g i{font-style:normal;font-size:7px;letter-spacing:1.5px;opacity:.5}
-.btk .g b{display:block;font-family:'Nanum Gothic Coding',monospace;font-weight:400;font-size:11px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.btk .stub{position:absolute;right:0;top:0;width:100px;height:100%;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.btk .holo{width:56px;height:56px;border-radius:50%;border:2.5px dashed rgba(255,225,225,.4);
-  position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
-  font-family:'Do Hyeon',sans-serif;font-size:13px;color:rgba(255,225,225,.94);
-  text-shadow:0 1px 1px rgba(70,0,6,.9)}
-.btk .holo i{position:absolute;inset:0;font-style:normal;
-  background:linear-gradient(115deg,transparent 25%,rgba(255,255,255,.5) 45%,rgba(180,220,255,.3) 50%,transparent 70%);
-  animation:tshim 2.4s linear infinite}
-@keyframes tshim{0%{transform:translateX(-70%)}100%{transform:translateX(70%)}}
-@media (prefers-reduced-motion:reduce){.btk .holo i{animation:none}}
-.btk .sl{font-size:6.5px;letter-spacing:1.5px;color:#8a8090;font-weight:800}
-
 /* 모집중 티켓 — 규격 일반 크기/* 모집중 티켓 — 규격 일반 크기 (폭 358 · 높이 150 · 절취선 258 · 스터브 100 · 모따기 14) */
 .tkt.lg{min-height:150px}
 .tkt.lg .tbody{display:flex;flex-direction:column;padding:15px 16px 13px}
@@ -886,7 +851,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=3"></script>
+<script src="tunel.js?v=4"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -1238,23 +1203,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
     const past = rows.filter(TUNEL.isPast);
     rows.forEach(m => meetingsById[m.id] = m);
-    const dowEN = w => ({'월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI','토':'SAT','일':'SUN'}[w]||w||'');
-    const rdHTML = m => `
-      <a class="btk" href="${m.line_path}">
-        <img src="1ndclub/tk_card.jpg?v2" alt="">
-        <div class="perf"></div>
-        <div class="ov">
-          <div class="lbl">TÜNEL BOARDING PASS</div>
-          <div class="route"><b>일상</b><span class="d"></span><b style="color:#E8756A">첫밤</b></div>
-          <div class="nm">${TUNEL.title(m)} · ${m.line_name||''}</div>
-          <div class="g">
-            <div><i>DATE</i><b>${+m.d.slice(5,7)}/${+m.d.slice(8)} ${dowEN(m.dow)}</b></div>
-            <div><i>TIME</i><b>${m.s||''}</b></div>
-            <div><i>PLACE</i><b>${m.place||''}</b></div>
-          </div>
-          <div class="stub"><div class="holo">모집중<i></i></div><div class="sl">BOARDING</div></div>
-        </div>
-      </a>`;
+    const rdHTML = m => TUNEL.boardingTicket(m, { href: m.line_path, stub: TUNEL.stubOpen() });
     upEl.innerHTML = up.map(m =>
       (m.status==='open' && m.line==='botc' ? rdHTML(m) : TUNEL.ticket(m))
       + (m.status==='open' ? barHTML(m) : '')).join('')

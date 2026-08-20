@@ -26,7 +26,7 @@
    구조는 봉은사 벙 앱, 색과 장식은 클럽 포스터.
    포스터 모티프 — 빨간 막대 라벨 · 하드 섀도 · 체크무늬 띠 */
 :root{
-  --bg:#17171c; --surface:#1f1f26; --surface2:#26262f;
+  --bg:#17171c; --tnl-hole:#17171c; --surface:#1f1f26; --surface2:#26262f;
   --line:#33333f; --ink:#e9ecf1; --sub:#8b93a1;
   --red:#e8323c; --red-lite:#ff4757;
   --spring:cubic-bezier(0.32,0.72,0,1);
@@ -215,43 +215,6 @@ nav .nb:active{transform:translateY(1px)}
 
 /* 티켓 규격 — 폭 358 고정, 중앙 배치(늘어나지 않음) */
 .rd{width:358px;max-width:calc(100% - 24px);margin:0 auto 16px}
-/* 모집중 티켓 — 확정규격 v3 일반(358×150). 원본: 시안/티켓_확정규격.html
-   허브(.btk)와 같은 티켓 — 규칙: 브랜드/티켓_현황.md (판지는 img+cover) */
-.btk{position:relative;display:block;width:358px;max-width:calc(100% - 24px);height:150px;margin:0 auto 16px;
-  overflow:hidden;filter:drop-shadow(0 5px 9px rgba(0,0,0,.45));cursor:pointer;
-  clip-path:polygon(14px 0,100% 0,100% 100%,0 100%,0 14px)}
-.btk>img{width:100%;height:100%;object-fit:cover;display:block}
-.btk .perf{position:absolute;left:258px;top:0;bottom:0;width:2px;
-  background:repeating-linear-gradient(180deg,rgba(0,0,0,.55) 0 5px,transparent 5px 10px)}
-.btk .perf::before,.btk .perf::after{content:'';position:absolute;left:-5px;width:12px;height:12px;border-radius:50%;
-  background:var(--bg);box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
-.btk .perf::before{top:-6px}.btk .perf::after{bottom:-6px}
-.btk .ov{position:absolute;inset:0;color:#ECEEF2}
-.btk .lbl{position:absolute;left:20px;top:14px;font-size:7.5px;letter-spacing:2.5px;
-  font-family:'Cinzel',serif;font-weight:800;color:#B8A88E}
-.btk .route{position:absolute;left:20px;top:34px;display:flex;align-items:baseline;gap:8px;width:200px}
-.btk .route b{font-family:'Do Hyeon',sans-serif;font-weight:400;font-size:21px}
-.btk .route .d{flex:1;border-bottom:2px dotted currentColor;opacity:.3;position:relative;top:-5px}
-.btk .nm{position:absolute;left:20px;top:72px;font-size:10.5px;opacity:.8}
-.btk .g{position:absolute;left:20px;top:100px;display:grid;gap:1px 9px;width:222px;
-  grid-template-columns:.9fr .8fr 1.3fr}
-.btk .g i{font-style:normal;font-size:7px;letter-spacing:1.5px;opacity:.5}
-.btk .g b{display:block;font-family:'Nanum Gothic Coding',monospace;font-weight:400;font-size:11px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.btk .stub{position:absolute;right:0;top:0;width:100px;height:100%;
-  display:flex;flex-direction:column;align-items:center;justify-content:center}
-.btk .stub img{width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
-.btk .stx{font-family:'Do Hyeon',sans-serif;font-size:10px;margin-top:-36px;color:rgba(255,225,225,.94);
-  text-shadow:0 1px 1px rgba(70,0,6,.9);z-index:2;text-align:center;line-height:1.1;pointer-events:none}
-.btk .stx small{display:block;font-family:'Nanum Gothic Coding',monospace;font-size:6px;opacity:.85}
-.btk .sl{font-size:6.5px;letter-spacing:1.5px;color:#8a8090;font-weight:800;margin-top:4px}
-.btk .holo2{width:56px;height:56px;border-radius:50%;border:2.5px dashed rgba(255,225,225,.4);
-  position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
-  font-family:'Do Hyeon',sans-serif;font-size:13px;color:rgba(255,225,225,.94);
-  text-shadow:0 1px 1px rgba(70,0,6,.9)}
-.btk .holo2 i{position:absolute;inset:0;font-style:normal;
-  background:linear-gradient(115deg,transparent 25%,rgba(255,255,255,.5) 45%,rgba(180,220,255,.3) 50%,transparent 70%);
-  animation:tshim 2.4s linear infinite}
 /* ══ 티켓 스킨 — 일정 카드를 승차권처럼 ══ */
 .rd{position:relative;border-radius:0;overflow:hidden;
     clip-path:polygon(14px 0,100% 0,100% 100%,0 100%,0 14px);
@@ -610,6 +573,7 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="../tunel.js?v=4"></script>
 <script src="api.js?v=nick1"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
@@ -1207,25 +1171,12 @@ function renderSched(){
   upcoming.forEach(r=>{
     const m=r.d.slice(5,7);
     if(m!==lastM){ html+=`<div class="monthlab">${+m}월</div>`; lastM=m; }
-    const dowEN = {'월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI','토':'SAT','일':'SUN'}[r.dow]||r.dow||'';
     html+= r.st==='open'
-    ? `<div class="btk" onclick="toggleDetail(this)">
-      <img src="tk_card.jpg?v2" alt="">
-      <div class="perf"></div>
-      <div class="ov">
-        <div class="lbl">TÜNEL BOARDING PASS</div>
-        <div class="route"><b>일상</b><span class="d"></span><b style="color:#E8756A">첫밤</b></div>
-        <div class="nm">${r.r?`${r.r}회차 정모`:'정모'} · 첫밤 사망자 클럽</div>
-        <div class="g">
-          <div><i>DATE</i><b>${+r.d.slice(5,7)}/${+r.d.slice(8)} ${dowEN}</b></div>
-          <div><i>TIME</i><b>${r.s}</b></div>
-          <div><i>PLACE</i><b>${r.place}</b></div>
-        </div>
-        <div class="stub">${myRsvp==='yes'
+    ? TUNEL.boardingTicket({ ...r, line_name:'첫밤 사망자 클럽' }, {
+        card:'tk_card.jpg?v2', onclick:'toggleDetail(this)',
+        stub: myRsvp==='yes'
           ? `<img src="stamp_wax.png" alt="" onclick="event.stopPropagation();setRsvp('yes')"><div class="stx">첫밤行<small>${r.d.slice(5).replace('-','.')}</small></div><div class="sl">STAMPED</div>`
-          : `<div class="holo2" onclick="event.stopPropagation();setRsvp('yes')">참석<i></i></div><div class="sl">STAMP HERE</div>`}</div>
-      </div>
-    </div>`
+          : `<div class="holo2" onclick="event.stopPropagation();setRsvp('yes')">참석<i></i></div><div class="sl">STAMP HERE</div>` })
     : `<div class="rd ${r.st}" onclick="toggleDetail(this)">
       <div class="stub"><div class="lb">예정</div></div>
       <span class="bpl">TÜNEL BOARDING PASS</span>
