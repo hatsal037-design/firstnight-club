@@ -1229,10 +1229,14 @@ function renderSched(){
 }
 /* 상세 패널은 티켓의 형제 요소라 클릭이 티켓으로 번지지 않는다 — 따로 막을 필요 없음 */
 function toggleDetail(el){
-  const x = el.nextElementSibling;
-  if(!x || !x.classList.contains('rdx')) return;
+  /* 티켓과 상세 사이에 신청 바(.tnlbar)가 끼어 있어서, 바로 다음이 아니라
+     .rdx 가 나올 때까지 형제를 따라간다 */
+  let x = el.nextElementSibling;
+  while(x && !x.classList.contains('rdx')) x = x.nextElementSibling;
+  if(!x) return;
   const willOpen = !x.classList.contains('show');
-  document.querySelectorAll('.rdx.show').forEach(o=>{o.classList.remove('show'); o.previousElementSibling?.classList.remove('on')});
+  document.querySelectorAll('.rdx.show').forEach(o=>{o.classList.remove('show')});
+  document.querySelectorAll('.rd.on,.btk.on').forEach(o=>o.classList.remove('on'));
   if(willOpen){ x.classList.add('show'); el.classList.add('on'); }
 }
 let schedScrolled = false;
