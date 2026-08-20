@@ -840,9 +840,8 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 
 /* ══ 정기승차권 — 첫밤과 같은 Supabase 세션을 공유한다 (같은 도메인) ══ */
 (async function(){
-  const sb = window.supabase.createClient(
-    'https://yguvfogtzazoawtclqvf.supabase.co',
-    'sb_publishable_KeezD9hmEnxSTEWA_w8x-A_Tgk3roUf');
+  /* 클라이언트는 페이지에 하나만 — 둘이면 토큰 갱신이 경합해 로그아웃이 난다 */
+  const sb = TUNEL.sb();
   const card = document.getElementById('pass');
   const nick = document.getElementById('pNick'), no = document.getElementById('pNo');
   const sub = document.getElementById('pSub'), btns = document.getElementById('pBtns');
