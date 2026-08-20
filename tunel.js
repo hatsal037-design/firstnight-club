@@ -139,7 +139,8 @@ const TUNEL = {
   /* 통합 일정 티켓 한 장. 노선 스킨은 lines.skin 이 정한다 */
   ticket(m, opt = {}){
     const past = opt.past ?? isPast(m);
-    const big  = !past && m.status === 'open';   // 모집중은 규격 일반(150) 크기로
+    const xl   = !past && m.kind === 'event';    // 대형 행사(MT·운동회)는 이벤트 180
+    const big  = !past && !xl && m.status === 'open';   // 모집중은 규격 일반(150) 크기로
     const tbd  = m.data?.tbd === true;
     const when = tbd ? '날짜 조율 중'
       : `${+m.d.slice(5,7)}/${+m.d.slice(8)} <small style="font-size:12px">(${m.dow||''})</small>`;
@@ -147,8 +148,9 @@ const TUNEL = {
     const href = opt.href ?? m.line_path;
     const place = m.place || '';
     const att = past && m.att_count ? ` · ${m.att_count}명` : '';
+    const desc = xl && m.memo ? `<span class="tdesc">${m.memo}</span>` : '';
     return `
-    <a class="tkt ${m.line_skin}${past ? ' past' : ''}${big ? ' lg' : ''}" href="${href}">
+    <a class="tkt ${m.line_skin}${past ? ' past' : ''}${big ? ' lg' : ''}${xl ? ' xl' : ''}" href="${href}">
       <span class="tbody">
         <span class="tno">PLATFORM ${String(m.line_no).padStart(2,'0')}${past ? ' · USED' : ''}</span>
         <span class="trow">
@@ -156,7 +158,7 @@ const TUNEL = {
           <span class="tt">${time}</span>
           <span class="tst">${TUNEL.statusLabel(m)}</span>
         </span>
-        <span class="tp">${TUNEL.title(m)} · ${place}${att}</span>
+        <span class="tp">${TUNEL.title(m)} · ${place}${att}</span>${desc}
       </span>
       <span class="tstub"><span>TÜNEL</span></span>
     </a>`;
@@ -187,10 +189,8 @@ const TUNEL = {
     botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2',
              ink:'#ECEEF2', lbl:'#B8A88E', rFont:"'Do Hyeon',sans-serif", rMd:21, rSm:16, acc:'#E8756A',
              perf:'rgba(0,0,0,.55)' },
-    play:  { t:'pass', short:'놀이터', card:'/tk/TK_play.jpg', cardSm:'/tk/TK_play_slim.jpg',
-             soonTkt:true,   /* 예정 회차는 판지 슬림 대신 기존 규격 소형 티켓 — 가독성 (2026-08-20 햇살님) */
-             ink:'#1d4a26', lbl:'#8a7a1a', rFont:"'Jua',sans-serif", rMd:21, rSm:16, acc:'#0e6b2b',
-             perf:'rgba(0,0,0,.38)' },
+    /* play(놀이터)는 판지 폐기 — 규격 티켓(.tkt) 디자인 3크기로 확정 (2026-08-20 햇살님).
+       허브 TUNEL.ticket() 이 그린다: 예정·지난=슬림 100 · 모집중=일반 150 · kind=event =이벤트 180 */
     snap:  { t:'pass', short:'나들이', card:'/tk/TK_sopung.jpg', cardSm:'/tk/TK_sopung_slim.jpg',
              ink:'#6B4A52', lbl:'#C4788F', rFont:"'Nanum Pen Script',cursive", rMd:27, rSm:21, acc:'#D9407A',
              perf:'rgba(140,80,100,.4)' },
