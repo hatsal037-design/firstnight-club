@@ -770,6 +770,8 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     syncH();
     tabs.forEach(t=>t.classList.toggle('on', t.dataset.v===views[idx]));
     const h = '#'+views[idx];
+    /* 로그인 복귀 해시(#access_token=…)는 건드리면 안 된다 — supabase 가 읽기 전에 지우면 로그인이 무한 반복된다 */
+    if(/access_token=|refresh_token=|code=|error=/.test(location.hash)) return;
     if(h !== location.hash) history.replaceState(null,'',h);
   }
   function go(v, scroll){
@@ -788,7 +790,10 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   window.addEventListener('load', syncH);
   window.addEventListener('resize', syncH);
   window.addEventListener('hashchange',()=>go(location.hash.slice(1)));
-  go(location.hash.slice(1), false);
+  const oauthReturn = /access_token=|refresh_token=|code=|error=/.test(location.hash);
+  go(oauthReturn ? 'plat' : location.hash.slice(1), false);
+  /* 토큰 처리 후 세션이 잡히면 화면을 새로 그린다 (로그인 직후 상태 반영) */
+  if(oauthReturn) TUNEL.sb().auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_IN') setTimeout(()=>location.reload(), 400); });
 
   /* 손가락으로 밀기 — 세로 스크롤과 충돌하지 않게 방향을 먼저 판정한다 */
   const W = () => track.getBoundingClientRect().width/3;
