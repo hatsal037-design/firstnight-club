@@ -823,6 +823,36 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     history.replaceState(null,'', location.pathname + '#me');   // ?li= 캐시버스터도 함께 정리
     setTimeout(()=>location.reload(), 250);
   });
+  else sessionStorage.removeItem('tnl_reloaded');   // 평상시 로드에서 지난 표식 청소
+
+  /* ══ 세션 감시자 — 로그인이 '다른 곳'에서 성립해도 화면이 따라가게 ══
+     iOS에서 카카오톡 앱을 거치면 복귀가 새 탭에 떨어지고, 원래 탭은
+     뒤로가기 캐시(bfcache)로 로그인 전 화면 그대로 살아난다.
+     로그아웃 화면(__tnlAuthed=false)인데 세션이 보이면 한 번만 새로고침한다. */
+  (function(){
+    const KEY='tnl_auth_reload_at';
+    let checking = false;
+    const again = async () => {
+      if(checking || window.__tnlAuthed !== false) return;
+      checking = true;
+      try{
+        const { data } = await TUNEL.sb().auth.getSession();
+        if(data?.session){
+          const rec = (sessionStorage.getItem(KEY)||'0|0').split('|');
+          const last = +rec[0], n = +rec[1];
+          if(Date.now() - last > 8000 && n < 2){   // 루프 방지 — 8초 간격, 탭당 최대 2회
+            sessionStorage.setItem(KEY, Date.now() + '|' + (n+1));
+            location.reload();
+          }
+        }
+      }catch(e){} finally{ checking = false; }
+    };
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) again(); });
+    window.addEventListener('focus', again);
+    window.addEventListener('pageshow', e => { if(e.persisted) again(); });
+    TUNEL.sb().auth.onAuthStateChange(ev => { if(ev==='SIGNED_IN') again(); });
+    setTimeout(again, 1800);
+  })();
 
   /* 손가락으로 밀기 — 세로 스크롤과 충돌하지 않게 방향을 먼저 판정한다 */
   const W = () => track.getBoundingClientRect().width/3;
@@ -893,6 +923,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   if(memBtn){ memBtn.style.display=''; memBtn.onclick = openAcct; }
 
   function acctOut(){
+    window.__tnlAuthed = false;   // 로그아웃 화면으로 그려짐 — 감시자가 이 표시를 본다
     abody.className = 'bodyw acct';
     const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
     abody.innerHTML = `<div class="an">로그인 전이에요</div>
@@ -906,6 +937,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
         options:{ redirectTo: location.origin + location.pathname + '?li=' + Date.now() } });
   }
   function acctIn(m){
+    window.__tnlAuthed = true;
     abody.className = 'bodyw acct';
     abody.innerHTML = `<div class="an">${m.nick}</div>
       <div class="ao">NO.${String(m.no||0).padStart(4,'0')}</div>
@@ -929,6 +961,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     if(!data?.session) return acctOut();
     const { data: mid } = await sb.rpc('claim_my_account');
     if(!mid){
+      window.__tnlAuthed = true;
       abody.className = 'bodyw acct';
       abody.innerHTML = `<div class="an">가입이 아직 안 끝났어요</div>
         <p class="as">첫밤 사망자 클럽에서 가입을 마치면<br>회원번호가 발급돼요.</p>
