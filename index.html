@@ -308,6 +308,10 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .actrow .aln{flex:none;font-size:8.5px;font-weight:800;letter-spacing:.5px;border-radius:3px;
   padding:3px 6px;background:#2A2630;color:#A79E8F}
 /* 회원 관리 */
+.memq{width:100%;border:1px solid #35313A;background:#1C1A1F;color:#E2DBCE;border-radius:9px;
+  padding:10px 13px;font-size:13px;font-family:inherit;margin-bottom:9px;outline:none}
+.memq:focus{border-color:#5A554E}
+.memq::placeholder{color:#77716A}
 .mm{background:#1C1A1F;border:1px solid #35313A;border-radius:9px;padding:9px 11px;margin-bottom:6px;
   display:flex;align-items:center;gap:10px}
 .mm .minfo{flex:1;min-width:0}
@@ -751,7 +755,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     <summary>지난 모임 <span id="pastCnt"></span> 열어보기</summary>
     <div id="tktPast"></div>
   </details>
-  <p class="bnote">모든 노선의 모임이 여기 모여요. 티켓을 누르면 그 노선으로 이동합니다.</p>
+  <p class="bnote">모든 노선의 모임이 여기 모여요. 티켓을 누르면 상세 정보가 펼쳐져요.</p>
 </section>
 
 <section class="hview" id="v-me">
@@ -759,6 +763,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   <div id="myAct"><p class="bnote">불러오는 중…</p></div>
   <div id="memAdmin" style="display:none">
     <div class="label" style="margin-top:26px">회원 관리 · MEMBERS</div>
+    <input class="memq" id="memSearch" type="search" placeholder="🔍 닉네임·오픈톡 이름·번호로 찾기" autocomplete="off">
     <div id="memList"><p class="bnote">회원을 불러오는 중…</p></div>
   </div>
 </section>
@@ -1440,6 +1445,7 @@ async function initMemAdmin(sb){
           <button class="mb" data-edit="${m.id}" title="수정">✏️</button>
         </div>`}
       </div>`).join('');
+    applyMemFilter();
     box.querySelectorAll('select[data-role]').forEach(sel=>{
       const orig = sel.value;
       sel.addEventListener('change', async ()=>{
@@ -1462,6 +1468,24 @@ async function initMemAdmin(sb){
       });
     });
   }
+  /* 닉네임 검색 — 닉·오픈톡 이름·회원번호 아무거나. 지우면 전체로 */
+  const q = document.getElementById('memSearch');
+  function applyMemFilter(){
+    const t = (q.value||'').trim().toLowerCase();
+    let shown = 0;
+    box.querySelectorAll('.mm').forEach(el=>{
+      const hit = !t || el.textContent.toLowerCase().includes(t);
+      el.style.display = hit ? '' : 'none';
+      if(hit) shown++;
+    });
+    let none = box.querySelector('.mnone');
+    if(!shown){
+      if(!none){ none = document.createElement('p'); none.className='bnote mnone';
+        none.style.textAlign='center'; box.appendChild(none); }
+      none.textContent = `"${q.value.trim()}" 로 찾은 회원이 없어요`;
+    } else none?.remove();
+  }
+  q.addEventListener('input', applyMemFilter);
   load();
 }
 </script>
