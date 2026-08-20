@@ -800,7 +800,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=10"></script>
+<script src="tunel.js?v=11"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -925,15 +925,18 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     const rows = await TUNEL.meetings();
     const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
     const past = rows.filter(TUNEL.isPast);
-    const rdHTML = m =>
-      m.status==='open'
-        ? TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', stub: TUNEL.stubOpen() })
-        : TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', size:'sm', stub: TUNEL.stubSoon() });
-    upEl.innerHTML = up.map(m =>
-      (TUNEL.hasSkin(m.line) ? rdHTML(m) : TUNEL.ticket(m))
-      + (m.status==='open' ? TUNEL.signupBar(m) : '')
-      + (TUNEL.hasSkin(m.line) ? TUNEL.ticketDetail(m,
-          { more: m.line_path, moreLabel: m.line==='botc' ? '첫밤 페이지' : '노선 페이지' }) : '')).join('')
+    upEl.innerHTML = up.map(m => {
+      /* 판지 실물 티켓은 확정 스킨이 있을 때 — 단 soonTkt 노선의 예정 회차는 기존 소형 티켓이 더 읽기 좋다 */
+      const useBP = TUNEL.hasSkin(m.line)
+        && !(m.status!=='open' && TUNEL._skins[m.line].soonTkt);
+      const tk = !useBP ? TUNEL.ticket(m)
+        : m.status==='open'
+          ? TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', stub: TUNEL.stubOpen() })
+          : TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', size:'sm', stub: TUNEL.stubSoon() });
+      return tk + (m.status==='open' ? TUNEL.signupBar(m) : '')
+        + (useBP ? TUNEL.ticketDetail(m,
+            { more: m.line_path, moreLabel: m.line==='botc' ? '첫밤 페이지' : '노선 페이지' }) : '');
+    }).join('')
       || '<p class="bnote" style="text-align:center">예정된 모임이 아직 없어요</p>';
     document.getElementById('pastCnt').textContent = past.length + '개';
     pastEl.innerHTML = past.map(m => TUNEL.ticket(m, {past:true})).join('');

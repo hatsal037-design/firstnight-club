@@ -188,6 +188,7 @@ const TUNEL = {
              ink:'#ECEEF2', lbl:'#B8A88E', rFont:"'Do Hyeon',sans-serif", rMd:21, rSm:16, acc:'#E8756A',
              perf:'rgba(0,0,0,.55)' },
     play:  { t:'pass', short:'놀이터', card:'/tk/TK_play.jpg', cardSm:'/tk/TK_play_slim.jpg',
+             soonTkt:true,   /* 예정 회차는 판지 슬림 대신 기존 규격 소형 티켓 — 가독성 (2026-08-20 햇살님) */
              ink:'#1d4a26', lbl:'#8a7a1a', rFont:"'Jua',sans-serif", rMd:21, rSm:16, acc:'#0e6b2b',
              perf:'rgba(0,0,0,.38)' },
     snap:  { t:'pass', short:'나들이', card:'/tk/TK_sopung.jpg', cardSm:'/tk/TK_sopung_slim.jpg',
