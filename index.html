@@ -191,20 +191,20 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .inbox .ask b{color:#E8C36B}
 .inbox .ask.chat{border-style:solid;background:rgba(254,229,0,.05);border-color:#5c542f}
 .inbox .ask.chat b{color:#FEE500}
-/* 푸시 설정 줄 — 토글 스위치 */
-.pushrow{display:flex;align-items:center;gap:11px;background:#1C1A1F;border:1px solid #35313A;
-  border-radius:9px;padding:12px 13px;margin-top:12px}
-.pushrow .pi{flex:none;font-size:16px}
-.pushrow .pt{flex:1;min-width:0}
-.pushrow .pt b{display:block;font-size:13px;color:#E9E2D2}
-.pushrow .pt span{display:block;font-size:10.5px;color:#8F887B;margin-top:2px;line-height:1.5}
+/* 푸시 토글 — 알림함 머리줄에 심플하게 */
+.hpush{margin-left:auto;display:flex;align-items:center;gap:7px}
+.hpush i{font-style:normal;font-size:10.5px;color:#A79E8F;letter-spacing:.5px}
+#navMdl .x{margin-left:12px}
 .sw{flex:none;position:relative;width:46px;height:27px;border-radius:999px;cursor:pointer;
   background:#3A353E;border:1px solid #4A453E;transition:background 180ms,border-color 180ms}
 .sw::after{content:'';position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;
   background:#8F887B;transition:transform 200ms var(--spring),background 180ms;
   box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.sw.sm{width:38px;height:23px}
+.sw.sm::after{width:17px;height:17px}
 .sw.on{background:#3A2B15;border-color:#B08D3E}
 .sw.on::after{transform:translateX(19px);background:linear-gradient(160deg,#F4DFA4,#C9A55E)}
+.sw.sm.on::after{transform:translateX(15px)}
 .sw.busy{opacity:.5;pointer-events:none}
 /* 쪽지 대화 */
 .thread .bub{max-width:85%;border-radius:9px;padding:9px 12px;font-size:12.5px;line-height:1.6;
@@ -743,6 +743,9 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     <div class="hd">
       <img src="v/bars_round.webp" alt="" style="height:14px">
       <b id="navTitle">알림 · INBOX</b>
+      <span class="hpush" id="pushMini" style="display:none">
+        <i>푸시알림</i><span class="sw sm" id="pushSw" role="switch"></span>
+      </span>
       <button class="x" data-close aria-label="닫기">✕</button>
     </div>
     <div class="bodyw inbox" id="navBody"><p class="bnote">불러오는 중…</p></div>
@@ -1093,11 +1096,8 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     + (isStaffMe()
         ? `<a class="ask" id="noticeBtn">📢 <b>공지 쓰기</b> ›</a>`
         : `<a class="ask" id="askBtn">운영진에게 <b>문의하기</b> ›</a>`)
-    + `<div class="pushrow" id="pushRow" style="display:none">
-        <span class="pi">🔔</span>
-        <span class="pt"><b>푸시 알림</b><span id="pushCap"></span></span>
-        <span class="sw" id="pushSw" role="switch"></span>
-      </div>`
+    + `<p class="bnote" id="pushGuide" style="display:none;text-align:center">
+        🔔 알림을 받으려면 홈 화면에 추가한 뒤 그 아이콘으로 열어주세요</p>`
     + chatLinks;
 
     body.querySelectorAll('.msg').forEach(el=>{
@@ -1110,38 +1110,12 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     if(ask) ask.onclick = () => renderThread(me.id);
     const nb = document.getElementById('noticeBtn');
     if(nb) nb.onclick = renderCompose;
-    /* 푸시 토글 스위치 — 켜짐/꺼짐이 한눈에 */
+    /* 미설치 아이폰이면 안내 한 줄만 */
     (async ()=>{
-      const row = document.getElementById('pushRow');
-      const sw  = document.getElementById('pushSw');
-      const cap = document.getElementById('pushCap');
-      if(!row) return;
-      const st = await pushState();
+      const g = document.getElementById('pushGuide');
+      if(!g) return;
       const ios = /iPhone|iPad/.test(navigator.userAgent);
-      if(st === 'unsupported'){
-        if(ios && !isStandalone()){
-          row.style.display='';
-          sw.style.display='none';
-          cap.textContent = '홈 화면에 추가한 뒤 그 아이콘으로 열면 켤 수 있어요';
-        }
-        return;
-      }
-      row.style.display='';
-      const apply = state => {
-        sw.classList.toggle('on', state==='on');
-        cap.textContent = state==='on' ? '켜짐 — 공지·쪽지가 오면 바로 알려드려요'
-          : state==='denied' ? '기기 설정에서 알림이 차단돼 있어요'
-          : '꺼짐 — 켜면 공지·쪽지를 바로 받아요';
-        if(state==='denied') sw.classList.add('busy');
-      };
-      apply(st);
-      sw.onclick = async () => {
-        sw.classList.add('busy');
-        try{
-          if(sw.classList.contains('on')){ await pushOff(); apply('off'); }
-          else { apply((await pushOn()) ? 'on' : await pushState()); }
-        } finally { sw.classList.remove('busy'); }
-      };
+      if(await pushState()==='unsupported' && ios && !isStandalone()) g.style.display='';
     })();
     // 공지·시스템은 열어본 것으로 — 목록에 뜬 시점에 읽음 처리하지 않고 탭해야 지워짐
   }
@@ -1214,7 +1188,26 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     };
   }
 
-  try{ await load(); }catch(e){ console.warn('알림함 로드 실패', e); }
+  async function initPushToggle(){
+    const box = document.getElementById('pushMini');
+    const sw  = document.getElementById('pushSw');
+    if(!box || !me) return;
+    const st = await pushState();
+    if(st === 'unsupported') return;          // 미설치 아이폰 등 — 목록의 안내 줄이 대신한다
+    box.style.display = '';
+    const apply = on => sw.classList.toggle('on', on);
+    apply(st === 'on');
+    if(st === 'denied'){ sw.classList.add('busy'); sw.title = '기기 설정에서 알림이 차단돼 있어요'; return; }
+    sw.onclick = async () => {
+      sw.classList.add('busy');
+      try{
+        if(sw.classList.contains('on')){ await pushOff(); apply(false); }
+        else apply(await pushOn());
+      } finally { sw.classList.remove('busy'); }
+    };
+  }
+
+  try{ await load(); await initPushToggle(); }catch(e){ console.warn('알림함 로드 실패', e); }
 })();
 
 /* ══ 내 활동 — 모든 노선을 한자리에 (노선 안에서는 그 노선만 본다) ══ */
