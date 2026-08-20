@@ -369,7 +369,7 @@ div.btk{cursor:pointer}
 .tnlmdl .st3.waitlist{background:#22303F;color:#9CC0E8}
 .tnlmdl .mgr button{flex:none;border:1px solid #4A453E;background:rgba(255,255,255,.03);
   color:#CFC7B8;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit}
-.tnlmdl .mgr button.ok{border-color:#2F6B5A;color:#7FD8B4}`;
+.tnlmdl .mgr button.ok{border-color:#2F6B5A;color:#7FD8B4}\n.sstub{display:contents}`;
       document.head.appendChild(st);
     }
     mdl = document.createElement('div');
@@ -598,6 +598,22 @@ div.btk{cursor:pointer}
   TUNEL.signupRefresh = async function(){
     await loadMine();
     document.querySelectorAll('.tnlbar').forEach(paintBar);
+    /* 페이지가 걸어둔 훅 — 신청 상태가 바뀌면 도장·명단을 다시 그리라고 알린다 */
+    if(typeof TUNEL.onSignupChange === 'function'){ try{ TUNEL.onSignupChange(); }catch(e){} }
+  };
+  /* 페이지에서 직접 팝업을 열 때 (첫밤 스터브 도장 등) */
+  TUNEL.signupOpen = function(mid){ ensureUI(); openSign(mid); };
+  /* 내 신청 상태 — signupRefresh 뒤에 유효 */
+  TUNEL.signupStatus = mid => mine[mid] || null;
+  /* 회차 신청자 명단 (닉네임 포함) — 회원끼리 서로 보인다 */
+  TUNEL.signupList = async function(mid){
+    const [{ data: rows }, { data: mems }] = await Promise.all([
+      sb().from('signups').select('member_id,status,created_at')
+        .eq('meeting_id', mid).neq('status','cancelled').order('created_at'),
+      sb().from('members').select('id,nick')
+    ]);
+    const nick = {}; (mems||[]).forEach(x => nick[x.id] = x.nick);
+    return (rows||[]).map(r => ({ ...r, nick: nick[r.member_id] || '?' }));
   };
 })();
 

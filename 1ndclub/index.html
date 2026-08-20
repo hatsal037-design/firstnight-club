@@ -573,7 +573,7 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=6"></script>
+<script src="../tunel.js?v=7"></script>
 <script src="api.js?v=nick1"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
@@ -1174,9 +1174,8 @@ function renderSched(){
     html+= r.st==='open'
     ? TUNEL.boardingTicket({ ...r, line_name:'첫밤 사망자 클럽' }, {
         card:'tk_card.jpg?v2', onclick:'toggleDetail(this)',
-        stub: myRsvp==='yes'
-          ? `<img src="stamp_wax.png" alt="" onclick="event.stopPropagation();setRsvp('yes')"><div class="stx">첫밤行<small>${r.d.slice(5).replace('-','.')}</small></div><div class="sl">STAMPED</div>`
-          : `<div class="holo2" onclick="event.stopPropagation();setRsvp('yes')">참석<i></i></div><div class="sl">STAMP HERE</div>` })
+        stub: `<span class="sstub" data-mid="${r.id}" data-d="${r.d}"
+            onclick="event.stopPropagation();TUNEL.signupOpen('${r.id}')"><div class="holo2">신청<i></i></div><div class="sl">STAMP HERE</div></span>` })
       + TUNEL.signupBar({ id:r.id, d:r.d, dow:r.dow, s:r.s, e:r.e, r:r.r,
           place:r.place, fee:r.fee, line_name:'첫밤 사망자 클럽', data:{ cap:r.cap } })
     : TUNEL.boardingTicket({ ...r, line_name:'첫밤 사망자 클럽' }, {
@@ -1212,8 +1211,9 @@ function renderSched(){
          <button class="abtn" onclick="editPast('')">＋ 지난 모임 추가</button>
        </div>` : '';
   document.getElementById('schedList').innerHTML = html;
-  renderPicked(); renderRsvp();
-  TUNEL.signupInit();   // 신청 바·팝업 — 허브와 같은 공통 모듈
+  renderPicked();
+  TUNEL.onSignupChange = () => { updateStubs(); renderApplicants(); };
+  TUNEL.signupInit();   // 신청 바·팝업·신청자 명단 — 허브와 같은 공통 모듈
 
   // 가장 가까운 앞으로의 일정이 화면 맨 위에 오도록 (더보기로 다시 그릴 때는 건너뛴다)
   if(!schedScrolled){
@@ -1340,41 +1340,35 @@ function googleCal(){
   return 'https://calendar.google.com/calendar/render?'+p.toString();
 }
 
-/* ══ 참석 여부 ══ */
-function renderRsvp(){
+/* ══ 신청자 명단 — 허브와 같은 signups 를 읽는다 (rsvps 참석투표는 은퇴) ══ */
+async function renderApplicants(){
   const box=document.getElementById('rsvpBox'); if(!box||!openRound) return;
+  let list=[]; try{ list = await TUNEL.signupList(openRound.id); }catch(e){}
+  const grp={confirmed:[],paid:[],applied:[],waitlist:[]};
+  list.forEach(r=>{ (grp[r.status]||[]).push(r); });
+  const chips=a=>a.map(p=>`<span class="pf" onclick="openProfile('${p.member_id}')">${avHtml(p.member_id,p.nick)}${p.nick}</span>`).join('');
+  const going=grp.confirmed.length+grp.paid.length+grp.applied.length;
   box.innerHTML = `
-    <div class="rt">🙋 이번 회차 참석하시나요? <span class="rc">${rsvpCnt.yes?`지금까지 <b>${rsvpCnt.yes}명</b> 참석`:''}</span></div>
-    <div class="rb2">
-      <button class="rbtn yes${myRsvp==='yes'?' on':''}" onclick="setRsvp('yes')">참석 ${rsvpCnt.yes||''}</button>
-      <button class="rbtn no${myRsvp==='no'?' on':''}" onclick="setRsvp('no')">불참 ${rsvpCnt.no||''}</button>
-    </div>
-    ${rsvpYesList.length?`<div class="rn2">참석 —<br>${rsvpYesList.map(p=>
-      `<span class="pf" onclick="openProfile('${p.uid}')">${avHtml(p.uid,p.nick)}${p.nick}</span>`).join('')}</div>`:''}
-    ${acc?'':'<div class="rn2">로그인하면 응답이 저장되고 모임장에게 전달돼요</div>'}`;
+    <div class="rt">🎟 신청 현황 <span class="rc">${going?`지금까지 <b>${going}명</b>`:''}</span></div>
+    ${grp.confirmed.length?`<div class="rn2">확정 —<br>${chips(grp.confirmed)}</div>`:''}
+    ${(grp.paid.length+grp.applied.length)?`<div class="rn2">입금·신청 중 —<br>${chips(grp.paid.concat(grp.applied))}</div>`:''}
+    ${grp.waitlist.length?`<div class="rn2">대기 —<br>${chips(grp.waitlist)}</div>`:''}
+    ${!acc?'<div class="rn2">로그인하면 신청하고 명단도 볼 수 있어요</div>':(list.length?'':'<div class="rn2">아직 신청자가 없어요 — 티켓의 도장 자리나 신청하기를 눌러주세요</div>')}`;
 }
-async function setRsvp(v){
-  if(!acc){ askNick('login'); return; }
-  const next = myRsvp===v ? null : v;    // 같은 버튼 다시 누르면 취소
-  const prev = myRsvp;
-  /* 낙관적 갱신 — 서버 응답을 기다리지 말고 화면부터 바꾼다 (버튼 딜레이 피드백 반영).
-     숫자·이름도 로컬에서 미리 맞춰두고, 서버 저장이 실패하면 원래대로 되돌린다. */
-  myRsvp = next;
-  if(prev==='yes'){ rsvpCnt.yes--; rsvpYesList = rsvpYesList.filter(x=>x.uid!==acc.uid); }
-  if(prev==='no') rsvpCnt.no--;
-  if(next==='yes'){ rsvpCnt.yes++; rsvpYesList.push({uid:acc.uid, nick:acc.nick}); }
-  if(next==='no') rsvpCnt.no++;
-  rsvpYesNames = rsvpYesList.map(x=>x.nick);
-  renderRsvp();
-  try{
-    await API.setRsvp(openRound.d, acc.uid, next);
-    // 서버 기준으로 한 번 더 맞춤 — kvdb 목록 반영이 1~2초 늦으므로 바로 읽으면 방금 누른 게 빠진 옛 값이 온다
-    setTimeout(()=>{ loadRsvpCnt().then(renderRsvp).catch(()=>{}); }, 2000);
-  }catch(e){
-    myRsvp = prev;
-    try{ await loadRsvpCnt(); }catch(_){}
-    renderRsvp();
-  }
+/* 스터브 도장 — 내 신청 상태를 티켓에 찍는다 */
+function updateStubs(){
+  document.querySelectorAll('.sstub').forEach(el=>{
+    const st = TUNEL.signupStatus(el.dataset.mid);
+    const dd = (el.dataset.d||'').slice(5).replace('-','.');
+    if(st==='confirmed')
+      el.innerHTML = `<img src="stamp_wax.png" alt=""><div class="stx">첫밤行<small>${dd}</small></div><div class="sl">STAMPED</div>`;
+    else if(st==='paid'||st==='applied')
+      el.innerHTML = `<img src="stamp_wax.png" alt="" style="opacity:.55"><div class="stx">첫밤行<small>${dd}</small></div><div class="sl">${st==='paid'?'입금 확인 중':'입금 전'}</div>`;
+    else if(st==='waitlist')
+      el.innerHTML = `<div class="holo2">대기중<i></i></div><div class="sl">WAITLIST</div>`;
+    else
+      el.innerHTML = `<div class="holo2">신청<i></i></div><div class="sl">STAMP HERE</div>`;
+  });
 }
 
 /* ══ 할 게임 고르기 ══ */
@@ -1530,14 +1524,14 @@ function pickPfp(){
       const url=await pfpShrink(f);
       await API.pfpSet(acc.uid,url);
       PFP[acc.uid]=url;
-      myAccountSheet(); renderRsvp();
+      myAccountSheet(); renderApplicants();
     }catch(e){ alert('사진을 저장하지 못했어요: '+e.message); }
   };
   inp.click();
 }
 async function delPfp(){
   await API.pfpDel(acc.uid); PFP[acc.uid]=null;
-  myAccountSheet(); renderRsvp();
+  myAccountSheet(); renderApplicants();
 }
 function pfpShrink(file){
   return new Promise((res,rej)=>{
