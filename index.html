@@ -816,7 +816,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=13"></script>
+<script src="tunel.js?v=14"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -944,7 +944,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     upEl.innerHTML = up.map(m => {
       /* 판지 실물 티켓은 확정 스킨이 있을 때 — 단 soonTkt 노선의 예정 회차는 기존 소형 티켓이 더 읽기 좋다 */
       const useBP = TUNEL.hasSkin(m.line)
-        && !(m.status!=='open' && TUNEL._skins[m.line].soonTkt);
+        && !(m.status!=='open' && m.kind!=='event' && TUNEL._skins[m.line].soonTkt);
       const tk = !useBP ? TUNEL.ticket(m)
         : TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)',
             size: m.kind==='event' ? 'xl' : m.status==='open' ? undefined : 'sm',

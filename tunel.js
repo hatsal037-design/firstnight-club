@@ -192,6 +192,7 @@ const TUNEL = {
     /* play(놀이터) — 판지 폐기. 톤은 옛 규격 티켓(.tkt.play — 초록판·오프셋 그림자·Bagel Fat One)
        구조는 공통 규격 그대로 (모따기 14 · 절취선 258 · 스터브 100). flat = 판지 없이 CSS 로 그린다 */
     play:  { t:'pass', flat:'play', short:'놀이터',
+             soonTkt:true,   /* 예정은 옛 소형 티켓이 더 예쁘다 (2026-08-20 햇살님) — 규격 티켓은 모집중·이벤트만 */
              ink:'#0E2A16', lbl:'#123A1F', rFont:"'Bagel Fat One',cursive", rMd:21, rSm:16, rXl:25,
              acc:'#FFE45C', perf:'rgba(14,42,22,.45)' },
     snap:  { t:'pass', short:'나들이', card:'/tk/TK_sopung.jpg', cardSm:'/tk/TK_sopung_slim.jpg',
