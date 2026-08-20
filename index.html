@@ -1033,6 +1033,16 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     PAYLINK = data?.value || '';
     return PAYLINK;
   }
+  /* 참가비 금액이 고정된 송금 링크(pay_links)가 있으면 그걸 쓴다 —
+     보내는 사람이 금액을 입력할 필요가 없어진다 */
+  async function feeLink(m){
+    const won = parseInt(String(m.fee||'').replace(/[^\d]/g,''), 10);
+    if(won){
+      const { data } = await sbS.from('pay_links').select('link').eq('amount', won).maybeSingle();
+      if(data?.link) return { link: data.link, fixed: true };
+    }
+    return { link: await payLink(), fixed: false };
+  }
   function qrHTML(url){
     try{
       const q = qrcode(0, 'M'); q.addData(url); q.make();
@@ -1098,11 +1108,11 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     }
 
     /* 신청 + 결제 안내 */
-    const link = await payLink();
+    const pl = await feeLink(m);
     body.innerHTML = `${meetingRows(m)}
-      ${m.fee ? `<p class="fee">${esc(m.fee)}</p><p class="feecap">참가비 — 공간·게임·다과</p>` : ''}
-      <a class="pay" href="${esc(link)}" target="_blank" rel="noopener">💛 카카오페이로 보내기</a>
-      <div class="qrbox">${qrHTML(link)}<p class="qrcap">컴퓨터로 보고 있다면 폰 카메라로 QR을 찍어주세요</p></div>
+      ${m.fee ? `<p class="fee">${esc(m.fee)}</p><p class="feecap">${pl.fixed?'금액이 맞춰져 있어요 — 보내기만 하면 끝':'참가비 — 공간·게임·다과'}</p>` : ''}
+      <a class="pay" href="${esc(pl.link)}" target="_blank" rel="noopener">💛 카카오페이로 보내기</a>
+      <div class="qrbox">${qrHTML(pl.link)}<p class="qrcap">컴퓨터로 보고 있다면 폰 카메라로 QR을 찍어주세요</p></div>
       <div class="warn">보낼 때 <b>메시지에 닉네임(${esc(me.nick)})</b>을 꼭 적어주세요.<br>운영진이 입금을 대조하는 데 써요.</div>
       <div class="act">
         <button class="go" id="sPaid">입금했어요</button>
