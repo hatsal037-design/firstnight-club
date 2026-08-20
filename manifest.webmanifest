@@ -1,0 +1,14 @@
+{
+  "name": "투넬 — TÜNEL",
+  "short_name": "투넬",
+  "description": "일상에서 취향으로 가는 터널 — 골라서 타세요",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#232125",
+  "theme_color": "#232125",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -6,6 +6,12 @@
 <title>투넬 — tunel.kr</title>
 <meta name="theme-color" content="#F4EBD9">
 <link rel="icon" type="image/png" href="1ndclub/favicon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="투넬">
 <meta property="og:type" content="website">
 <meta property="og:title" content="투넬 tunel.kr">
 <meta property="og:description" content="일상에서 취향으로 가는 터널 — 골라서 타세요">
@@ -858,8 +864,12 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 
   function acctOut(){
     abody.className = 'bodyw acct';
+    const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
     abody.innerHTML = `<div class="an">로그인 전이에요</div>
       <p class="as">카카오로 로그인하면 회원번호가 발급되고,<br>모든 노선의 활동 기록이 하나로 이어져요.</p>
+      ${standalone ? `<p class="as" style="color:#E8C36B">홈 화면 앱에서는 카카오 화면에서
+        <b>카카오계정으로 로그인</b>(직접 입력)을 골라주세요.<br>
+        카카오톡 앱으로 건너가면 로그인이 앱 밖(사파리)에 저장돼요.</p>` : ''}
       <hr><button class="kko" id="aKko">카카오 로그인</button>`;
     document.getElementById('aKko').onclick = () =>
       sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: location.origin + location.pathname } });
@@ -947,6 +957,45 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     if(h<48) return '어제'; return (d.getMonth()+1)+'/'+d.getDate();
   };
   const KLBL = { notice:'공지', dm:'쪽지', system:'시스템' };
+  const VAPID = 'BH1uBqNh_QUwx8qlZDJJhMnAOFS9qNkPwWoOTSCD6YdSH4Qo1v-_wxxL1ioPojlBDQTmxsujzcB-Pg23--KIPoM';
+  const b64ToU8 = b64 => {
+    const pad = '='.repeat((4 - b64.length % 4) % 4);
+    const raw = atob((b64 + pad).replace(/-/g,'+').replace(/_/g,'/'));
+    return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+  };
+  const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const canPush = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  async function swReg(){ return navigator.serviceWorker.register('sw.js'); }
+  async function pushState(){
+    if(!canPush()) return 'unsupported';
+    if(Notification.permission === 'denied') return 'denied';
+    try{
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = reg && await reg.pushManager.getSubscription();
+      return sub ? 'on' : 'off';
+    }catch(e){ return 'off'; }
+  }
+  async function pushOn(){
+    const reg = await swReg();
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ alert('알림 권한이 거부됐어요. 설정에서 허용해 주세요.'); return false; }
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: b64ToU8(VAPID) });
+    const j = sub.toJSON();
+    const { error } = await sbI.from('push_subscriptions').upsert({
+      endpoint: sub.endpoint, member_id: me.id, p256dh: j.keys.p256dh, auth: j.keys.auth
+    });
+    if(error){ alert('등록 실패: '+error.message); return false; }
+    return true;
+  }
+  async function pushOff(){
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && await reg.pushManager.getSubscription();
+    if(sub){ try{ await sbI.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); }catch(e){}
+      await sub.unsubscribe(); }
+  }
+  function notifyPush(id){  /* 등록 직후 배달 — 실패해도 알림함에는 이미 있다 */
+    try{ sbI.functions.invoke('send-push', { body:{ message_id:id } }); }catch(e){}
+  }
   const esc = t => String(t??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
   async function load(){
@@ -1021,6 +1070,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     + (isStaffMe()
         ? `<a class="ask" id="noticeBtn">📢 <b>공지 쓰기</b> ›</a>`
         : `<a class="ask" id="askBtn">운영진에게 <b>문의하기</b> ›</a>`)
+    + `<a class="ask" id="pushBtn" style="display:none"></a>`
     + chatLinks;
 
     body.querySelectorAll('.msg').forEach(el=>{
@@ -1033,6 +1083,24 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     if(ask) ask.onclick = () => renderThread(me.id);
     const nb = document.getElementById('noticeBtn');
     if(nb) nb.onclick = renderCompose;
+    /* 푸시 토글 — 기기 상태에 따라 문구가 달라진다 */
+    (async ()=>{
+      const pb = document.getElementById('pushBtn');
+      if(!pb) return;
+      const st = await pushState();
+      const ios = /iPhone|iPad/.test(navigator.userAgent);
+      if(st === 'unsupported'){
+        if(ios && !isStandalone()){
+          pb.style.display=''; pb.innerHTML = '🔔 알림을 받으려면 <b>홈 화면에 추가</b>한 뒤 그 아이콘으로 열어주세요';
+        }
+        return;
+      }
+      pb.style.display='';
+      if(st === 'on'){ pb.innerHTML = '🔕 <b>푸시 알림 끄기</b>'; pb.onclick = async()=>{ await pushOff(); renderList(); }; }
+      else if(st === 'denied'){ pb.innerHTML = '🔔 알림이 차단돼 있어요 — 기기 설정에서 허용해 주세요'; }
+      else { pb.innerHTML = '🔔 <b>푸시 알림 켜기</b> — 공지·쪽지가 오면 바로 알려드려요';
+             pb.onclick = async()=>{ if(await pushOn()) renderList(); }; }
+    })();
     // 공지·시스템은 열어본 것으로 — 목록에 뜬 시점에 읽음 처리하지 않고 탭해야 지워짐
   }
 
@@ -1064,6 +1132,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       const { data, error } = await sbI.from('messages').insert(row).select('*').single();
       if(error){ alert('전송 실패: '+error.message); return; }
       msgs.unshift(data); reads.add(data.id);
+      notifyPush(data.id);
       renderThread(threadMember);
     };
   }
@@ -1098,6 +1167,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       if(error){ alert('실패: '+error.message); return; }
       msgs.unshift(data); reads.add(data.id);
       try{ await sbI.from('message_reads').insert({message_id:data.id, member_id:me.id}); }catch(e){}
+      notifyPush(data.id);
       renderList();
     };
   }
