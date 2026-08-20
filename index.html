@@ -820,7 +820,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     if(sessionStorage.getItem('tnl_reloaded')){ sessionStorage.removeItem('tnl_reloaded'); return; }
     sessionStorage.setItem('tnl_reloaded','1');
     /* 토큰 해시를 지운 뒤 새로고침 — 남아 있으면 재처리 루프가 된다 */
-    history.replaceState(null,'', location.pathname + location.search + '#me');
+    history.replaceState(null,'', location.pathname + '#me');   // ?li= 캐시버스터도 함께 정리
     setTimeout(()=>location.reload(), 250);
   });
 
@@ -902,7 +902,8 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
         카카오톡 앱으로 건너가면 로그인이 앱 밖(사파리)에 저장돼요.</p>` : ''}
       <hr><button class="kko" id="aKko">카카오 로그인</button>`;
     document.getElementById('aKko').onclick = () =>
-      sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: location.origin + location.pathname } });
+      sb.auth.signInWithOAuth({ provider:'kakao',
+        options:{ redirectTo: location.origin + location.pathname + '?li=' + Date.now() } });
   }
   function acctIn(m){
     abody.className = 'bodyw acct';
@@ -1211,7 +1212,8 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
           border-radius:9px;padding:13px 0;font-size:14px;font-weight:800;cursor:pointer">카카오 로그인</button>
       </div>`;
       document.getElementById('myKko').onclick = () =>
-        TUNEL.sb().auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: location.origin + location.pathname } });
+        TUNEL.sb().auth.signInWithOAuth({ provider:'kakao',
+          options:{ redirectTo: location.origin + location.pathname + '?li=' + Date.now() } });
       return;
     }
     const [rows, sum] = await Promise.all([TUNEL.myActivity(), TUNEL.myActivitySummary()]);
