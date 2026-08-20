@@ -800,7 +800,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=7"></script>
+<script src="tunel.js?v=8"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -927,11 +927,12 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     const past = rows.filter(TUNEL.isPast);
     const rdHTML = m =>
       m.status==='open'
-        ? TUNEL.boardingTicket(m, { href: m.line_path, stub: TUNEL.stubOpen() })
-        : TUNEL.boardingTicket(m, { href: m.line_path, size:'sm', stub: TUNEL.stubSoon() });
+        ? TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', stub: TUNEL.stubOpen() })
+        : TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', size:'sm', stub: TUNEL.stubSoon() });
     upEl.innerHTML = up.map(m =>
       (m.line==='botc' ? rdHTML(m) : TUNEL.ticket(m))
-      + (m.status==='open' ? TUNEL.signupBar(m) : '')).join('')
+      + (m.status==='open' ? TUNEL.signupBar(m) : '')
+      + (m.line==='botc' ? TUNEL.ticketDetail(m, { more: m.line_path, moreLabel: '첫밤 페이지' }) : '')).join('')
       || '<p class="bnote" style="text-align:center">예정된 모임이 아직 없어요</p>';
     document.getElementById('pastCnt').textContent = past.length + '개';
     pastEl.innerHTML = past.map(m => TUNEL.ticket(m, {past:true})).join('');

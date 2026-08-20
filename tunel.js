@@ -209,6 +209,44 @@ const TUNEL = {
     ${opt.href ? '</a>' : '</div>'}`;
   },
 
+  /* 티켓 상세 아코디언 — 주소·메모·참가비·2차 + 지도·캘린더.
+     티켓의 onclick 에 TUNEL.ticketToggle(this) 를 걸고,
+     티켓(과 신청 바) 뒤에 이 HTML 을 붙이면 된다 */
+  ticketDetail(m, opt = {}){
+    const mapq = m.data?.mapq || m.addr || m.place || '';
+    const cal = (() => {
+      if(!m.d || !m.s) return '';
+      const st = t => m.d.replace(/-/g,'') + 'T' + String(t||'').replace(':','') + '00';
+      const p = new URLSearchParams({ action:'TEMPLATE',
+        text:`${m.line_name || ''} ${TUNEL.title(m)}`.trim(),
+        dates:`${st(m.s)}/${st(m.e || m.s)}`,
+        details:[m.place, m.fee ? `참가비 ${m.fee}` : ''].filter(Boolean).join('\n'),
+        location:m.addr || m.place || '', ctz:'Asia/Seoul' });
+      return 'https://calendar.google.com/calendar/render?' + p.toString();
+    })();
+    return `<div class="tnlx">
+      ${m.addr ? `<div class="xr">📍 ${m.addr}</div>` : ''}
+      ${m.memo ? `<div class="xn">${m.memo}</div>` : ''}
+      ${m.fee ? `<div class="xr">참가비 ${m.fee}</div>` : ''}
+      ${m.after ? `<div class="xr">2차 · ${m.after} (자율)</div>` : ''}
+      <div class="xb">
+        ${mapq ? `<a href="https://map.naver.com/p/search/${encodeURIComponent(mapq)}" target="_blank" rel="noopener">📍 지도</a>` : ''}
+        ${cal ? `<a href="${cal}" target="_blank" rel="noopener">📅 캘린더에 저장</a>` : ''}
+        ${opt.more ? `<a href="${opt.more}">${opt.moreLabel || '노선 페이지'} ›</a>` : ''}
+      </div>
+    </div>`;
+  },
+
+  /* 티켓을 누르면 바로 다음의 .tnlx 를 여닫는다 (신청 바는 건너뛴다) */
+  ticketToggle(el){
+    let x = el.nextElementSibling;
+    while(x && !x.classList.contains('tnlx')) x = x.nextElementSibling;
+    if(!x) return;
+    const willOpen = !x.classList.contains('show');
+    document.querySelectorAll('.tnlx.show').forEach(o => o.classList.remove('show'));
+    if(willOpen) x.classList.add('show');
+  },
+
   /* 스터브 기성품 — 페이지들이 똑같이 쓰라고 여기 둔다 */
   stubOpen(){
     return `<div class="holo2">모집중<i></i></div><div class="sl">BOARDING</div>`;
@@ -267,6 +305,17 @@ div.btk{cursor:pointer}
 .btk.sm .nm{top:64px;font-size:9.5px}
 .btk .soon{font-family:'Do Hyeon',sans-serif;font-size:14px;letter-spacing:5px;text-indent:5px;
   color:rgba(236,238,242,.55);text-shadow:0 1px 1px rgba(70,0,6,.6)}
+.tnlx{display:none;width:358px;max-width:calc(100% - 24px);margin:-6px auto 16px;padding:12px 15px 13px;
+  background:#1C1A1F;border:1px solid #35313A;border-top:0;border-radius:0 0 9px 9px}
+.tnlx.show{display:block;animation:tnlxopen .2s ease}
+@keyframes tnlxopen{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.tnlx .xr{font-size:11.5px;color:#A79E8F;line-height:1.7}
+.tnlx .xn{font-size:12px;color:#A79E8F;line-height:1.65;background:rgba(255,255,255,.03);
+  border-radius:7px;padding:8px 10px;margin:7px 0}
+.tnlx .xb{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.tnlx .xb a{border:1px solid #4A453E;background:rgba(255,255,255,.03);color:#CFC7B8;
+  border-radius:7px;padding:7px 11px;font-size:11.5px;text-decoration:none}
+div.btk .stub{cursor:pointer}
 @keyframes tnlshim{0%{transform:translateX(-70%)}100%{transform:translateX(70%)}}
 @media (prefers-reduced-motion:reduce){.btk .holo2 i{animation:none}}`;
     document.head.appendChild(st);
