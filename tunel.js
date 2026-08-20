@@ -18,6 +18,9 @@ const ANON = 'sb_publishable_KeezD9hmEnxSTEWA_w8x-A_Tgk3roUf';
 let _sb = null;
 function sb(){
   if(!_sb){
+    /* 페이지가 자기 클라이언트를 이미 만들었으면 그걸 쓴다 (window.__TNL_SB) —
+       클라이언트가 둘이면 로그인이 꼬인다 (2026-08-20 로그인 문제의 원인 중 하나) */
+    if(global.__TNL_SB){ _sb = global.__TNL_SB; return _sb; }
     if(!global.supabase) throw new Error('supabase-js 를 먼저 불러와야 합니다');
     _sb = global.supabase.createClient(URL, ANON);
   }
@@ -269,6 +272,334 @@ div.btk{cursor:pointer}
     document.head.appendChild(st);
   }
 };
+
+/* ══ 참가 신청 — 티켓처럼 한 시스템. 페이지는 두 줄만 부른다:
+     1) 모집중 티켓 아래에  TUNEL.signupBar(m)      (HTML 문자열)
+     2) 렌더가 끝난 뒤       TUNEL.signupInit()       (바 채색 + 팝업 준비)
+   m 은 최소한 id · d · dow · s · e · place · fee · line_name · data.cap 을 갖는다.
+   흐름: 신청(applied) → 카카오페이 → 입금했어요(paid) → 운영진 확정(confirmed)
+   서버가 강제한다 — signups RLS · signup_seats · notify 트리거              ══ */
+(function(){
+  const byId = {}, mine = {}, seats = {};
+  const esc = t => String(t??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const capOf = m => m.data?.cap ?? null;
+  let mdl=null, body=null, titleEl=null, PAYLINK=null, _qrP=null;
+
+  function qrLib(){
+    if(global.qrcode) return Promise.resolve();
+    if(!_qrP) _qrP = new Promise(res => {
+      const sc = document.createElement('script');
+      sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+      sc.onload = res; sc.onerror = res;
+      document.head.appendChild(sc);
+    });
+    return _qrP;
+  }
+  function qrHTML(url){
+    try{
+      const q = global.qrcode(0, 'M'); q.addData(url); q.make();
+      return q.createImgTag(4, 8);
+    }catch(e){ return ''; }
+  }
+
+  function ensureUI(){
+    if(mdl) return;
+    if(!document.getElementById('tnl-signup-css')){
+      const st = document.createElement('style');
+      st.id = 'tnl-signup-css';
+      st.textContent = `
+.tnlbar{display:flex;align-items:center;gap:10px;width:358px;max-width:calc(100% - 8px);
+  margin:-6px auto 14px;background:#1C1A1F;border:1px solid #35313A;border-top:0;
+  border-radius:0 0 9px 9px;padding:9px 13px}
+.tnlbar .seats{flex:1;font-size:11.5px;color:#A79E8F}
+.tnlbar .seats b{color:#E8C36B;font-weight:800}
+.tnlbar button{flex:none;border:0;border-radius:7px;padding:8px 14px;font-size:12px;
+  font-weight:800;cursor:pointer;font-family:inherit;background:#B3161E;color:#fff}
+.tnlbar button.ghost{background:none;border:1px solid #4A453E;color:#CFC7B8;font-weight:700}
+.tnlbar button.done{background:#2F6B5A;color:#DFF3EC}
+.tnlbar button.wait{background:#3A2B15;color:#E8C36B}
+.tnlmdl{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;justify-content:center}
+.tnlmdl.on{display:flex}
+.tnlmdl .bd{position:absolute;inset:0;background:rgba(12,10,14,.66);backdrop-filter:blur(2px)}
+.tnlmdl .sh{position:relative;width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column;
+  background:#232125;border:1px solid #3A342B;border-bottom:0;border-radius:14px 14px 0 0;
+  box-shadow:0 -10px 30px rgba(0,0,0,.5);
+  padding-bottom:env(safe-area-inset-bottom);
+  animation:tnlmdlup .26s cubic-bezier(0.32,0.72,0,1)}
+@keyframes tnlmdlup{from{transform:translateY(22px);opacity:.5}to{transform:none;opacity:1}}
+.tnlmdl .hd{flex:none;display:flex;align-items:center;gap:10px;padding:15px 16px 12px;
+  border-bottom:1px solid rgba(244,235,217,.14)}
+.tnlmdl .hd b{font-size:13px;font-weight:800;letter-spacing:2px;color:#D9D2C4}
+.tnlmdl .x{margin-left:auto;border:1px solid #4A453E;background:none;color:#CFC7B8;
+  width:28px;height:28px;border-radius:50%;font-size:15px;line-height:1;cursor:pointer}
+.tnlmdl .x:active{transform:scale(.9)}
+.tnlmdl .bodyw{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 22px;
+  font-family:'Pretendard',-apple-system,'Apple SD Gothic Neo',sans-serif}
+@media (min-width:600px){
+  .tnlmdl{align-items:center}
+  .tnlmdl .sh{border-radius:14px;border-bottom:1px solid #3A342B;max-height:80vh}
+}
+.tnlmdl .bnote{font-size:12px;color:#8F887B;line-height:1.7;margin-top:10px}
+.tnlmdl .row{display:flex;gap:12px;padding:8px 2px;font-size:13px;border-bottom:1px solid rgba(244,235,217,.08)}
+.tnlmdl .row .k{flex:none;width:56px;color:#8F887B}
+.tnlmdl .row .v{flex:1;color:#E2DBCE}
+.tnlmdl .fee{font-size:24px;font-weight:800;color:#E8C36B;text-align:center;margin:16px 0 4px}
+.tnlmdl .feecap{font-size:11px;color:#8F887B;text-align:center;margin-bottom:14px}
+.tnlmdl .pay{display:block;text-align:center;background:#FEE500;color:#191600;border-radius:9px;
+  padding:13px 0;font-size:14px;font-weight:800;margin-bottom:9px;text-decoration:none}
+.tnlmdl .qrbox{text-align:center;margin:13px 0 5px}
+.tnlmdl .qrbox img{width:132px;height:132px;border-radius:8px;background:#fff;padding:8px}
+.tnlmdl .qrcap{font-size:10.5px;color:#77716A;text-align:center;margin-top:6px;line-height:1.6}
+.tnlmdl .warn{background:rgba(232,195,107,.08);border:1px solid rgba(232,195,107,.35);border-radius:8px;
+  padding:10px 12px;font-size:11.5px;color:#E8C36B;line-height:1.7;margin:13px 0}
+.tnlmdl .act{display:flex;gap:8px;margin-top:14px}
+.tnlmdl .act button{flex:1;border:0;border-radius:9px;padding:12px 0;font-size:13px;font-weight:800;
+  cursor:pointer;font-family:inherit}
+.tnlmdl .act .go{background:#B3161E;color:#fff}
+.tnlmdl .act .ghost{background:none;border:1px solid #4A453E;color:#A79E8F;font-weight:700}
+.tnlmdl .big{font-size:17px;font-weight:800;color:#F2EAD9;text-align:center;margin:18px 0 6px}
+.tnlmdl .cap2{font-size:12px;color:#8F887B;text-align:center;line-height:1.8}
+.tnlmdl .mgr{display:flex;align-items:center;gap:9px;background:#1C1A1F;border:1px solid #35313A;
+  border-radius:9px;padding:10px 12px;margin-bottom:7px}
+.tnlmdl .mgr .nm3{flex:1;font-size:13px;font-weight:700;color:#E9E2D2}
+.tnlmdl .mgr .st3{flex:none;font-size:9px;font-weight:800;border-radius:3px;padding:3px 7px}
+.tnlmdl .st3.applied{background:#2A2630;color:#A79E8F}
+.tnlmdl .st3.paid{background:#3A2B15;color:#E8C36B}
+.tnlmdl .st3.confirmed{background:#1F3A30;color:#7FD8B4}
+.tnlmdl .st3.waitlist{background:#22303F;color:#9CC0E8}
+.tnlmdl .mgr button{flex:none;border:1px solid #4A453E;background:rgba(255,255,255,.03);
+  color:#CFC7B8;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit}
+.tnlmdl .mgr button.ok{border-color:#2F6B5A;color:#7FD8B4}`;
+      document.head.appendChild(st);
+    }
+    mdl = document.createElement('div');
+    mdl.className = 'tnlmdl'; mdl.id = 'tnlSignMdl';
+    mdl.setAttribute('role','dialog'); mdl.setAttribute('aria-modal','true'); mdl.setAttribute('aria-label','참가 신청');
+    mdl.innerHTML = `<div class="bd" data-close></div>
+      <div class="sh">
+        <div class="hd"><b id="tnlSignTitle">참가 신청</b><button class="x" data-close aria-label="닫기">✕</button></div>
+        <div class="bodyw" id="tnlSignBody"><p class="bnote">불러오는 중…</p></div>
+      </div>`;
+    document.body.appendChild(mdl);
+    body = document.getElementById('tnlSignBody');
+    titleEl = document.getElementById('tnlSignTitle');
+    mdl.querySelectorAll('[data-close]').forEach(el => el.onclick = close);
+  }
+  function close(){
+    mdl.classList.remove('on'); document.body.style.overflow='';
+    TUNEL.signupRefresh();
+  }
+
+  async function loadMine(){
+    const me = await TUNEL.me();
+    if(!me) return;
+    const ids = Object.keys(byId);
+    if(!ids.length) return;
+    const { data } = await sb().from('signups').select('meeting_id,status')
+      .eq('member_id', me.id).in('meeting_id', ids);
+    Object.keys(mine).forEach(k => delete mine[k]);
+    (data||[]).forEach(r => { if(r.status!=='cancelled') mine[r.meeting_id] = r.status; });
+  }
+  async function loadSeats(mid){
+    const { data } = await sb().rpc('signup_seats', { p_meeting: mid });
+    seats[mid] = data || { taken:0, wait:0 };
+    return seats[mid];
+  }
+
+  async function paintBar(bar){
+    const mid = bar.dataset.mid;
+    const m = byId[mid]; if(!m) return;
+    const cap = capOf(m);
+    const st = await loadSeats(mid);
+    const left = cap ? Math.max(0, cap - st.taken) : null;
+    const my = mine[mid];
+    const seatsEl = bar.querySelector('.seats');
+    const btn = bar.querySelector('button');
+    seatsEl.innerHTML = cap
+      ? (left > 0 ? `남은 자리 <b>${left}</b> / ${cap}` : `만석 · 대기 ${st.wait}명`)
+      : `신청 ${st.taken}명`;
+    btn.className = '';
+    if(my === 'confirmed'){ btn.textContent = '확정됨 ✓'; btn.classList.add('done'); }
+    else if(my === 'paid'){ btn.textContent = '입금 확인 중'; btn.classList.add('wait'); }
+    else if(my === 'applied'){ btn.textContent = '입금하러 가기'; }
+    else if(my === 'waitlist'){ btn.textContent = '대기 중'; btn.classList.add('wait'); }
+    else if(cap && left === 0){ btn.textContent = '대기 등록'; btn.classList.add('ghost'); }
+    else btn.textContent = '신청하기';
+    btn.onclick = () => openSign(mid);
+    TUNEL.me().then(me => {
+      if(me && (me.is_admin || me.role==='staff') && !bar.querySelector('[data-act="mgr"]')){
+        const g = document.createElement('button');
+        g.className='ghost'; g.dataset.act='mgr'; g.textContent='관리';
+        g.onclick = () => openManage(mid);
+        bar.appendChild(g);
+      }
+    });
+  }
+
+  async function payLink(){
+    if(PAYLINK !== null) return PAYLINK;
+    const { data } = await sb().from('settings').select('value').eq('key','kakaopay_link').maybeSingle();
+    PAYLINK = data?.value || '';
+    return PAYLINK;
+  }
+  /* 참가비 금액이 고정된 송금 링크(pay_links)가 있으면 그걸 쓴다 */
+  async function feeLink(m){
+    const won = parseInt(String(m.fee||'').replace(/[^\d]/g,''), 10);
+    if(won){
+      const { data } = await sb().from('pay_links').select('link').eq('amount', won).maybeSingle();
+      if(data?.link) return { link: data.link, fixed: true };
+    }
+    return { link: await payLink(), fixed: false };
+  }
+  function meetingRows(m){
+    return `<div class="row"><span class="k">모임</span><span class="v">${TUNEL.title(m)} · ${esc(m.line_name)}</span></div>
+      <div class="row"><span class="k">날짜</span><span class="v">${(m.d||'').replace(/-/g,'.')} (${m.dow||''}) ${m.s||''}${m.e?'~'+m.e:''}</span></div>
+      <div class="row"><span class="k">장소</span><span class="v">${esc(m.place||'')}</span></div>`;
+  }
+
+  async function openSign(mid){
+    const m = byId[mid];
+    mdl.classList.add('on'); document.body.style.overflow='hidden';
+    titleEl.textContent = '참가 신청';
+    body.innerHTML = '<p class="bnote">불러오는 중…</p>';
+
+    const me = await TUNEL.me();
+    if(!me){
+      body.innerHTML = `<p class="big">로그인이 필요해요</p>
+        <p class="cap2">카카오로 로그인하면 닉네임으로 신청할 수 있어요</p>
+        <div class="act"><button class="go" id="tnlKko">카카오 로그인</button></div>`;
+      document.getElementById('tnlKko').onclick = () =>
+        sb().auth.signInWithOAuth({ provider:'kakao',
+          options:{ redirectTo: location.origin + location.pathname + '?li=' + Date.now() } });
+      return;
+    }
+    const my = mine[mid];
+    if(my === 'confirmed'){
+      body.innerHTML = `<p class="big">확정됐어요 🎉</p>${meetingRows(m)}
+        <p class="cap2" style="margin-top:14px">그날 봬요! 사정이 생기면 취소를 눌러주세요.</p>
+        <div class="act"><button class="ghost" id="tnlCancel">신청 취소</button></div>`;
+      hookCancel(mid); return;
+    }
+    if(my === 'paid'){
+      body.innerHTML = `<p class="big">입금 확인 기다리는 중</p>${meetingRows(m)}
+        <p class="cap2" style="margin-top:14px">운영진이 입금을 확인하면 확정 알림을 보내드려요.<br>보통 하루 안에 확인돼요.</p>
+        <div class="act"><button class="ghost" id="tnlCancel">신청 취소</button></div>`;
+      hookCancel(mid); return;
+    }
+    if(my === 'waitlist'){
+      body.innerHTML = `<p class="big">대기 등록되어 있어요</p>${meetingRows(m)}
+        <p class="cap2" style="margin-top:14px">자리가 나면 알림으로 알려드려요.</p>
+        <div class="act"><button class="ghost" id="tnlCancel">대기 취소</button></div>`;
+      hookCancel(mid); return;
+    }
+
+    const cap = capOf(m);
+    const st = await loadSeats(mid);
+    const full = cap && (cap - st.taken) <= 0;
+    if(full && !my){
+      body.innerHTML = `<p class="big">지금은 만석이에요</p>${meetingRows(m)}
+        <p class="cap2" style="margin-top:14px">대기로 걸어두면 자리가 날 때 순서대로 알려드려요.<br>지금 대기 ${st.wait}명.</p>
+        <div class="act"><button class="go" id="tnlWait">대기 등록</button></div>`;
+      document.getElementById('tnlWait').onclick = async () => {
+        const { error } = await sb().from('signups').upsert(
+          { meeting_id: mid, member_id: me.id, status:'waitlist' }, { onConflict:'meeting_id,member_id' });
+        if(error){ alert('등록 실패: '+error.message); return; }
+        mine[mid] = 'waitlist'; openSign(mid);
+      };
+      return;
+    }
+
+    /* 신청 + 결제 안내 */
+    await qrLib();
+    const pl = await feeLink(m);
+    body.innerHTML = `${meetingRows(m)}
+      ${m.fee ? `<p class="fee">${esc(m.fee)}</p><p class="feecap">${pl.fixed?'금액이 맞춰져 있어요 — 보내기만 하면 끝':'참가비 — 공간·게임·다과'}</p>` : ''}
+      <a class="pay" href="${esc(pl.link)}" target="_blank" rel="noopener">💛 카카오페이로 보내기</a>
+      <div class="qrbox">${qrHTML(pl.link)}<p class="qrcap">컴퓨터로 보고 있다면 폰 카메라로 QR을 찍어주세요</p></div>
+      <div class="warn">보낼 때 <b>메시지에 닉네임(${esc(me.nick)})</b>을 꼭 적어주세요.<br>운영진이 입금을 대조하는 데 써요.</div>
+      <div class="act">
+        <button class="go" id="tnlPaid">입금했어요</button>
+        <button class="ghost" id="tnlCancel" style="flex:0 0 92px">${my==='applied'?'신청 취소':'닫기'}</button>
+      </div>`;
+    /* 팝업을 연 순간 자리 선점 (applied) */
+    if(!my){
+      const { error } = await sb().from('signups').upsert(
+        { meeting_id: mid, member_id: me.id, status:'applied' }, { onConflict:'meeting_id,member_id' });
+      if(!error) mine[mid] = 'applied';
+    }
+    document.getElementById('tnlPaid').onclick = async () => {
+      const { error } = await sb().from('signups').update({ status:'paid' })
+        .eq('meeting_id', mid).eq('member_id', me.id);
+      if(error){ alert('실패: '+error.message); return; }
+      mine[mid] = 'paid'; openSign(mid);
+    };
+    if(my==='applied') hookCancel(mid);
+    else document.getElementById('tnlCancel').onclick = close;
+  }
+  function hookCancel(mid){
+    const b = document.getElementById('tnlCancel'); if(!b) return;
+    b.onclick = async () => {
+      if(!confirm('신청을 취소할까요?')) return;
+      const me = await TUNEL.me();
+      const { error } = await sb().from('signups').update({ status:'cancelled' })
+        .eq('meeting_id', mid).eq('member_id', me.id);
+      if(error){ alert('실패: '+error.message); return; }
+      delete mine[mid]; close();
+    };
+  }
+
+  /* ── 운영진 신청 관리 ── */
+  async function openManage(mid){
+    const m = byId[mid];
+    mdl.classList.add('on'); document.body.style.overflow='hidden';
+    titleEl.textContent = '신청 관리 · ' + (m.d||'').slice(5).replace('-','/');
+    body.innerHTML = '<p class="bnote">불러오는 중…</p>';
+    const [{ data: rows }, { data: mems }] = await Promise.all([
+      sb().from('signups').select('id,member_id,status,created_at')
+        .eq('meeting_id', mid).neq('status','cancelled').order('created_at'),
+      sb().from('members').select('id,nick')
+    ]);
+    const nick = {}; (mems||[]).forEach(x=>nick[x.id]=x.nick);
+    const LBL = { applied:'신청', paid:'입금대기', confirmed:'확정', waitlist:'대기' };
+    if(!(rows||[]).length){ body.innerHTML = '<p class="bnote" style="text-align:center;padding:18px 0">아직 신청이 없어요</p>'; return; }
+    body.innerHTML = (rows||[]).map(r => `
+      <div class="mgr" data-sid="${r.id}">
+        <span class="nm3">${esc(nick[r.member_id]||'?')}</span>
+        <span class="st3 ${r.status}">${LBL[r.status]||r.status}</span>
+        ${r.status!=='confirmed' ? `<button class="ok" data-do="confirmed">확정</button>` : ''}
+        <button data-do="cancelled">취소</button>
+      </div>`).join('')
+      + '<p class="bnote">확정을 누르면 신청자 알림함으로 확정 알림이 가요.</p>';
+    body.querySelectorAll('[data-do]').forEach(btn => {
+      btn.onclick = async () => {
+        const sid = btn.closest('.mgr').dataset.sid;
+        const to = btn.dataset.do;
+        if(to==='cancelled' && !confirm('이 신청을 취소할까요?')) return;
+        const { error } = await sb().from('signups').update({ status: to }).eq('id', sid);
+        if(error){ alert('실패: '+error.message); return; }
+        openManage(mid);
+      };
+    });
+  }
+
+  /* 모집중 티켓 아래 신청 바 — HTML 문자열 (회차를 등록해 둔다) */
+  TUNEL.signupBar = function(m){
+    byId[m.id] = m;
+    return `<div class="tnlbar" data-mid="${m.id}">
+      <span class="seats">…</span>
+      <button data-act="open">신청하기</button>
+    </div>`;
+  };
+  /* 렌더 뒤 한 번 — 팝업 준비 + 바 채색. 다시 불러도 안전하다 */
+  TUNEL.signupInit = async function(){
+    ensureUI();
+    await TUNEL.signupRefresh();
+  };
+  TUNEL.signupRefresh = async function(){
+    await loadMine();
+    document.querySelectorAll('.tnlbar').forEach(paintBar);
+  };
+})();
 
 global.TUNEL = TUNEL;
 })(window);

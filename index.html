@@ -22,7 +22,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Cinzel:wght@600;800&family=Do+Hyeon&family=Jua&family=Bagel+Fat+One&family=Black+Han+Sans&family=Dongle:wght@700&family=Gugi&family=Nanum+Pen+Script&family=Song+Myung&family=Nanum+Gothic+Coding&family=Gamja+Flower&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" defer></script>
 <style>
 /* ═══ 투넬 메트로 — 빈티지 이스탄불 트램 세계관 ═══
    튀넬(1875, 세계 2번째 지하철)과 이스탄불 노스탤지어 트램 오마주.
@@ -164,49 +163,6 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
   border:1px dashed #4A453E;border-radius:8px;padding:10px 0}
 .pastfold summary::-webkit-details-marker{display:none}
 .pastfold[open] summary{margin-bottom:12px;color:#CFC7B8}
-/* 참가 신청 — 티켓 아래 신청 바 */
-.signbar{display:flex;align-items:center;gap:10px;width:358px;max-width:calc(100% - 8px);
-  margin:-6px auto 14px;background:#1C1A1F;border:1px solid #35313A;border-top:0;
-  border-radius:0 0 9px 9px;padding:9px 13px}
-.signbar .seats{flex:1;font-size:11.5px;color:#A79E8F}
-.signbar .seats b{color:#E8C36B;font-weight:800}
-.signbar button{flex:none;border:0;border-radius:7px;padding:8px 14px;font-size:12px;
-  font-weight:800;cursor:pointer;font-family:inherit;background:#B3161E;color:#fff}
-.signbar button.ghost{background:none;border:1px solid #4A453E;color:#CFC7B8;font-weight:700}
-.signbar button.done{background:#2F6B5A;color:#DFF3EC}
-.signbar button.wait{background:#3A2B15;color:#E8C36B}
-/* 신청 팝업 본문 */
-.signb .row{display:flex;gap:12px;padding:8px 2px;font-size:13px;border-bottom:1px solid rgba(244,235,217,.08)}
-.signb .row .k{flex:none;width:56px;color:#8F887B}
-.signb .row .v{flex:1;color:#E2DBCE}
-.signb .fee{font-size:24px;font-weight:800;color:#E8C36B;text-align:center;margin:16px 0 4px}
-.signb .feecap{font-size:11px;color:#8F887B;text-align:center;margin-bottom:14px}
-.signb .pay{display:block;text-align:center;background:#FEE500;color:#191600;border-radius:9px;
-  padding:13px 0;font-size:14px;font-weight:800;margin-bottom:9px}
-.signb .qrbox{text-align:center;margin:13px 0 5px}
-.signb .qrbox img{width:132px;height:132px;border-radius:8px;background:#fff;padding:8px}
-.signb .qrcap{font-size:10.5px;color:#77716A;text-align:center;margin-top:6px;line-height:1.6}
-.signb .warn{background:rgba(232,195,107,.08);border:1px solid rgba(232,195,107,.35);border-radius:8px;
-  padding:10px 12px;font-size:11.5px;color:#E8C36B;line-height:1.7;margin:13px 0}
-.signb .act{display:flex;gap:8px;margin-top:14px}
-.signb .act button{flex:1;border:0;border-radius:9px;padding:12px 0;font-size:13px;font-weight:800;
-  cursor:pointer;font-family:inherit}
-.signb .act .go{background:#B3161E;color:#fff}
-.signb .act .ghost{background:none;border:1px solid #4A453E;color:#A79E8F;font-weight:700}
-.signb .big{font-size:17px;font-weight:800;color:#F2EAD9;text-align:center;margin:18px 0 6px}
-.signb .cap2{font-size:12px;color:#8F887B;text-align:center;line-height:1.8}
-/* 운영진 신청 관리 */
-.signb .mgr{display:flex;align-items:center;gap:9px;background:#1C1A1F;border:1px solid #35313A;
-  border-radius:9px;padding:10px 12px;margin-bottom:7px}
-.signb .mgr .nm3{flex:1;font-size:13px;font-weight:700;color:#E9E2D2}
-.signb .mgr .st3{flex:none;font-size:9px;font-weight:800;border-radius:3px;padding:3px 7px}
-.signb .st3.applied{background:#2A2630;color:#A79E8F}
-.signb .st3.paid{background:#3A2B15;color:#E8C36B}
-.signb .st3.confirmed{background:#1F3A30;color:#7FD8B4}
-.signb .st3.waitlist{background:#22303F;color:#9CC0E8}
-.signb .mgr button{flex:none;border:1px solid #4A453E;background:rgba(255,255,255,.03);
-  color:#CFC7B8;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit}
-.signb .mgr button.ok{border-color:#2F6B5A;color:#7FD8B4}
 /* 팝업 (계정 설정 · 공용) */
 .mdl{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;justify-content:center}
 .mdl.on{display:flex}
@@ -798,13 +754,6 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 </div>
 </main>
 
-<div class="mdl" id="signMdl" role="dialog" aria-modal="true" aria-label="참가 신청">
-  <div class="bd" data-close></div>
-  <div class="sh">
-    <div class="hd"><b id="signTitle">참가 신청</b><button class="x" data-close aria-label="닫기">✕</button></div>
-    <div class="bodyw signb" id="signBody"><p class="bnote">불러오는 중…</p></div>
-  </div>
-</div>
 <div class="mdl" id="acctMdl" role="dialog" aria-modal="true" aria-label="계정 설정">
   <div class="bd" data-close></div>
   <div class="sh">
@@ -851,7 +800,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=5"></script>
+<script src="tunel.js?v=6"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -968,252 +917,25 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 
 /* ══ 통합 일정 — meetings 한 곳에서 읽는다 (노선이 늘어도 코드는 그대로) ══
-   모집중(open) 회차에는 신청 바가 붙는다: 신청 → 카카오페이 → 입금했어요 → 운영진 확정 */
+   모집중(open) 회차의 신청 바·팝업은 공통 모듈(tunel.js signup)이 그린다 */
 (async function(){
   const upEl   = document.getElementById('tktList');
   const pastEl = document.getElementById('tktPast');
-  const sbS = TUNEL.sb();
-  let meetingsById = {}, mySignups = {}, seatCache = {};
-
-  const capOf = m => m.data?.cap ?? null;
-  const esc = t => String(t??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
-  async function loadMine(){
-    const me = await TUNEL.me();
-    if(!me) return;
-    const ids = Object.keys(meetingsById);
-    if(!ids.length) return;
-    const { data } = await sbS.from('signups').select('meeting_id,status')
-      .eq('member_id', me.id).in('meeting_id', ids);
-    mySignups = {};
-    (data||[]).forEach(r => { if(r.status!=='cancelled') mySignups[r.meeting_id] = r.status; });
-  }
-  async function loadSeats(mid){
-    const { data } = await sbS.rpc('signup_seats', { p_meeting: mid });
-    seatCache[mid] = data || { taken:0, wait:0 };
-    return seatCache[mid];
-  }
-
-  function barHTML(m){
-    return `<div class="signbar" data-mid="${m.id}">
-      <span class="seats">…</span>
-      <button data-act="open">신청하기</button>
-    </div>`;
-  }
-  async function paintBar(bar){
-    const mid = bar.dataset.mid;
-    const m = meetingsById[mid];
-    const cap = capOf(m);
-    const st = await loadSeats(mid);
-    const left = cap ? Math.max(0, cap - st.taken) : null;
-    const mine = mySignups[mid];
-    const seats = bar.querySelector('.seats');
-    const btn = bar.querySelector('button');
-    seats.innerHTML = cap
-      ? (left > 0 ? `남은 자리 <b>${left}</b> / ${cap}` : `만석 · 대기 ${st.wait}명`)
-      : `신청 ${st.taken}명`;
-    btn.className = '';
-    if(mine === 'confirmed'){ btn.textContent = '확정됨 ✓'; btn.classList.add('done'); }
-    else if(mine === 'paid'){ btn.textContent = '입금 확인 중'; btn.classList.add('wait'); }
-    else if(mine === 'applied'){ btn.textContent = '입금하러 가기'; }
-    else if(mine === 'waitlist'){ btn.textContent = '대기 중'; btn.classList.add('wait'); }
-    else if(cap && left === 0){ btn.textContent = '대기 등록'; btn.classList.add('ghost'); }
-    else btn.textContent = '신청하기';
-    btn.onclick = () => openSign(mid);
-    /* 운영진이면 관리 진입 */
-    TUNEL.me().then(me => {
-      if(me && (me.is_admin || me.role==='staff') && !bar.querySelector('[data-act="mgr"]')){
-        const g = document.createElement('button');
-        g.className='ghost'; g.dataset.act='mgr'; g.textContent='관리';
-        g.onclick = () => openManage(mid);
-        bar.appendChild(g);
-      }
-    });
-  }
-
-  /* ── 신청 팝업 ── */
-  const mdl = document.getElementById('signMdl');
-  const body = document.getElementById('signBody');
-  const titleEl = document.getElementById('signTitle');
-  const close = () => { mdl.classList.remove('on'); document.body.style.overflow=''; refreshBars(); };
-  mdl.querySelectorAll('[data-close]').forEach(el => el.onclick = close);
-
-  let PAYLINK = null;
-  async function payLink(){
-    if(PAYLINK !== null) return PAYLINK;
-    const { data } = await sbS.from('settings').select('value').eq('key','kakaopay_link').maybeSingle();
-    PAYLINK = data?.value || '';
-    return PAYLINK;
-  }
-  /* 참가비 금액이 고정된 송금 링크(pay_links)가 있으면 그걸 쓴다 —
-     보내는 사람이 금액을 입력할 필요가 없어진다 */
-  async function feeLink(m){
-    const won = parseInt(String(m.fee||'').replace(/[^\d]/g,''), 10);
-    if(won){
-      const { data } = await sbS.from('pay_links').select('link').eq('amount', won).maybeSingle();
-      if(data?.link) return { link: data.link, fixed: true };
-    }
-    return { link: await payLink(), fixed: false };
-  }
-  function qrHTML(url){
-    try{
-      const q = qrcode(0, 'M'); q.addData(url); q.make();
-      return q.createImgTag(4, 8);
-    }catch(e){ return ''; }
-  }
-  function meetingRows(m){
-    return `<div class="row"><span class="k">모임</span><span class="v">${TUNEL.title(m)} · ${esc(m.line_name)}</span></div>
-      <div class="row"><span class="k">날짜</span><span class="v">${(m.d||'').replace(/-/g,'.')} (${m.dow||''}) ${m.s||''}${m.e?'~'+m.e:''}</span></div>
-      <div class="row"><span class="k">장소</span><span class="v">${esc(m.place||'')}</span></div>`;
-  }
-
-  async function openSign(mid){
-    const m = meetingsById[mid];
-    mdl.classList.add('on'); document.body.style.overflow='hidden';
-    titleEl.textContent = '참가 신청';
-    body.innerHTML = '<p class="bnote">불러오는 중…</p>';
-
-    const me = await TUNEL.me();
-    if(!me){
-      body.innerHTML = `<p class="big">로그인이 필요해요</p>
-        <p class="cap2">카카오로 로그인하면 닉네임으로 신청할 수 있어요</p>
-        <div class="act"><button class="go" id="sKko">카카오 로그인</button></div>`;
-      document.getElementById('sKko').onclick = () =>
-        sbS.auth.signInWithOAuth({ provider:'kakao',
-          options:{ redirectTo: location.origin + location.pathname + '?li=' + Date.now() } });
-      return;
-    }
-    const mine = mySignups[mid];
-    if(mine === 'confirmed'){
-      body.innerHTML = `<p class="big">확정됐어요 🎉</p>${meetingRows(m)}
-        <p class="cap2" style="margin-top:14px">그날 봬요! 사정이 생기면 취소를 눌러주세요.</p>
-        <div class="act"><button class="ghost" id="sCancel">신청 취소</button></div>`;
-      hookCancel(mid); return;
-    }
-    if(mine === 'paid'){
-      body.innerHTML = `<p class="big">입금 확인 기다리는 중</p>${meetingRows(m)}
-        <p class="cap2" style="margin-top:14px">운영진이 입금을 확인하면 확정 알림을 보내드려요.<br>보통 하루 안에 확인돼요.</p>
-        <div class="act"><button class="ghost" id="sCancel">신청 취소</button></div>`;
-      hookCancel(mid); return;
-    }
-    if(mine === 'waitlist'){
-      body.innerHTML = `<p class="big">대기 등록되어 있어요</p>${meetingRows(m)}
-        <p class="cap2" style="margin-top:14px">자리가 나면 알림으로 알려드려요.</p>
-        <div class="act"><button class="ghost" id="sCancel">대기 취소</button></div>`;
-      hookCancel(mid); return;
-    }
-
-    const cap = capOf(m);
-    const st = await loadSeats(mid);
-    const full = cap && (cap - st.taken) <= 0;
-    if(full && !mine){
-      body.innerHTML = `<p class="big">지금은 만석이에요</p>${meetingRows(m)}
-        <p class="cap2" style="margin-top:14px">대기로 걸어두면 자리가 날 때 순서대로 알려드려요.<br>지금 대기 ${st.wait}명.</p>
-        <div class="act"><button class="go" id="sWait">대기 등록</button></div>`;
-      document.getElementById('sWait').onclick = async () => {
-        const { error } = await sbS.from('signups').upsert(
-          { meeting_id: mid, member_id: me.id, status:'waitlist' }, { onConflict:'meeting_id,member_id' });
-        if(error){ alert('등록 실패: '+error.message); return; }
-        mySignups[mid] = 'waitlist'; openSign(mid);
-      };
-      return;
-    }
-
-    /* 신청 + 결제 안내 */
-    const pl = await feeLink(m);
-    body.innerHTML = `${meetingRows(m)}
-      ${m.fee ? `<p class="fee">${esc(m.fee)}</p><p class="feecap">${pl.fixed?'금액이 맞춰져 있어요 — 보내기만 하면 끝':'참가비 — 공간·게임·다과'}</p>` : ''}
-      <a class="pay" href="${esc(pl.link)}" target="_blank" rel="noopener">💛 카카오페이로 보내기</a>
-      <div class="qrbox">${qrHTML(pl.link)}<p class="qrcap">컴퓨터로 보고 있다면 폰 카메라로 QR을 찍어주세요</p></div>
-      <div class="warn">보낼 때 <b>메시지에 닉네임(${esc(me.nick)})</b>을 꼭 적어주세요.<br>운영진이 입금을 대조하는 데 써요.</div>
-      <div class="act">
-        <button class="go" id="sPaid">입금했어요</button>
-        <button class="ghost" id="sCancel" style="flex:0 0 92px">${mine==='applied'?'신청 취소':'닫기'}</button>
-      </div>`;
-    /* 팝업을 연 순간 자리 선점 (applied) */
-    if(!mine){
-      const { error } = await sbS.from('signups').upsert(
-        { meeting_id: mid, member_id: me.id, status:'applied' }, { onConflict:'meeting_id,member_id' });
-      if(!error) mySignups[mid] = 'applied';
-    }
-    document.getElementById('sPaid').onclick = async () => {
-      const { error } = await sbS.from('signups').update({ status:'paid' })
-        .eq('meeting_id', mid).eq('member_id', me.id);
-      if(error){ alert('실패: '+error.message); return; }
-      mySignups[mid] = 'paid'; openSign(mid);
-    };
-    if(mine==='applied') hookCancel(mid);
-    else document.getElementById('sCancel').onclick = close;
-
-    function noop(){}
-  }
-  function hookCancel(mid){
-    const b = document.getElementById('sCancel'); if(!b) return;
-    b.onclick = async () => {
-      if(!confirm('신청을 취소할까요?')) return;
-      const me = await TUNEL.me();
-      const { error } = await sbS.from('signups').update({ status:'cancelled' })
-        .eq('meeting_id', mid).eq('member_id', me.id);
-      if(error){ alert('실패: '+error.message); return; }
-      delete mySignups[mid]; close();
-    };
-  }
-
-  /* ── 운영진 신청 관리 ── */
-  async function openManage(mid){
-    const m = meetingsById[mid];
-    mdl.classList.add('on'); document.body.style.overflow='hidden';
-    titleEl.textContent = '신청 관리 · ' + (m.d||'').slice(5).replace('-','/');
-    body.innerHTML = '<p class="bnote">불러오는 중…</p>';
-    const [{ data: rows }, { data: mems }] = await Promise.all([
-      sbS.from('signups').select('id,member_id,status,created_at')
-        .eq('meeting_id', mid).neq('status','cancelled').order('created_at'),
-      sbS.from('members').select('id,nick')
-    ]);
-    const nick = {}; (mems||[]).forEach(x=>nick[x.id]=x.nick);
-    const LBL = { applied:'신청', paid:'입금대기', confirmed:'확정', waitlist:'대기' };
-    if(!(rows||[]).length){ body.innerHTML = '<p class="bnote" style="text-align:center;padding:18px 0">아직 신청이 없어요</p>'; return; }
-    body.innerHTML = (rows||[]).map(r => `
-      <div class="mgr" data-sid="${r.id}">
-        <span class="nm3">${esc(nick[r.member_id]||'?')}</span>
-        <span class="st3 ${r.status}">${LBL[r.status]||r.status}</span>
-        ${r.status!=='confirmed' ? `<button class="ok" data-do="confirmed">확정</button>` : ''}
-        <button data-do="cancelled">취소</button>
-      </div>`).join('')
-      + '<p class="bnote">확정을 누르면 신청자 알림함으로 확정 알림이 가요.</p>';
-    body.querySelectorAll('[data-do]').forEach(btn => {
-      btn.onclick = async () => {
-        const sid = btn.closest('.mgr').dataset.sid;
-        const to = btn.dataset.do;
-        if(to==='cancelled' && !confirm('이 신청을 취소할까요?')) return;
-        const { error } = await sbS.from('signups').update({ status: to }).eq('id', sid);
-        if(error){ alert('실패: '+error.message); return; }
-        openManage(mid);
-      };
-    });
-  }
-
-  async function refreshBars(){
-    await loadMine();
-    document.querySelectorAll('.signbar').forEach(paintBar);
-  }
-
   try{
     const rows = await TUNEL.meetings();
     const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
     const past = rows.filter(TUNEL.isPast);
-    rows.forEach(m => meetingsById[m.id] = m);
     const rdHTML = m =>
       m.status==='open'
         ? TUNEL.boardingTicket(m, { href: m.line_path, stub: TUNEL.stubOpen() })
         : TUNEL.boardingTicket(m, { href: m.line_path, size:'sm', stub: TUNEL.stubSoon() });
     upEl.innerHTML = up.map(m =>
       (m.line==='botc' ? rdHTML(m) : TUNEL.ticket(m))
-      + (m.status==='open' ? barHTML(m) : '')).join('')
+      + (m.status==='open' ? TUNEL.signupBar(m) : '')).join('')
       || '<p class="bnote" style="text-align:center">예정된 모임이 아직 없어요</p>';
     document.getElementById('pastCnt').textContent = past.length + '개';
     pastEl.innerHTML = past.map(m => TUNEL.ticket(m, {past:true})).join('');
-    await refreshBars();
+    await TUNEL.signupInit();
   }catch(e){
     upEl.innerHTML = '<p class="bnote" style="text-align:center">시각표를 못 불러왔어요<br>'
       + (e.message||'') + '</p>';

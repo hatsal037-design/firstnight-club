@@ -9,6 +9,7 @@
 const SB_URL = 'https://yguvfogtzazoawtclqvf.supabase.co';
 const SB_KEY = 'sb_publishable_KeezD9hmEnxSTEWA_w8x-A_Tgk3roUf';   // 공개용 키 (노출 정상)
 const sb = window.supabase.createClient(SB_URL, SB_KEY);
+window.__TNL_SB = sb;   // 공통 모듈(tunel.js)도 이 클라이언트를 쓴다 — 둘이면 로그인이 꼬인다
 
 /* ── 행 → 앱 계정 모양 변환 ── */
 function rowToAcc(row, payname){
@@ -184,6 +185,7 @@ API.roundsList = async function(){
   const { data } = await sb.from('meetings').select('*')
     .eq('line', LINE).order('d', { ascending:true });
   return (data||[]).map(m => ({
+    id: m.id,
     r: m.r ?? null, d: m.d, dow: m.dow || '', s: m.s || '', e: m.e || '',
     h: (m.data && m.data.h) ?? null,
     st: m.status === 'open' ? 'open' : m.status === 'done' ? 'done'

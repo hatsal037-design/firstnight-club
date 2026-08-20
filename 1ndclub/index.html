@@ -573,7 +573,7 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=5"></script>
+<script src="../tunel.js?v=6"></script>
 <script src="api.js?v=nick1"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
@@ -1177,6 +1177,8 @@ function renderSched(){
         stub: myRsvp==='yes'
           ? `<img src="stamp_wax.png" alt="" onclick="event.stopPropagation();setRsvp('yes')"><div class="stx">첫밤行<small>${r.d.slice(5).replace('-','.')}</small></div><div class="sl">STAMPED</div>`
           : `<div class="holo2" onclick="event.stopPropagation();setRsvp('yes')">참석<i></i></div><div class="sl">STAMP HERE</div>` })
+      + TUNEL.signupBar({ id:r.id, d:r.d, dow:r.dow, s:r.s, e:r.e, r:r.r,
+          place:r.place, fee:r.fee, line_name:'첫밤 사망자 클럽', data:{ cap:r.cap } })
     : TUNEL.boardingTicket({ ...r, line_name:'첫밤 사망자 클럽' }, {
         card:'tk_card.jpg?v2', size:'sm', onclick:'toggleDetail(this)',
         stub: TUNEL.stubSoon() });
@@ -1211,6 +1213,7 @@ function renderSched(){
        </div>` : '';
   document.getElementById('schedList').innerHTML = html;
   renderPicked(); renderRsvp();
+  TUNEL.signupInit();   // 신청 바·팝업 — 허브와 같은 공통 모듈
 
   // 가장 가까운 앞으로의 일정이 화면 맨 위에 오도록 (더보기로 다시 그릴 때는 건너뛴다)
   if(!schedScrolled){
