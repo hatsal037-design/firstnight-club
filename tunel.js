@@ -30,7 +30,7 @@ const isPast = m => m.status === 'done' || m.status === 'cancelled'
                  || new Date(m.d) < today();
 
 /* ── 캐시 ── */
-let _lines = null, _me = null, _meDone = false;
+let _lines = null, _meP = null;
 
 const TUNEL = {
 
@@ -50,18 +50,21 @@ const TUNEL = {
   },
 
   /* 로그인 회원. 로그인 전이면 null */
-  async me(){
-    if(_meDone) return _me;
-    _meDone = true;
-    try{
-      const { data } = await sb().auth.getSession();
-      if(!data?.session) return (_me = null);
-      const { data: mid } = await sb().rpc('claim_my_account');
-      if(!mid) return (_me = null);
-      const { data: m } = await sb().from('members')
-        .select('id,nick,no,joined,role,is_admin').eq('id', mid).single();
-      return (_me = m || null);
-    }catch(e){ return (_me = null); }
+  me(){
+    /* 약속을 캐시한다 — 결과를 캐시하면 동시에 부르는 두 번째 화면이
+       아직 비어 있는 값을 받아 로그아웃으로 그려진다 (2026-08-20에 실제로 겪음) */
+    if(!_meP) _meP = (async () => {
+      try{
+        const { data } = await sb().auth.getSession();
+        if(!data?.session) return null;
+        const { data: mid } = await sb().rpc('claim_my_account');
+        if(!mid) return null;
+        const { data: m } = await sb().from('members')
+          .select('id,nick,no,joined,role,is_admin').eq('id', mid).single();
+        return m || null;
+      }catch(e){ return null; }
+    })();
+    return _meP;
   },
 
   /* 회차 조회
