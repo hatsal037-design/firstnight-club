@@ -815,7 +815,14 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   const oauthReturn = /access_token=|refresh_token=|code=|error=/.test(location.hash);
   go(oauthReturn ? 'plat' : location.hash.slice(1), false);
   /* 토큰 처리 후 세션이 잡히면 화면을 새로 그린다 (로그인 직후 상태 반영) */
-  if(oauthReturn) TUNEL.sb().auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_IN') setTimeout(()=>location.reload(), 400); });
+  if(oauthReturn) TUNEL.sb().auth.onAuthStateChange((ev)=>{
+    if(ev!=='SIGNED_IN') return;
+    if(sessionStorage.getItem('tnl_reloaded')){ sessionStorage.removeItem('tnl_reloaded'); return; }
+    sessionStorage.setItem('tnl_reloaded','1');
+    /* 토큰 해시를 지운 뒤 새로고침 — 남아 있으면 재처리 루프가 된다 */
+    history.replaceState(null,'', location.pathname + location.search + '#me');
+    setTimeout(()=>location.reload(), 250);
+  });
 
   /* 손가락으로 밀기 — 세로 스크롤과 충돌하지 않게 방향을 먼저 판정한다 */
   const W = () => track.getBoundingClientRect().width/3;
