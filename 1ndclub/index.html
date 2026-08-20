@@ -573,7 +573,7 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="api.js?v=cat1"></script>
+<script src="api.js?v=nick1"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=lines1"></script>
@@ -884,46 +884,29 @@ async function logout(){
   if(view==='members') setView('games');
 }
 function myAccountSheet(){
+  /* 계정 정보 변경(닉네임·사진)은 중앙역 마이페이지로 모았다 (2026-08-20).
+     여기는 보기 + 로그아웃만 */
   const ph = PFP[acc.uid];
   document.getElementById('modal').innerHTML = `
     <h2>내 정보</h2>
-    <div class="mdesc"><b style="color:var(--red-lite)">${acc.nick}</b> 으로 접속해 있어요.
-      닉네임을 바꿔도 활동 기록은 그대로 따라옵니다.</div>
-    <div class="fld"><label>프로필 사진</label>
-      <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
-        <div class="av" style="width:48px;height:48px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
-             font-size:19px;font-weight:700;color:#fff;font-family:'Do Hyeon',sans-serif;
-             ${ph?`background:url('${ph}') center/cover`:`background:${avColor(acc.uid)}`}">${ph?'':acc.nick[0]}</div>
-        <span class="b" style="flex:none;padding:9px 14px;font-size:12px;font-weight:600;background:var(--surface2);
-              border:1px solid var(--line);border-radius:5px;cursor:pointer" onclick="pickPfp()">📷 사진 바꾸기</span>
-        ${ph?`<span class="b" style="flex:none;padding:9px 14px;font-size:12px;font-weight:600;background:var(--surface2);
-              border:1px solid var(--line);border-radius:5px;cursor:pointer;color:var(--sub)" onclick="delPfp()">기본으로</span>`:''}
-      </div>
-      <div style="font-size:10.5px;color:var(--sub);margin-top:7px">참석자 목록과 프로필 카드에 동그랗게 보여요</div>
+    <div class="mdesc"><b style="color:var(--red-lite)">${acc.nick}</b> 으로 접속해 있어요.</div>
+    <div style="display:flex;align-items:center;gap:12px;margin:12px 0 4px">
+      <div class="av" style="width:48px;height:48px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+           font-size:19px;font-weight:700;color:#fff;font-family:'Do Hyeon',sans-serif;
+           ${ph?`background:url('${ph}') center/cover`:`background:${avColor(acc.uid)}`}">${ph?'':acc.nick[0]}</div>
+      <div style="font-size:11.5px;color:var(--sub);line-height:1.6">닉네임·프로필 사진은<br>중앙역 마이페이지에서 바꿀 수 있어요</div>
     </div>
-    <div style="margin-top:14px">
+    <div style="margin-top:10px">
       <div class="mrow"><div class="k">닉네임</div><div>${acc.nick}</div></div>
       <div class="mrow"><div class="k">톡방 닉</div><div>${acc.payname||'—'}</div></div>
       <div class="mrow"><div class="k">가입일</div><div>${(acc.joined||'').replace(/-/g,'.')}</div></div>
       ${acc.aliases?.length?`<div class="mrow"><div class="k">옛 닉네임</div><div>${acc.aliases.join(', ')}</div></div>`:''}
     </div>
-    <div class="fld"><label>닉네임 바꾸기</label><input id="rnIn" value="${acc.nick}"></div>
-    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
-    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="doRename()">닉네임 변경</button></div>
+    <div class="mbtns"><a class="mbtn" href="../#me" style="text-decoration:none;text-align:center">중앙역에서 정보 바꾸기 ›</a></div>
     <button class="mclose" onclick="logout()">로그아웃</button>
     <button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
 }
-async function doRename(){
-  const n=document.getElementById('rnIn').value.trim();
-  if(!n) return joinErr('닉네임을 적어주세요.');
-  if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자).');
-  if(ADMINS.includes(n) && !isAdmin()) return joinErr('그 닉네임은 관리자 전용이에요.');
-  busy('변경 중');
-  try{ acc = await API.rename(acc, n); renderMe(); closeM(); if(view==='me') renderMePage(); }
-  catch(e){ joinErr(e.message); }
-}
-
 /* ══ 뷰 전환 ══ */
 function setView(v, skipHash){
   if(v==='members' && !isStaff()) v='games';
@@ -2037,7 +2020,7 @@ function renderMePage(){
 
     <div class="notice">닉네임을 바꿔도 활동 기록은 그대로 따라옵니다. 계정은 내 아이디로 구분되고,
       예전에 쓰던 닉네임도 같이 기억해뒀다가 대조하거든요.</div>
-    <div style="margin:14px"><button class="abtn ghost" onclick="askNick()">내 정보 · 닉네임 변경</button></div>
+    <div style="margin:14px"><button class="abtn ghost" onclick="askNick()">내 정보</button></div>
     <div class="notice" style="border-color:var(--red)">📲 <b style="color:var(--red-lite)">홈 화면에 추가</b>해두면 앱처럼 바로 열려요.<br>
       <span style="font-size:11.5px">갤럭시는 크롬 메뉴 → "홈 화면에 추가", 아이폰은 사파리 공유 → "홈 화면에 추가".
       나중에 회차 알림도 여기로 받을 수 있게 준비 중이에요.</span></div>

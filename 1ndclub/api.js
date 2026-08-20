@@ -68,13 +68,12 @@ API.save = async function(acc){
   throwErr(error, '저장에 실패했어요');
   return acc;
 };
+/* 닉변은 서버 RPC 로만 — 6개월 제한과 운영진 알림을 서버가 강제한다.
+   (2026-08-20 정책. members.nick 직접 update 권한은 회수됨) */
 API.rename = async function(acc, newNick){
-  if(newNick === acc.nick) return acc;
-  if(await API.nickTaken(newNick)) throw new Error(`'${newNick}'은(는) 이미 쓰고 있는 닉네임이에요.`);
-  const old = acc.nick;
-  if(old && !acc.aliases.includes(old)) acc.aliases.unshift(old);
-  acc.nick = newNick;
-  return await API.save(acc);
+  const { error } = await sb.rpc('rename_me', { p_nick: newNick });
+  throwErr(error, '닉네임 변경 실패');
+  return await API.get(acc.uid);
 };
 API.list = async function(){
   const { data } = await T('members').select('*, member_private(payname)').order('no');
