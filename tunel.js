@@ -136,6 +136,7 @@ const TUNEL = {
   /* 통합 일정 티켓 한 장. 노선 스킨은 lines.skin 이 정한다 */
   ticket(m, opt = {}){
     const past = opt.past ?? isPast(m);
+    const big  = !past && m.status === 'open';   // 모집중은 규격 일반(150) 크기로
     const tbd  = m.data?.tbd === true;
     const when = tbd ? '날짜 조율 중'
       : `${+m.d.slice(5,7)}/${+m.d.slice(8)} <small style="font-size:12px">(${m.dow||''})</small>`;
@@ -144,7 +145,7 @@ const TUNEL = {
     const place = m.place || '';
     const att = past && m.att_count ? ` · ${m.att_count}명` : '';
     return `
-    <a class="tkt ${m.line_skin}${past ? ' past' : ''}" href="${href}">
+    <a class="tkt ${m.line_skin}${past ? ' past' : ''}${big ? ' lg' : ''}" href="${href}">
       <span class="tbody">
         <span class="tno">PLATFORM ${String(m.line_no).padStart(2,'0')}${past ? ' · USED' : ''}</span>
         <span class="trow">
