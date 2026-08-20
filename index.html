@@ -1025,9 +1025,12 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     const fresh = ids.filter(id=>!reads.has(id));
     if(!fresh.length || !me) return;
     fresh.forEach(id=>reads.add(id));
-    try{ await sbI.from('message_reads').upsert(
-      fresh.map(id=>({message_id:id, member_id:me.id})), {onConflict:'message_id,member_id'});
-    }catch(e){}
+    try{
+      const { error } = await sbI.from('message_reads').upsert(
+        fresh.map(id=>({message_id:id, member_id:me.id})),
+        { onConflict:'message_id,member_id', ignoreDuplicates:true });   // update 권한 없이 insert 만
+      if(error) console.warn('읽음 저장 실패', error);
+    }catch(e){ console.warn('읽음 저장 실패', e); }
     updateDot();
   }
   const lineName = id => lines.find(l=>l.id===id)?.name || '투넬';
