@@ -180,33 +180,93 @@ const TUNEL = {
          href    있으면 <a> 링크 티켓
          onclick 있으면 <div> + onclick (첫밤 아코디언용)
        })                                                          */
+  /* ── 확정 티켓 스킨 5종 (2026-08-20 확정본 이식 — 시안/티켓_*3크기*.html)
+     pass  = 보딩패스형 (첫밤·놀이터·찰칵) · score = 스코어카드 (올림픽) · metal = 각인 메탈 (방구석)
+     새 노선 확정본이 나오면 여기 한 줄 더하면 어디서든 티켓이 뜬다 */
+  _skins: {
+    botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2',
+             ink:'#ECEEF2', lbl:'#B8A88E', rFont:"'Do Hyeon',sans-serif", rMd:21, rSm:16, acc:'#E8756A',
+             perf:'rgba(0,0,0,.55)' },
+    play:  { t:'pass', short:'놀이터', card:'/tk/TK_play.jpg', cardSm:'/tk/TK_play_slim.jpg',
+             ink:'#1d4a26', lbl:'#8a7a1a', rFont:"'Jua',sans-serif", rMd:21, rSm:16, acc:'#0e6b2b',
+             perf:'rgba(0,0,0,.38)' },
+    snap:  { t:'pass', short:'나들이', card:'/tk/TK_sopung.jpg', cardSm:'/tk/TK_sopung_slim.jpg',
+             ink:'#6B4A52', lbl:'#C4788F', rFont:"'Nanum Pen Script',cursive", rMd:27, rSm:21, acc:'#D9407A',
+             perf:'rgba(140,80,100,.4)' },
+    sport: { t:'score', card:'/v/tk_sport.webp', cardSm:'/v/tk_sport_slim.webp' },
+    cyber: { t:'metal', card:'/v/tk_cyber_hairline.webp' }
+  },
+  hasSkin(line){ return !!TUNEL._skins[line]; },
+
   boardingTicket(m, opt = {}){
     TUNEL._ticketCSS();
-    const sm    = opt.size === 'sm';      // 슬림 358×100 — 예정 회차용 (당일 정보 숨김)
+    const sk    = TUNEL._skins[m.line] || TUNEL._skins.botc;
+    const sm    = opt.size === 'sm';      // 슬림 358×100 — 예정·지난 회차용 (당일 정보 숨김)
     const tbd   = m.data?.tbd === true;
     const dowEN = {'월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI','토':'SAT','일':'SUN'}[m.dow] || m.dow || '';
-    const card  = opt.card ?? `${m.line_path || ''}tk_card.jpg?v2`;
-    const cls   = `btk${sm ? ' sm' : ''}`;
-    const tag   = opt.href ? `<a class="${cls}" href="${opt.href}">`
+    const card  = opt.card ?? (sm && sk.cardSm ? sk.cardSm : sk.card);
+    const no    = String(m.line_no || '').padStart(2,'0');
+    const dt    = tbd ? '미정' : `${+m.d.slice(5,7)}/${+m.d.slice(8)} ${dowEN}`;
+    const open_ = (cls) => opt.href ? `<a class="${cls}" href="${opt.href}">`
                 : `<div class="${cls}"${opt.onclick ? ` onclick="${opt.onclick}"` : ''}>`;
+    const close_ = opt.href ? '</a>' : '</div>';
+
+    if(sk.t === 'score'){   /* 우리끼리 올림픽 — 스코어카드 */
+      return `${open_(`btk score${sm ? ' sm' : ''}`)}
+        <img src="${card}" alt="">
+        <div class="sov"></div><div class="sperf"></div>
+        <div class="in">
+          <div class="no">PLATFORM ${no}</div>
+          <div class="snm">${m.line_name || ''}</div>
+          ${sm ? `<div class="sub2">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
+               : `<div class="g sg">
+                    <div><i>DATE</i><b>${dt}</b></div>
+                    <div><i>TIME</i><b>${m.s || ''}</b></div>
+                    <div><i>PLACE</i><b>${m.place || ''}</b></div>
+                  </div>`}
+        </div>
+        <div class="stub s2">${sm ? `<div class="stamp">예정</div>`
+          : `<div class="stamp">출전</div><div class="ssl">STAMP HERE</div>`}</div>
+      ${close_}`;
+    }
+
+    if(sk.t === 'metal'){   /* 방구석 디스코드 — 헤어라인 메탈 + 레이저 각인 */
+      const code = m.data?.code;
+      return `${open_(`btk metal${sm ? ' sm' : ''}`)}
+        <img src="${card}" alt="">
+        <div class="gl"></div>
+        <div class="etch">
+          <div class="mlbl">PLATFORM ${no}${m.status === 'open' ? ' · OPEN' : ''}</div>
+          <div class="rt">${m.line_name || ''}</div>
+          ${sm ? '' : `<div class="evt">${TUNEL.title(m)}${m.place ? ' · ' + m.place : ''}</div>`}
+          <div class="when">${tbd ? '날짜 조율 중' : `${dt}　${m.s || ''}`}</div>
+        </div>
+        <div class="laser"></div>
+        <div class="stub m2">${code ? `<div class="code">${code}</div><div class="mstx">TODAY'S CODE</div>`
+                                    : `<div class="code" style="opacity:.55">····</div><div class="mstx">CODE SOON</div>`}</div>
+      ${close_}`;
+    }
+
+    /* 보딩패스형 (첫밤·놀이터·찰칵) */
     const body  = sm
       ? `<div class="nm">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
       : `<div class="nm">${TUNEL.title(m)} · ${m.line_name || ''}</div>
         <div class="g">
-          <div><i>DATE</i><b>${tbd ? '미정' : `${+m.d.slice(5,7)}/${+m.d.slice(8)} ${dowEN}`}</b></div>
+          <div><i>DATE</i><b>${dt}</b></div>
           <div><i>TIME</i><b>${m.s || ''}</b></div>
           <div><i>PLACE</i><b>${m.place || ''}</b></div>
         </div>`;
-    return `${tag}
+    return `${open_(`btk${sm ? ' sm' : ''}`)}
       <img src="${card}" alt="">
-      <div class="perf"></div>
-      <div class="ov">
-        <div class="lbl">TÜNEL BOARDING PASS</div>
-        <div class="route"><b>일상</b><span class="d"></span><b style="color:#E8756A">${m.line_short || '첫밤'}</b></div>
+      <div class="perf" style="background:repeating-linear-gradient(180deg,${sk.perf} 0 5px,transparent 5px 10px)"></div>
+      <div class="ov" style="color:${sk.ink}">
+        <div class="lbl" style="color:${sk.lbl}">TÜNEL BOARDING PASS</div>
+        <div class="route" style="font-family:${sk.rFont};font-size:${sm ? sk.rSm : sk.rMd}px">
+          <b>일상</b><span class="d"></span><b style="color:${sk.acc}">${m.data?.dest || m.line_short || sk.short}</b></div>
         ${body}
         <div class="stub">${opt.stub || ''}</div>
       </div>
-    ${opt.href ? '</a>' : '</div>'}`;
+    ${close_}`;
   },
 
   /* 티켓 상세 아코디언 — 주소·메모·참가비·2차 + 지도·캘린더.
@@ -327,7 +387,7 @@ div.btk{cursor:pointer}
 .btk .lbl{position:absolute;left:20px;top:14px;font-size:7.5px;letter-spacing:2.5px;
   font-family:'Cinzel',serif;font-weight:800;color:#B8A88E}
 .btk .route{position:absolute;left:20px;top:34px;display:flex;align-items:baseline;gap:8px;width:200px}
-.btk .route b{font-family:'Do Hyeon',sans-serif;font-weight:400;font-size:21px}
+.btk .route b{font-weight:400}
 .btk .route .d{flex:1;border-bottom:2px dotted currentColor;opacity:.3;position:relative;top:-5px}
 .btk .nm{position:absolute;left:20px;top:72px;font-size:10.5px;opacity:.8}
 .btk .g{position:absolute;left:20px;top:100px;display:grid;gap:1px 9px;width:222px;
@@ -352,7 +412,6 @@ div.btk{cursor:pointer}
 .btk.sm{height:100px}
 .btk.sm .lbl{top:15px}
 .btk.sm .route{top:34px}
-.btk.sm .route b{font-size:16px}
 .btk.sm .nm{top:64px;font-size:9.5px}
 .btk .soon{font-family:'Do Hyeon',sans-serif;font-size:14px;letter-spacing:5px;text-indent:5px;
   color:rgba(236,238,242,.55);text-shadow:0 1px 1px rgba(70,0,6,.6)}
@@ -370,6 +429,50 @@ div.btk{cursor:pointer}
 .tnlx .xr b{color:#E8C36B}
 .tnlx .xr2{font-size:11px;opacity:.85}
 div.btk .stub{cursor:pointer}
+/* ── 스코어카드 (우리끼리 올림픽) ── */
+.btk.score{color:#0F1B33}
+.btk.score .sov{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg, rgba(247,246,240,.9) 0 58%, rgba(247,246,240,.55) 78%, rgba(247,246,240,.35) 100%)}
+.btk.score .sperf{position:absolute;left:258px;top:0;bottom:0;width:2px;
+  background:repeating-linear-gradient(180deg,rgba(46,100,216,.5) 0 5px,transparent 5px 10px)}
+.btk.score .in{position:absolute;inset:0;z-index:2;padding:13px 16px}
+.btk.score .no{font-family:'Nanum Gothic Coding',monospace;font-size:8.5px;letter-spacing:2px;color:#5B7BB8}
+.btk.score .snm{font-family:'Gugi',cursive;letter-spacing:.5px;color:#12224A;font-size:23px;margin-top:5px}
+.btk.score.sm .snm{font-size:17px;margin-top:4px}
+.btk.score .sub2{font-size:10.5px;color:#3B4A6B;margin-top:5px}
+.btk.score .sg{position:static;margin-top:12px;width:214px;grid-template-columns:1fr 1fr 1fr;gap:1px 10px}
+.btk.score .sg i{color:#5B7BB8;font-size:7.5px;opacity:1}
+.btk.score .sg b{color:#12224A;font-size:12.5px}
+.btk.score .stub.s2{gap:5px}
+.btk.score .stamp{width:60px;height:60px;border-radius:50%;border:2.5px dashed rgba(46,100,216,.55);color:#1B3C86;
+  display:grid;place-items:center;font-weight:800;font-size:11px;transform:rotate(-8deg);text-align:center;line-height:1.2}
+.btk.score.sm .stamp{width:48px;height:48px;font-size:10px}
+.btk.score .ssl{font-size:7px;letter-spacing:1.5px;color:#5B7BB8;font-weight:800}
+/* ── 각인 메탈 (방구석 디스코드) ── */
+.btk.metal{background:#2b2f33}
+.btk.metal>img{opacity:.95}
+.btk.metal .gl{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(104deg,transparent 30%,rgba(255,255,255,.16) 45%,transparent 58%)}
+.btk.metal .etch{position:absolute;inset:0;color:#cfd6db}
+.btk.metal .mlbl{position:absolute;left:20px;top:14px;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2.5px;
+  color:#8b949b;text-shadow:0 1px 0 rgba(255,255,255,.7),0 -1px 1px rgba(0,0,0,.5)}
+.btk.metal .rt{position:absolute;left:20px;top:31px;font-family:'IBM Plex Sans KR',sans-serif;font-weight:200;letter-spacing:3px;
+  font-size:23px;color:#5e666d;text-shadow:0 1px 0 rgba(255,255,255,.8),0 -1px 1px rgba(0,0,0,.6)}
+.btk.metal.sm .rt{top:29px;font-size:17px}
+.btk.metal .evt{position:absolute;left:20px;top:74px;font-family:'IBM Plex Sans KR',sans-serif;font-weight:300;
+  letter-spacing:.5px;font-size:10px;color:#6d757c;text-shadow:0 1px 0 rgba(255,255,255,.65),0 -1px 1px rgba(0,0,0,.45)}
+.btk.metal .when{position:absolute;left:20px;bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-weight:300;
+  letter-spacing:.5px;font-size:10px;color:#6d757c;text-shadow:0 1px 0 rgba(255,255,255,.65),0 -1px 1px rgba(0,0,0,.45)}
+.btk.metal.sm .when{font-size:9.5px;bottom:12px}
+.btk.metal .laser{position:absolute;left:258px;top:0;bottom:0;width:2px;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.45) 0 4px,rgba(255,255,255,.5) 4px 5px,transparent 5px 9px)}
+.btk.metal .stub.m2{gap:5px}
+.btk.metal .code{font-family:'IBM Plex Mono',monospace;color:#2f9e7e;letter-spacing:2px;font-size:14px;
+  text-shadow:0 0 6px rgba(47,158,126,.45),0 1px 0 rgba(255,255,255,.5);
+  border:1px solid rgba(47,158,126,.5);padding:6px 8px}
+.btk.metal.sm .code{font-size:11px;padding:4px 6px}
+.btk.metal .mstx{font-family:'IBM Plex Mono',monospace;font-size:8px;color:#2f9e7e;
+  text-shadow:0 1px 0 rgba(255,255,255,.4);border:1px solid rgba(47,158,126,.4);padding:5px 4px}
 @keyframes tnlshim{0%{transform:translateX(-70%)}100%{transform:translateX(70%)}}
 @media (prefers-reduced-motion:reduce){.btk .holo2 i{animation:none}}`;
     document.head.appendChild(st);

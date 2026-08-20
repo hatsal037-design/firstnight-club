@@ -19,7 +19,7 @@
 <meta property="og:url" content="https://tunel.kr/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Cinzel:wght@600;800&family=Do+Hyeon&family=Jua&family=Bagel+Fat+One&family=Black+Han+Sans&family=Dongle:wght@700&family=Gugi&family=Nanum+Pen+Script&family=Song+Myung&family=Nanum+Gothic+Coding&family=Gamja+Flower&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&family=Cinzel:wght@600;800&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@200;300&family=IBM+Plex+Mono&family=Do+Hyeon&family=Jua&family=Bagel+Fat+One&family=Black+Han+Sans&family=Dongle:wght@700&family=Gugi&family=Nanum+Pen+Script&family=Song+Myung&family=Nanum+Gothic+Coding&family=Gamja+Flower&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
 <style>
@@ -800,7 +800,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=9"></script>
+<script src="tunel.js?v=10"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -930,9 +930,10 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
         ? TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', stub: TUNEL.stubOpen() })
         : TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)', size:'sm', stub: TUNEL.stubSoon() });
     upEl.innerHTML = up.map(m =>
-      (m.line==='botc' ? rdHTML(m) : TUNEL.ticket(m))
+      (TUNEL.hasSkin(m.line) ? rdHTML(m) : TUNEL.ticket(m))
       + (m.status==='open' ? TUNEL.signupBar(m) : '')
-      + (m.line==='botc' ? TUNEL.ticketDetail(m, { more: m.line_path, moreLabel: '첫밤 페이지' }) : '')).join('')
+      + (TUNEL.hasSkin(m.line) ? TUNEL.ticketDetail(m,
+          { more: m.line_path, moreLabel: m.line==='botc' ? '첫밤 페이지' : '노선 페이지' }) : '')).join('')
       || '<p class="bnote" style="text-align:center">예정된 모임이 아직 없어요</p>';
     document.getElementById('pastCnt').textContent = past.length + '개';
     pastEl.innerHTML = past.map(m => TUNEL.ticket(m, {past:true})).join('');
