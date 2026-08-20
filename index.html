@@ -484,20 +484,20 @@ main{overflow:hidden;padding-left:0;padding-right:0}
 .th .arrow{margin-left:auto;font-family:'Song Myung',serif;font-size:12px;color:#D69A6B}
 
 /* ═══ 5 운동 — 경기장 전광판 ═══ */
-.sc{background:#0F1B33;border:2px solid #2E64D8;border-radius:5px;overflow:hidden;
-  box-shadow:0 6px 16px rgba(15,27,51,.35)}
-.sc .bar{background:#2E64D8;padding:5px 13px;display:flex;align-items:center;gap:8px}
-.sc .bar b{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:2.5px;color:#fff;margin-left:auto}
-.sc .bar .dot{width:6px;height:6px;border-radius:50%;background:#FFE45C;
-  box-shadow:0 0 6px #FFE45C}
-.sc .body{padding:13px 15px 14px;position:relative;
-  background-image:radial-gradient(rgba(255,255,255,.055) 1px, transparent 1px);background-size:4px 4px}
-.sc .nm{font-family:'Gugi',cursive;font-size:24px;color:#EAF1FF;letter-spacing:.5px}
-.sc .ds{font-size:11.5px;color:#8FA6CE;margin-top:8px;line-height:1.6}
-.sc .foot{display:flex;align-items:center;margin-top:12px}
+.sc{position:relative;height:158px;border-radius:6px;overflow:hidden;
+  box-shadow:0 6px 14px rgba(0,0,0,.4)}
+.sc .bgp{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sc .scrim{position:absolute;inset:0;
+  background:linear-gradient(100deg, rgba(16,28,66,.55) 0%, rgba(16,28,66,.3) 45%, rgba(16,28,66,.05) 70%, transparent 100%)}
+.sc .in{position:absolute;inset:0;padding:14px 16px 12px;display:flex;flex-direction:column;
+  color:#F6F4EC;text-shadow:0 1px 3px rgba(6,12,40,.6)}
+.sc .no{font-family:'Nanum Gothic Coding',monospace;font-size:9px;letter-spacing:2.5px;color:#BFCBEE}
+.sc .nm{font-family:'Gugi',cursive;font-size:24px;margin-top:3px;color:#FFF}
+.sc .ds{font-size:11.5px;margin-top:7px;line-height:1.6;width:57%;color:#DDE4F6}
+.sc .foot{display:flex;align-items:center;margin-top:auto}
 .sc .st{font-family:'Nanum Gothic Coding',monospace;font-size:9.5px;letter-spacing:1.5px;
-  background:#FFE45C;color:#0F1B33;padding:4px 9px;font-weight:700}
-.sc .arrow{margin-left:auto;font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:#5B7BB8}
+  background:#F2B33D;color:#1E2340;padding:4px 9px;font-weight:700;text-shadow:none}
+.sc .arrow{margin-left:auto;font-family:'Nanum Gothic Coding',monospace;font-size:10px;color:#BFCBEE}
 
 /* ═══ 6 도서관 — 대출카드 ═══ */
 .lb{background:#FBFBF9;border:1px solid #D8DED6;border-radius:3px;overflow:hidden;
@@ -682,8 +682,10 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   <a class="card soon">
     <img class="veh" src="v/A5_sport.webp" alt="">
     <div class="sc">
-      <div class="bar"><b>PLATFORM 05</b><span class="dot"></span></div>
-      <div class="body">
+      <img class="bgp" src="v/card_sport.jpg" alt="">
+      <div class="scrim"></div>
+      <div class="in">
+        <div class="no">PLATFORM 05</div>
         <div class="nm">우리끼리 올림픽</div>
         <div class="ds">회차마다 종목이 바뀝니다. 러닝·배드민턴·풋살·운동회, 못해도 나와요</div>
         <div class="foot"><span class="st">개회준비</span><span class="arrow">출전 ›</span></div>
