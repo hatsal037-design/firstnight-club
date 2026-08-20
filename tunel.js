@@ -213,28 +213,56 @@ const TUNEL = {
      티켓의 onclick 에 TUNEL.ticketToggle(this) 를 걸고,
      티켓(과 신청 바) 뒤에 이 HTML 을 붙이면 된다 */
   ticketDetail(m, opt = {}){
+    TUNEL._dt[m.id] = m;
     const mapq = m.data?.mapq || m.addr || m.place || '';
-    const cal = (() => {
-      if(!m.d || !m.s) return '';
-      const st = t => m.d.replace(/-/g,'') + 'T' + String(t||'').replace(':','') + '00';
-      const p = new URLSearchParams({ action:'TEMPLATE',
-        text:`${m.line_name || ''} ${TUNEL.title(m)}`.trim(),
-        dates:`${st(m.s)}/${st(m.e || m.s)}`,
+    const st = (d,t) => d.replace(/-/g,'') + 'T' + String(t||'').replace(':','') + '00';
+    /* 구글 캘린더 링크 — 첫밤 googleCal() 과 같은 구성 */
+    const gc = (!m.d || !m.s) ? '' :
+      'https://calendar.google.com/calendar/render?' + new URLSearchParams({ action:'TEMPLATE',
+        text:`${m.line_name || ''}${m.r ? ` ${m.r}회차` : ''}`.trim() || TUNEL.title(m),
+        dates:`${st(m.d, m.s)}/${st(m.d, m.e || m.s)}`,
         details:[m.place, m.fee ? `참가비 ${m.fee}` : ''].filter(Boolean).join('\n'),
-        location:m.addr || m.place || '', ctz:'Asia/Seoul' });
-      return 'https://calendar.google.com/calendar/render?' + p.toString();
-    })();
+        location:m.addr || m.place || '', ctz:'Asia/Seoul' }).toString();
     return `<div class="tnlx">
       ${m.addr ? `<div class="xr">📍 ${m.addr}</div>` : ''}
       ${m.memo ? `<div class="xn">${m.memo}</div>` : ''}
       ${m.fee ? `<div class="xr">참가비 ${m.fee}</div>` : ''}
       ${m.after ? `<div class="xr">2차 · ${m.after} (자율)</div>` : ''}
+      ${m.status === 'open' ? `<div class="xapl" data-mid="${m.id}"></div>` : ''}
       <div class="xb">
         ${mapq ? `<a href="https://map.naver.com/p/search/${encodeURIComponent(mapq)}" target="_blank" rel="noopener">📍 지도</a>` : ''}
-        ${cal ? `<a href="${cal}" target="_blank" rel="noopener">📅 캘린더에 저장</a>` : ''}
+        ${m.d && m.s ? `<a onclick="TUNEL.calSave('${m.id}')">📅 캘린더에 저장</a>` : ''}
+        ${gc ? `<a href="${gc}" target="_blank" rel="noopener">구글 캘린더</a>` : ''}
         ${opt.more ? `<a href="${opt.more}">${opt.moreLabel || '노선 페이지'} ›</a>` : ''}
       </div>
     </div>`;
+  },
+  _dt: {},
+
+  /* 캘린더에 저장 (.ics 내려받기) — 첫밤 saveCal() 그대로 */
+  calSave(mid){
+    const m = TUNEL._dt[mid]; if(!m || !m.d || !m.s) return;
+    const st = (d,t) => d.replace(/-/g,'') + 'T' + String(t).replace(':','') + '00';
+    const title = `${m.line_name || ''}${m.r ? ` ${m.r}회차` : ''}`.trim() || TUNEL.title(m);
+    const desc = [m.place, m.addr, m.fee ? `참가비 ${m.fee}` : '', m.after ? `2차 ${m.after} (자율)` : '']
+      .filter(Boolean).join('\\n');
+    const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//TUNEL//KR','CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      `UID:tunel-${m.line || 'x'}-${m.d}@tunel.kr`,
+      `DTSTAMP:${st(new Date().toISOString().slice(0,10), '00:00')}Z`,
+      `DTSTART;TZID=Asia/Seoul:${st(m.d, m.s)}`,
+      `DTEND;TZID=Asia/Seoul:${st(m.d, m.e || m.s)}`,
+      `SUMMARY:${title}`,
+      `LOCATION:${(m.addr || m.place || '').replace(/,/g,'\\,')}`,
+      `DESCRIPTION:${desc}`,
+      'BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY',`DESCRIPTION:내일 ${title}`,'END:VALARM',
+      'END:VEVENT','END:VCALENDAR'].join('\r\n');
+    const blob = new Blob([ics], { type:'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${(m.line_name || 'tunel').replace(/\s/g,'')}_${m.d}.ics`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
   },
 
   /* 티켓을 누르면 바로 다음의 .tnlx 를 여닫는다 (신청 바는 건너뛴다) */
@@ -244,7 +272,30 @@ const TUNEL = {
     if(!x) return;
     const willOpen = !x.classList.contains('show');
     document.querySelectorAll('.tnlx.show').forEach(o => o.classList.remove('show'));
-    if(willOpen) x.classList.add('show');
+    if(willOpen){ x.classList.add('show'); TUNEL._fillApplicants(x); }
+  },
+
+  /* 상세를 열면 신청 현황(확정·입금/신청·대기 명단)을 채운다 — 회원에게만 보인다 */
+  async _fillApplicants(x){
+    const ap = x.querySelector('.xapl');
+    if(!ap || ap.dataset.done) return;
+    ap.dataset.done = '1';
+    const me = await TUNEL.me();
+    if(!me){ ap.innerHTML = ''; return; }
+    ap.innerHTML = '<div class="xr">🎟 신청 현황 불러오는 중…</div>';
+    try{
+      const list = await TUNEL.signupList(ap.dataset.mid);
+      const grp = { confirmed:[], paid:[], applied:[], waitlist:[] };
+      list.forEach(r => { (grp[r.status]||[]).push(r); });
+      const nx = a => a.map(p => p.nick).join(' · ');
+      const going = grp.confirmed.length + grp.paid.length + grp.applied.length;
+      ap.innerHTML = list.length
+        ? `<div class="xr">🎟 신청 <b>${going}명</b>${grp.waitlist.length ? ` · 대기 ${grp.waitlist.length}명` : ''}</div>`
+          + (grp.confirmed.length ? `<div class="xr xr2">확정 — ${nx(grp.confirmed)}</div>` : '')
+          + ((grp.paid.length + grp.applied.length) ? `<div class="xr xr2">입금·신청 중 — ${nx(grp.paid.concat(grp.applied))}</div>` : '')
+          + (grp.waitlist.length ? `<div class="xr xr2">대기 — ${nx(grp.waitlist)}</div>` : '')
+        : '<div class="xr">🎟 아직 신청자가 없어요 — 첫 번째로 신청해보세요</div>';
+    }catch(e){ ap.innerHTML = ''; }
   },
 
   /* 스터브 기성품 — 페이지들이 똑같이 쓰라고 여기 둔다 */
@@ -314,7 +365,10 @@ div.btk{cursor:pointer}
   border-radius:7px;padding:8px 10px;margin:7px 0}
 .tnlx .xb{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .tnlx .xb a{border:1px solid #4A453E;background:rgba(255,255,255,.03);color:#CFC7B8;
-  border-radius:7px;padding:7px 11px;font-size:11.5px;text-decoration:none}
+  border-radius:7px;padding:7px 11px;font-size:11.5px;text-decoration:none;cursor:pointer}
+.tnlx .xapl{margin-top:8px;padding-top:8px;border-top:1px solid rgba(244,235,217,.08)}
+.tnlx .xr b{color:#E8C36B}
+.tnlx .xr2{font-size:11px;opacity:.85}
 div.btk .stub{cursor:pointer}
 @keyframes tnlshim{0%{transform:translateX(-70%)}100%{transform:translateX(70%)}}
 @media (prefers-reduced-motion:reduce){.btk .holo2 i{animation:none}}`;
