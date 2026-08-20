@@ -573,7 +573,7 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=4"></script>
+<script src="../tunel.js?v=5"></script>
 <script src="api.js?v=nick1"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
@@ -1177,18 +1177,10 @@ function renderSched(){
         stub: myRsvp==='yes'
           ? `<img src="stamp_wax.png" alt="" onclick="event.stopPropagation();setRsvp('yes')"><div class="stx">첫밤行<small>${r.d.slice(5).replace('-','.')}</small></div><div class="sl">STAMPED</div>`
           : `<div class="holo2" onclick="event.stopPropagation();setRsvp('yes')">참석<i></i></div><div class="sl">STAMP HERE</div>` })
-    : `<div class="rd ${r.st}" onclick="toggleDetail(this)">
-      <div class="stub"><div class="lb">예정</div></div>
-      <span class="bpl">TÜNEL BOARDING PASS</span>
-      <div class="top">
-        <span class="dt">${fmt(r.d)} <span style="font-size:14px">(${r.dow})</span></span>
-        <span class="tm">${r.s}~${r.e} · ${r.h}시간</span>
-        <span class="st ${r.st}">예정</span>
-      </div>
-      <div class="pl">${r.place}${r.cap?` · 최대 ${r.cap}명`:''}</div>
-      <span class="expand">›</span>
-    </div>
-    <div class="rdx${r.st==='open'?' open':''}">
+    : TUNEL.boardingTicket({ ...r, line_name:'첫밤 사망자 클럽' }, {
+        card:'tk_card.jpg?v2', size:'sm', onclick:'toggleDetail(this)',
+        stub: TUNEL.stubSoon() });
+    html+=`<div class="rdx${r.st==='open'?' open':''}">
       ${r.addr?`<div class="ad">${r.addr}</div>`:''}
       ${r.note?`<div class="nt">${r.note}</div>`:''}
       ${r.st==='open'&&r.fee?`<div class="ad" style="margin-top:6px">참가비 ${r.fee}</div>`:''}

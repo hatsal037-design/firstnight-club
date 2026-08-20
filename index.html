@@ -851,7 +851,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=4"></script>
+<script src="tunel.js?v=5"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -1203,9 +1203,12 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
     const past = rows.filter(TUNEL.isPast);
     rows.forEach(m => meetingsById[m.id] = m);
-    const rdHTML = m => TUNEL.boardingTicket(m, { href: m.line_path, stub: TUNEL.stubOpen() });
+    const rdHTML = m =>
+      m.status==='open'
+        ? TUNEL.boardingTicket(m, { href: m.line_path, stub: TUNEL.stubOpen() })
+        : TUNEL.boardingTicket(m, { href: m.line_path, size:'sm', stub: TUNEL.stubSoon() });
     upEl.innerHTML = up.map(m =>
-      (m.status==='open' && m.line==='botc' ? rdHTML(m) : TUNEL.ticket(m))
+      (m.line==='botc' ? rdHTML(m) : TUNEL.ticket(m))
       + (m.status==='open' ? barHTML(m) : '')).join('')
       || '<p class="bnote" style="text-align:center">예정된 모임이 아직 없어요</p>';
     document.getElementById('pastCnt').textContent = past.length + '개';

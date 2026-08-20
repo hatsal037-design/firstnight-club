@@ -179,22 +179,28 @@ const TUNEL = {
        })                                                          */
   boardingTicket(m, opt = {}){
     TUNEL._ticketCSS();
+    const sm    = opt.size === 'sm';      // 슬림 358×100 — 예정 회차용 (당일 정보 숨김)
+    const tbd   = m.data?.tbd === true;
     const dowEN = {'월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI','토':'SAT','일':'SUN'}[m.dow] || m.dow || '';
     const card  = opt.card ?? `${m.line_path || ''}tk_card.jpg?v2`;
-    const tag   = opt.href ? `<a class="btk" href="${opt.href}">`
-                : `<div class="btk"${opt.onclick ? ` onclick="${opt.onclick}"` : ''}>`;
+    const cls   = `btk${sm ? ' sm' : ''}`;
+    const tag   = opt.href ? `<a class="${cls}" href="${opt.href}">`
+                : `<div class="${cls}"${opt.onclick ? ` onclick="${opt.onclick}"` : ''}>`;
+    const body  = sm
+      ? `<div class="nm">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
+      : `<div class="nm">${TUNEL.title(m)} · ${m.line_name || ''}</div>
+        <div class="g">
+          <div><i>DATE</i><b>${tbd ? '미정' : `${+m.d.slice(5,7)}/${+m.d.slice(8)} ${dowEN}`}</b></div>
+          <div><i>TIME</i><b>${m.s || ''}</b></div>
+          <div><i>PLACE</i><b>${m.place || ''}</b></div>
+        </div>`;
     return `${tag}
       <img src="${card}" alt="">
       <div class="perf"></div>
       <div class="ov">
         <div class="lbl">TÜNEL BOARDING PASS</div>
         <div class="route"><b>일상</b><span class="d"></span><b style="color:#E8756A">${m.line_short || '첫밤'}</b></div>
-        <div class="nm">${TUNEL.title(m)} · ${m.line_name || ''}</div>
-        <div class="g">
-          <div><i>DATE</i><b>${+m.d.slice(5,7)}/${+m.d.slice(8)} ${dowEN}</b></div>
-          <div><i>TIME</i><b>${m.s || ''}</b></div>
-          <div><i>PLACE</i><b>${m.place || ''}</b></div>
-        </div>
+        ${body}
         <div class="stub">${opt.stub || ''}</div>
       </div>
     ${opt.href ? '</a>' : '</div>'}`;
@@ -203,6 +209,9 @@ const TUNEL = {
   /* 스터브 기성품 — 페이지들이 똑같이 쓰라고 여기 둔다 */
   stubOpen(){
     return `<div class="holo2">모집중<i></i></div><div class="sl">BOARDING</div>`;
+  },
+  stubSoon(){
+    return `<div class="soon">예정</div>`;
   },
 
   /* 티켓 CSS 주입 — 페이지마다 복사하지 않고 여기 한 벌만.
@@ -248,6 +257,13 @@ div.btk{cursor:pointer}
 .btk .holo2 i{position:absolute;inset:0;font-style:normal;
   background:linear-gradient(115deg,transparent 25%,rgba(255,255,255,.5) 45%,rgba(180,220,255,.3) 50%,transparent 70%);
   animation:tnlshim 2.4s linear infinite}
+.btk.sm{height:100px}
+.btk.sm .lbl{top:15px}
+.btk.sm .route{top:34px}
+.btk.sm .route b{font-size:16px}
+.btk.sm .nm{top:64px;font-size:9.5px}
+.btk .soon{font-family:'Do Hyeon',sans-serif;font-size:14px;letter-spacing:5px;text-indent:5px;
+  color:rgba(236,238,242,.55);text-shadow:0 1px 1px rgba(70,0,6,.6)}
 @keyframes tnlshim{0%{transform:translateX(-70%)}100%{transform:translateX(70%)}}
 @media (prefers-reduced-motion:reduce){.btk .holo2 i{animation:none}}`;
     document.head.appendChild(st);
