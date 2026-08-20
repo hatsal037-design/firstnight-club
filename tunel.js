@@ -189,8 +189,10 @@ const TUNEL = {
     botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2',
              ink:'#ECEEF2', lbl:'#B8A88E', rFont:"'Do Hyeon',sans-serif", rMd:21, rSm:16, acc:'#E8756A',
              perf:'rgba(0,0,0,.55)' },
-    /* play(놀이터)는 스킨 없음 — 원래 소형 티켓(.tkt.play)이 확정 (2026-08-20 햇살님 '둘 다 별로').
-       TUNEL.ticket() 이 3크기 처리: 예정·지난=슬림100 · 모집중=일반150 · kind=event=이벤트180 */
+    /* play(놀이터) — 손목밴드 판지 확정 (2026-08-20 햇살님 승인).
+       놀이공원·워터밤·클럽 밴드 플랫레이 사진 + 어두운 막 + Dongle 헤드라인.
+       시안: 시안/티켓_플레이_밴드3크기.html · 슬림100(예정)·일반150(모집중)·이벤트180(kind=event) */
+    play:  { t:'band', card:'/tk/TK_play_band.jpg', short:'놀이터' },
     snap:  { t:'pass', short:'나들이', card:'/tk/TK_sopung.jpg', cardSm:'/tk/TK_sopung_slim.jpg',
              ink:'#6B4A52', lbl:'#C4788F', rFont:"'Nanum Pen Script',cursive", rMd:27, rSm:21, acc:'#D9407A',
              perf:'rgba(140,80,100,.4)' },
@@ -248,7 +250,31 @@ const TUNEL = {
       ${close_}`;
     }
 
-    /* 보딩패스형 (첫밤·놀이터·찰칵) — xl(180) = 이벤트, 설명 한 줄 추가 */
+    if(sk.t === 'band'){   /* 어른이 놀이터 — 밴드 판지 + Dongle 헤드라인 */
+      const xl2 = opt.size === 'xl';
+      const body2 = sm
+        ? `<div class="bnm">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
+        : `<div class="bnm">${TUNEL.title(m)}</div>
+          ${xl2 && m.memo ? `<div class="bdesc">${m.memo}</div>` : ''}
+          <div class="g bg2">
+            <div><i>DATE</i><b>${dt}</b></div>
+            <div><i>TIME</i><b>${m.s || ''}</b></div>
+            <div><i>PLACE</i><b>${m.place || ''}</b></div>
+          </div>`;
+      return `${open_(`btk band${sm ? ' sm' : xl2 ? ' xl' : ''}`)}
+        <img src="${opt.card ?? sk.card}" alt="">
+        <div class="bdim"></div>
+        <div class="perf" style="background:repeating-linear-gradient(180deg,rgba(255,255,255,.5) 0 5px,transparent 5px 10px)"></div>
+        <div class="ov bov">
+          <div class="blbl">TÜNEL BOARDING PASS · PLATFORM ${no}</div>
+          <div class="bline">${m.line_name || ''}</div>
+          ${body2}
+          <div class="stub bstub">${opt.stub || ''}</div>
+        </div>
+      ${close_}`;
+    }
+
+    /* 보딩패스형 (첫밤·찰칵) — xl(180) = 이벤트, 설명 한 줄 추가 */
     const xl = opt.size === 'xl';
     const grid = `<div class="g">
           <div><i>DATE</i><b>${dt}</b></div>
@@ -364,9 +390,12 @@ const TUNEL = {
 
   /* 스터브 기성품 — 페이지들이 똑같이 쓰라고 여기 둔다 */
   stubOpen(m){
+    if(m && m.line === 'play')
+      return `<div class="bring">${m.kind === 'event' ? 'GO!' : 'GO!'}</div><div class="bsl">STAMP HERE</div>`;
     return `<div class="holo2">모집중<i></i></div><div class="sl">BOARDING</div>`;
   },
-  stubSoon(){
+  stubSoon(m){
+    if(m && m.line === 'play') return `<div class="bring">예정</div>`;
     return `<div class="soon">예정</div>`;
   },
 
@@ -483,6 +512,30 @@ div.btk .stub{cursor:pointer}
 .btk.metal.sm .code{font-size:11px;padding:4px 6px}
 .btk.metal .mstx{font-family:'IBM Plex Mono',monospace;font-size:8px;color:#2f9e7e;
   text-shadow:0 1px 0 rgba(255,255,255,.4);border:1px solid rgba(47,158,126,.4);padding:5px 4px}
+/* ── 놀이터 밴드 스킨 (승인 시안 그대로) ── */
+.btk.band .bdim{position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(115deg, rgba(8,16,10,.84) 0%, rgba(8,16,10,.68) 45%, rgba(8,16,10,.45) 75%, rgba(8,16,10,.25) 100%)}
+.btk.band .bov{z-index:4;color:#FCFFF6;text-shadow:0 1px 3px rgba(0,0,0,.75)}
+.btk.band .blbl{position:absolute;left:20px;top:13px;font-size:7.5px;letter-spacing:2.5px;font-weight:800;color:#EDE3B8}
+.btk.band .bline{position:absolute;left:20px;width:225px;font-family:'Dongle',sans-serif;font-weight:700;
+  line-height:.78;color:#EFFFE6;letter-spacing:.5px;text-shadow:0 1px 2px rgba(0,0,0,.55);top:31px;font-size:33px}
+.btk.band .bnm{position:absolute;left:20px;font-size:11px;opacity:.95;top:72px}
+.btk.band .bdesc{position:absolute;left:20px;width:225px;font-size:9.5px;opacity:.8;line-height:1.5}
+.btk.band .g.bg2{top:99px}
+.btk.band .g i{opacity:.75}
+.btk.band .stub.bstub{background:rgba(0,0,0,.22);gap:6px}
+.btk.band .bring{width:56px;height:56px;border-radius:50%;border:2.5px dashed rgba(255,255,255,.75);
+  display:grid;place-items:center;font-family:'Dongle',sans-serif;font-weight:700;font-size:24px;color:#FCFFF6;
+  text-shadow:0 1px 2px rgba(0,0,0,.6);transform:rotate(-8deg);line-height:1;padding-top:3px}
+.btk.band .bsl{font-size:6.5px;letter-spacing:1.5px;font-weight:800;color:rgba(255,255,255,.75)}
+.btk.band.sm .bline{top:27px;font-size:27px}
+.btk.band.sm .bnm{top:64px;font-size:10px}
+.btk.band.sm .bring{width:44px;height:44px;font-size:19px}
+.btk.band.xl .bline{top:29px}
+.btk.band.xl .bnm{top:69px}
+.btk.band.xl .bdesc{top:95px}
+.btk.band.xl .g.bg2{top:122px}
+.btk.band.xl .bring{width:62px;height:62px;font-size:26px}
 @keyframes tnlshim{0%{transform:translateX(-70%)}100%{transform:translateX(70%)}}
 @media (prefers-reduced-motion:reduce){.btk .holo2 i{animation:none}}`;
     document.head.appendChild(st);
