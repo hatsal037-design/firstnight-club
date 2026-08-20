@@ -197,6 +197,16 @@ nav .nb:active{transform:translateY(1px)}
       margin-right:6px;vertical-align:1px;
       transition:color 150ms ease,transform 150ms var(--spring)}
 .star:active{transform:scale(1.3)}
+/* 해봤어요 — 참석한 회차에 단체로 나온 게임 (실링왁스 금색) */
+.game{position:relative}
+.played-seal{position:absolute;right:9px;bottom:9px;
+  font-family:'Do Hyeon',sans-serif;font-size:9.5px;letter-spacing:1px;
+  color:#e8b93a;border:1.5px solid #e8b93a;border-radius:4px;
+  padding:2px 7px;transform:rotate(-6deg);opacity:.92;
+  background:rgba(232,185,58,.07);pointer-events:none}
+.game.played .thumb{box-shadow:0 0 0 1.5px rgba(232,185,58,.45)}
+.tg.done{color:#e8b93a;border-color:rgba(232,185,58,.55);background:rgba(232,185,58,.1)}
+
 .star.on{color:var(--red)}
 .favn{display:inline-block;font-family:'Pretendard',sans-serif;font-size:11px;font-weight:700;
       color:var(--red-lite);background:var(--surface2);border:1px solid var(--red);border-radius:999px;
@@ -563,7 +573,7 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="api.js?v=lines1"></script>
+<script src="api.js?v=cat1"></script>
 <script src="games.js"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=lines1"></script>
@@ -634,7 +644,9 @@ async function bootSession(){
     }
   }catch(e){ /* 오프라인이면 그냥 비로그인으로 둔다 */ }
   try{ serverPast = await API.pastList(); }catch(e){}
-  try{ MEMBERS = await API.list(); computeFavCount(); }catch(e){}
+  try{ MEMBERS = await API.list(); }catch(e){}
+  try{ await computeFavCount(); }catch(e){}
+  computeMyPlayed();
   try{ if(acc) await loadPfps([acc.uid]); }catch(e){}
   try{ OWNERS = await API.ownerMap(); }catch(e){}
   try{ NOTICES = await API.noticeList(); }catch(e){}
@@ -858,7 +870,9 @@ async function afterAuth(a){
     try{ await API.setPicks(openRound.d, acc.uid, picks); }catch(e){}
     localStorage.removeItem('botc_picks_anon');
   }
-  try{ MEMBERS = await API.list(); computeFavCount(); }catch(e){}
+  try{ MEMBERS = await API.list(); }catch(e){}
+  try{ await computeFavCount(); }catch(e){}
+  computeMyPlayed();
   renderMe(); closeM(); renderGames();
   if(view==='me') renderMePage(); if(view==='sched') renderSched();
 }
@@ -955,10 +969,17 @@ const esc = s => s.replace(/'/g,"\\'");
 const byCat = (a,b)=>{const o=c=>CATS.findIndex(x=>x.k===c);return o(a.cat)-o(b.cat);};
 
 /* 즐겨찾기 집계 — 회원들의 favs를 모아 게임별 담은 사람 수. MEMBERS가 갱신될 때 다시 계산 */
+/* 내가 해본 게임 — 참석한 회차의 기록에서 계산. 어디에도 저장하지 않는다 */
+let MYPLAYED = new Set();
+function computeMyPlayed(){
+  MYPLAYED = new Set();
+  if(!acc) return;
+  pastList().filter(p=>(p.people||[]).some(pIsMe))
+    .forEach(p=>(p.played||[]).forEach(n=>MYPLAYED.add(n)));
+}
 let FAVCOUNT = {};
-function computeFavCount(){
-  FAVCOUNT = {};
-  (MEMBERS||[]).forEach(m=>(m.favs||[]).forEach(n=>{ FAVCOUNT[n]=(FAVCOUNT[n]||0)+1; }));
+async function computeFavCount(){
+  try{ FAVCOUNT = await API.favCounts(); }catch(e){}
 }
 function favCount(n){ return FAVCOUNT[n]||0; }
 
@@ -967,7 +988,8 @@ function gameCard(g, mode){
   const on = mode==='pick' ? picks.includes(g.n) : favs.includes(g.n);
   const fn = mode==='pick' ? `togPick('${esc(g.n)}')` : `togFav('${esc(g.n)}')`;
   const fc = mode!=='pick' ? favCount(g.n) : 0;
-  return `<div class="game${on?' fav':''}${mode!=='pick'&&crew&&!fits(g)?' dim':''}">
+  const done = mode!=='pick' && MYPLAYED.has(g.n);
+  return `<div class="game${on?' fav':''}${done?' played':''}${mode!=='pick'&&crew&&!fits(g)?' dim':''}">
     <div class="info" onclick="openM(${i})">
       <div class="nm"><span class="star${on?' on':''}" onclick="event.stopPropagation();${fn}">${on?'★':'☆'}</span>${fc?`<span class="favn">${fc}</span>`:''}${g.n}</div>
       <div class="meta"><b>${peopleTxt(g)}</b> · ${g.t}분</div>
@@ -984,6 +1006,7 @@ function gameCard(g, mode){
       <img class="thumb" src="${cover(g)}" alt="" loading="lazy"
            onerror="this.onerror=null;this.src=fallbackCover('${esc(g.n)}','${g.cat}')">
     </div>
+    ${done?'<div class="played-seal">해봤어요</div>':''}
   </div>`;
 }
 
@@ -1959,8 +1982,6 @@ function renderMePage(){
 
   const playedSet = new Set();
   mineRounds.forEach(p=>(p.played||[]).forEach(g=>playedSet.add(g)));
-  const total = GAMES.filter(g=>g.have!==false).length;
-  const pct = Math.round(playedSet.size/total*100);
   const wish = favs.filter(n=>!playedSet.has(n));
   const next = upcoming[0];
   const dday = next ? Math.round((new Date(next.d)-TODAY)/86400000) : null;
@@ -1975,7 +1996,7 @@ function renderMePage(){
         <div class="rw"><div class="k">참석</div><div>${cnt?`${cnt}번`:'아직 기록 없음'}</div></div>
         ${first?`<div class="rw"><div class="k">첫 참석</div><div>${first.d.replace(/-/g,'.')} (${first.dow}) · ${daysSince}일 전</div></div>`:''}
         ${last&&cnt>1?`<div class="rw"><div class="k">최근</div><div>${last.d.replace(/-/g,'.')} (${last.dow})</div></div>`:''}
-        <div class="rw"><div class="k">해본 게임</div><div>${playedSet.size} / ${total}종 · ${pct}%</div></div>
+        <div class="rw"><div class="k">해본 게임</div><div>${playedSet.size?playedSet.size+'가지':'아직 기록 없음'}</div></div>
         ${acc.joined?`<div class="rw"><div class="k">가입일</div><div>${acc.joined.replace(/-/g,'.')}</div></div>`:''}
         ${acc.aliases?.length?`<div class="rw"><div class="k">옛 닉네임</div><div>${acc.aliases.join(', ')}<br><span style="color:var(--sub);font-size:11px">이 이름으로 남은 기록도 함께 잡혀요</span></div></div>`:''}
         <div class="rw"><div class="k">내 아이디</div><div style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--sub)">${acc.uid.slice(0,8)}</div></div>
@@ -1989,10 +2010,15 @@ function renderMePage(){
       <div class="label">이번 회차에 고른 게임 · ${picks.length}개</div>
       <div class="picked" style="margin:0 14px">${picks.join(' · ')}</div>`:''}
 
+    ${playedSet.size?`
+      <div class="label">해본 게임 · ${playedSet.size}가지</div>
+      <div class="tags" style="margin:0 18px">${[...playedSet].map(n=>`<span class="tg done">${n}</span>`).join('')}<span class="tg" style="opacity:.45">?</span></div>
+      <div class="notice">도장은 참석한 회차의 기록에서 저절로 찍혀요.</div>`:''}
+
     <div class="label">내 즐겨찾기 · ${favs.length}개</div>
     ${favs.length
-      ? `<div class="tags" style="margin:0 18px">${favs.map(n=>`<span class="tg">${playedSet.has(n)?'✓ ':''}${n}</span>`).join('')}</div>
-         ${wish.length?`<div class="notice">이 중 <b style="color:var(--red-lite)">${wish.length}개</b>는 아직 못 해봤어요 — ${wish.join(' · ')}</div>`:''}`
+      ? `<div class="tags" style="margin:0 18px">${favs.map(n=>`<span class="tg${playedSet.has(n)?' done':''}">${playedSet.has(n)?'✓ ':''}${n}</span>`).join('')}</div>
+         ${wish.length?`<div class="notice">다음에 해봐요 — <b style="color:var(--red-lite)">${wish.join(' · ')}</b></div>`:''}`
       : `<div class="empty" style="padding:22px">게임 도감에서 ★를 눌러 담아보세요.</div>`}
 
     <div class="label">내가 참여한 모임</div>

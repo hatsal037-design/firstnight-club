@@ -80,10 +80,43 @@ API.list = async function(){
   const { data } = await T('members').select('*, member_private(payname)').order('no');
   return (data||[]).map(r=>rowToAcc(r));
 };
-/* 즐겨찾기 — 본인 행의 favs만 갱신 (RLS가 본인 행으로 제한) */
+/* ══ 항목 참조(catalog) — 게임 이름 ↔ 고정키 변환 ══
+   2026-08-20 회원 활동 통합. 통계·기록은 이름이 아니라 catalog_items 참조로 잇는다.
+   설계: 브랜드/회원활동_설계.md */
+let _items = null;
+async function itemsMap(){
+  if(_items) return _items;
+  const { data } = await sb.from('catalog_items').select('id,key,name').eq('line', LINE);
+  _items = { byName:{}, byId:{} };
+  (data||[]).forEach(r => { _items.byName[r.name] = r; _items.byId[r.id] = r; });
+  return _items;
+}
+
+/* 즐겨찾기 — members.favs(빠른 부팅용) + member_items(통계·통합용) 이중 기록 */
 API.setFavs = async function(uid, arr){
   const { error } = await T('members').update({ favs: arr }).eq('id', uid);
   throwErr(error, '즐겨찾기 저장 실패');
+  try{
+    const im = await itemsMap();
+    const ids = arr.map(n => im.byName[n]?.id).filter(Boolean);
+    let q = sb.from('member_items').update({ fav:false }).eq('member_id', uid).eq('fav', true);
+    if(ids.length) q = q.not('item_id', 'in', '(' + ids.join(',') + ')');
+    await q;
+    if(ids.length){
+      await sb.from('member_items').upsert(
+        ids.map(id => ({ member_id:uid, item_id:id, fav:true })),
+        { onConflict:'member_id,item_id' });
+    }
+  }catch(e){ console.warn('찜 참조 동기화 실패', e); }
+};
+
+/* 게임별 찜 수 — member_items 집계 (회원끼리 서로 보인다) */
+API.favCounts = async function(){
+  const im = await itemsMap();
+  const { data } = await sb.from('member_items').select('item_id').eq('fav', true);
+  const m = {};
+  (data||[]).forEach(r => { const n = im.byId[r.item_id]?.name; if(n) m[n] = (m[n]||0)+1; });
+  return m;
 };
 /* 관리 조작 — 전부 서버 RPC가 관리자 여부를 재검증한다 */
 API.adminSetRole   = async function(uid, role){ const {error}=await sb.rpc('admin_set_role',{p_mid:uid,p_role:role}); throwErr(error,'등급 변경 실패'); };
@@ -92,17 +125,36 @@ API.adminUpdate    = async function(uid, nick, payname){ const {error}=await sb.
 API.remove         = async function(acc){ const {error}=await sb.rpc('admin_delete_member',{p_mid:acc.uid}); throwErr(error,'삭제 실패'); };
 
 /* ══ 회차별 게임 선택 ══ */
+/* 회차별 게임 선택 — meeting_items(role=picked). 옛 picks 테이블은 동결 */
+async function meetingIdOf(date){
+  const { data } = await sb.from('meetings').select('id')
+    .eq('line', LINE).eq('d', date).maybeSingle();
+  return data?.id || null;
+}
 API.setPicks = async function(date, uid, arr){
-  if(arr.length){ const {error}=await T('picks').upsert({d:date, member_id:uid, games:arr}); throwErr(error,'저장 실패'); }
-  else await T('picks').delete().eq('d',date).eq('member_id',uid);
+  const mid = await meetingIdOf(date); if(!mid) throw new Error('회차를 못 찾았어요');
+  const im = await itemsMap();
+  await sb.from('meeting_items').delete()
+    .eq('meeting_id', mid).eq('role','picked').eq('member_id', uid);
+  const rows = arr.map(n => im.byName[n]?.id).filter(Boolean)
+    .map(id => ({ meeting_id:mid, item_id:id, role:'picked', member_id:uid }));
+  if(rows.length){ const { error } = await sb.from('meeting_items').insert(rows); throwErr(error,'저장 실패'); }
 };
 API.getMyPicks = async function(date, uid){
-  const { data } = await T('picks').select('games').eq('d',date).eq('member_id',uid).maybeSingle();
-  return data?.games || [];
+  const mid = await meetingIdOf(date); if(!mid) return [];
+  const im = await itemsMap();
+  const { data } = await sb.from('meeting_items').select('item_id')
+    .eq('meeting_id', mid).eq('role','picked').eq('member_id', uid);
+  return (data||[]).map(r => im.byId[r.item_id]?.name).filter(Boolean);
 };
-API.allPicks = async function(date){   // 운영진만 전체가 보임(RLS). 일반 회원은 자기 것만 옴
-  const { data } = await T('picks').select('member_id, games').eq('d', date);
-  return (data||[]).map(r=>({ uid:r.member_id, games:r.games }));
+API.allPicks = async function(date){
+  const mid = await meetingIdOf(date); if(!mid) return [];
+  const im = await itemsMap();
+  const { data } = await sb.from('meeting_items').select('member_id,item_id')
+    .eq('meeting_id', mid).eq('role','picked');
+  const by = {};
+  (data||[]).forEach(r => { (by[r.member_id] = by[r.member_id]||[]).push(im.byId[r.item_id]?.name); });
+  return Object.entries(by).map(([uid, games]) => ({ uid, games: games.filter(Boolean) }));
 };
 
 /* ══ 지난 모임 ══
@@ -173,6 +225,15 @@ API.pastSave = async function(rec){
   /* 참석자 — 통째로 다시 쓴다 (편집 화면이 전체 목록을 넘겨준다) */
   const mid = saved.id;
   await sb.from('attendance').delete().eq('meeting_id', mid);
+
+  /* 그날 한 게임 → 참조 계층 동기화 (단체로 돌린 게임만 적는 게 운영 방침) */
+  try{
+    const im = await itemsMap();
+    await sb.from('meeting_items').delete().eq('meeting_id', mid).eq('role','done');
+    const rowsG = (rec.played || []).map(n => im.byName[n]?.id).filter(Boolean)
+      .map(id => ({ meeting_id:mid, item_id:id, role:'done' }));
+    if(rowsG.length) await sb.from('meeting_items').insert(rowsG);
+  }catch(e){ console.warn('게임 참조 동기화 실패', e); }
   const rowsA = (rec.people || []).map(p =>
     typeof p === 'object' && p.uid
       ? { meeting_id:mid, member_id:p.uid }
@@ -202,16 +263,23 @@ API.allRsvp = async function(date){
   return (data||[]).map(r=>({ uid:r.member_id, v:r.v }));
 };
 
-/* ══ 게임 소유자 ══ */
-API.ownerMap = async function(){   // RLS: 운영진은 전부, 일반 회원은 자기 것만 옴 — 그게 의도
-  const { data } = await T('game_owners').select('game, owner_id');
+/* ══ 게임 소유자 — member_items.own (옛 game_owners 는 동결) ══ */
+API.ownerMap = async function(){
+  const im = await itemsMap();
+  const { data } = await sb.from('member_items').select('item_id, member_id').eq('own', true);
   const m = {};
-  (data||[]).forEach(r=>{ m[r.game] = r.owner_id; });
+  (data||[]).forEach(r => { const n = im.byId[r.item_id]?.name; if(n) m[n] = r.member_id; });
   return m;
 };
 API.setOwner = async function(gameName, uid){
-  if(uid){ const {error}=await T('game_owners').upsert({game:gameName, owner_id:uid}); throwErr(error,'저장 실패'); }
-  else await T('game_owners').delete().eq('game', gameName);
+  const im = await itemsMap();
+  const it = im.byName[gameName]; if(!it) throw new Error('도감에 없는 게임: ' + gameName);
+  await sb.from('member_items').update({ own:false }).eq('item_id', it.id).eq('own', true);
+  if(uid){
+    const { error } = await sb.from('member_items')
+      .upsert({ member_id:uid, item_id:it.id, own:true }, { onConflict:'member_id,item_id' });
+    throwErr(error, '저장 실패');
+  }
 };
 
 /* ══ 공지 ══ */

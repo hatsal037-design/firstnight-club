@@ -60,7 +60,7 @@ header > .rig, header > .en, header > .est, header > .tagline{position:relative}
   filter:drop-shadow(0 0 1.5px rgba(0,0,0,.95)) drop-shadow(0 0 5px rgba(0,0,0,.75))
          drop-shadow(0 2px 6px rgba(0,0,0,.6))}
 .mbtn{right:15px}   /* 회원 · 계정 설정 */
-.nbtn{left:15px}    /* 노선 바로가기 */
+.nbtn{left:15px}    /* 알림함 */
 
 /* 역 천장에 사슬로 매단 황동 명판 */
 .rig{position:relative;display:inline-block;max-width:300px;width:78%}
@@ -163,18 +163,40 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
   width:28px;height:28px;border-radius:50%;font-size:15px;line-height:1;cursor:pointer}
 .mdl .x:active{transform:scale(.9)}
 .mdl .bodyw{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 22px}
-/* 노선 바로가기 본문 */
-.navlist a{display:flex;align-items:center;gap:11px;border:1px solid #3A342B;border-radius:9px;
-  padding:11px 13px;margin-bottom:7px}
-.navlist a:active{background:rgba(255,255,255,.04)}
-.navlist .np{flex:none;font-family:'Nanum Gothic Coding',monospace;font-size:10px;
-  letter-spacing:1px;color:#B08D3E;width:22px}
-.navlist .nn{flex:1;min-width:0;font-size:14px;font-weight:700;color:#E9E2D2;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.navlist .ns{flex:none;font-size:9.5px;font-weight:800;border-radius:3px;padding:3px 7px;
-  background:#2A2630;color:#A79E8F}
-.navlist .ns.on{background:#3A2B15;color:#E8A54B}
-.navlist .soon{opacity:.5}
+/* 알림함 본문 */
+.hbtn .reddot{position:absolute;top:1px;right:1px;width:10px;height:10px;border-radius:50%;
+  background:#E8323C;border:2px solid #232125;display:none}
+.inbox .msg{display:flex;gap:10px;background:#1C1A1F;border:1px solid #35313A;border-radius:9px;
+  padding:12px 13px;margin-bottom:8px;position:relative;cursor:pointer}
+.inbox .msg.unread{border-color:#5c4a2f;background:#211E22}
+.inbox .msg.unread::before{content:'';position:absolute;left:-1px;top:12px;bottom:12px;width:3px;
+  border-radius:0 3px 3px 0;background:#E8C36B}
+.inbox .k{flex:none;font-size:8.5px;font-weight:800;letter-spacing:.5px;border-radius:3px;
+  padding:3px 6px;height:fit-content;margin-top:2px}
+.inbox .k.notice{background:#3A2B15;color:#E8A54B}
+.inbox .k.dm{background:#3A1A1E;color:#FF9BA0}
+.inbox .k.system{background:#22303F;color:#9CC0E8}
+.inbox .m{flex:1;min-width:0}
+.inbox .t{font-size:13.5px;font-weight:700;color:#E9E2D2;line-height:1.45}
+.inbox .b2{font-size:12px;color:#A79E8F;margin-top:4px;line-height:1.6;white-space:pre-line}
+.inbox .w{font-size:10px;color:#77716A;margin-top:6px;font-family:'Nanum Gothic Coding',monospace}
+.inbox .ask{display:block;text-align:center;border:1px dashed #4A453E;border-radius:9px;
+  padding:11px 0;font-size:12px;color:#A79E8F;margin-top:12px;cursor:pointer}
+.inbox .ask b{color:#E8C36B}
+.inbox .ask.chat{border-style:solid;background:rgba(254,229,0,.05);border-color:#5c542f}
+.inbox .ask.chat b{color:#FEE500}
+/* 쪽지 대화 */
+.thread .bub{max-width:85%;border-radius:9px;padding:9px 12px;font-size:12.5px;line-height:1.6;
+  margin-top:9px;white-space:pre-line}
+.thread .bub.them{background:#2A2630;color:#D9D2C4}
+.thread .bub.me{background:#3A2B15;color:#F0E0C0;margin-left:auto}
+.thread .bub .who{display:block;font-size:9.5px;color:#8F887B;margin-bottom:3px;white-space:normal}
+.thread .reply{display:flex;gap:7px;margin-top:13px}
+.thread .reply textarea{flex:1;background:#26232A;border:1px solid #4A453E;border-radius:7px;
+  padding:9px 11px;font-size:12.5px;color:#E2DBCE;font-family:inherit;resize:none;height:38px}
+.thread .reply button{flex:none;background:#B3161E;border:0;color:#fff;border-radius:7px;
+  padding:0 14px;font-size:12px;font-weight:700;cursor:pointer}
+.thread .back{font-size:11.5px;color:#A79E8F;cursor:pointer;margin-bottom:10px;display:inline-block}
 /* 계정 설정 본문 */
 .acct .an{font-size:20px;font-weight:800;color:#F2EAD9}
 .acct .ao{font-family:'Nanum Gothic Coding',monospace;font-size:11px;letter-spacing:1.5px;color:#B08D3E;margin-top:5px}
@@ -502,8 +524,9 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 <body>
 
 <header>
-  <button class="hbtn nbtn" id="navBtn" title="노선 바로가기" aria-label="노선 바로가기">
+  <button class="hbtn nbtn" id="navBtn" title="알림" aria-label="알림">
     <img src="v/bars_round.webp" alt="" width="32" height="21">
+    <span class="reddot" id="navDot"></span>
   </button>
   <button class="hbtn mbtn" id="memBtn" style="display:none" title="계정 설정" aria-label="계정 설정">
     <img src="v/mb_satin.webp" alt="" width="24" height="32">
@@ -693,15 +716,15 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     </div>
   </div>
 </div>
-<div class="mdl" id="navMdl" role="dialog" aria-modal="true" aria-label="노선 바로가기">
+<div class="mdl" id="navMdl" role="dialog" aria-modal="true" aria-label="알림">
   <div class="bd" data-close></div>
   <div class="sh">
     <div class="hd">
       <img src="v/bars_round.webp" alt="" style="height:14px">
-      <b>노선 안내 · LINES</b>
+      <b id="navTitle">알림 · INBOX</b>
       <button class="x" data-close aria-label="닫기">✕</button>
     </div>
-    <div class="bodyw" id="navBody"><p class="bnote">불러오는 중…</p></div>
+    <div class="bodyw inbox" id="navBody"><p class="bnote">불러오는 중…</p></div>
   </div>
 </div>
 <footer>
@@ -900,31 +923,187 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   }catch(e){ loggedOut(); }
 })();
 
-/* ══ 노선 바로가기 — 헤더 왼쪽 버튼 ══ */
+/* ══ 알림함 — 공지·쪽지·시스템 (헤더 왼쪽 버튼) ══
+   회원 간 DM 없음. 발신은 운영진·시스템, 회원은 문의로 시작.
+   설계: 브랜드/기능_지도.md */
 (async function(){
-  const mdl = document.getElementById('navMdl');
-  const btn = document.getElementById('navBtn');
+  const mdl  = document.getElementById('navMdl');
+  const btn  = document.getElementById('navBtn');
   const body = document.getElementById('navBody');
+  const dot  = document.getElementById('navDot');
+  const titleEl = document.getElementById('navTitle');
   if(!mdl || !btn) return;
-  const open  = () => { mdl.classList.add('on'); document.body.style.overflow='hidden'; };
+  const sbI = TUNEL.sb();
+  const open  = () => { mdl.classList.add('on'); document.body.style.overflow='hidden'; renderList(); };
   const close = () => { mdl.classList.remove('on'); document.body.style.overflow=''; };
   mdl.querySelectorAll('[data-close]').forEach(el => el.onclick = close);
   document.addEventListener('keydown', e => { if(e.key==='Escape' && mdl.classList.contains('on')) close(); });
   btn.onclick = open;
-  try{
-    const lines = await TUNEL.lines();
-    body.className = 'bodyw navlist';
-    body.innerHTML = lines.map(l => {
-      const live = l.status === '운행중';
-      return `<a href="${l.path}" class="${live?'':'soon'}">
-        <span class="np">${String(l.no).padStart(2,'0')}</span>
-        <span class="nn">${l.name}</span>
-        <span class="ns${live?' on':''}">${l.status}</span>
-      </a>`;
-    }).join('') + '<p class="bnote">플랫폼 번호는 노선이 열린 순서가 아니라 자리 번호예요</p>';
-  }catch(e){
-    body.innerHTML = '<p class="bnote">노선을 못 불러왔어요<br>' + (e.message||'') + '</p>';
+
+  let me=null, msgs=[], reads=new Set(), lines=[], memNick={};
+  const isStaffMe = () => me && (me.is_admin || me.role === 'staff');
+  const fmtW = ts => {
+    const d=new Date(ts), now=new Date(), h=(now-d)/36e5;
+    if(h<1) return '방금'; if(h<24) return Math.floor(h)+'시간 전';
+    if(h<48) return '어제'; return (d.getMonth()+1)+'/'+d.getDate();
+  };
+  const KLBL = { notice:'공지', dm:'쪽지', system:'시스템' };
+  const esc = t => String(t??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  async function load(){
+    me = await TUNEL.me();
+    lines = await TUNEL.lines();
+    if(!me){ dot.style.display='none'; return; }
+    const { data: m } = await sbI.from('messages').select('*').order('created_at',{ascending:false}).limit(100);
+    msgs = m || [];
+    const { data: r } = await sbI.from('message_reads').select('message_id').eq('member_id', me.id);
+    reads = new Set((r||[]).map(x=>x.message_id));
+    if(isStaffMe()){
+      const { data: mm } = await sbI.from('members').select('id,nick');
+      (mm||[]).forEach(x=>memNick[x.id]=x.nick);
+    }
+    updateDot();
   }
+  function myMsgs(){
+    /* 운영진은 회원 문의(남의 쪽지 스레드)도 받아본다 */
+    return msgs.filter(x => x.kind==='notice' || x.to_member === me.id
+      || (isStaffMe() && x.kind==='dm'));
+  }
+  function updateDot(){
+    const n = me ? myMsgs().filter(x=>!reads.has(x.id)).length : 0;
+    dot.style.display = n ? 'block' : 'none';
+  }
+  async function markRead(ids){
+    const fresh = ids.filter(id=>!reads.has(id));
+    if(!fresh.length || !me) return;
+    fresh.forEach(id=>reads.add(id));
+    try{ await sbI.from('message_reads').upsert(
+      fresh.map(id=>({message_id:id, member_id:me.id})), {onConflict:'message_id,member_id'});
+    }catch(e){}
+    updateDot();
+  }
+  const lineName = id => lines.find(l=>l.id===id)?.name || '투넬';
+
+  function renderList(){
+    titleEl.textContent = '알림 · INBOX';
+    if(!me){
+      body.innerHTML = '<p class="bnote" style="text-align:center;padding:18px 0">로그인하면 공지와 쪽지가 여기 모여요</p>';
+      return;
+    }
+    const list = myMsgs();
+    const dmLatest = {};   // 쪽지는 스레드당 최신 한 줄만
+    const rows = [];
+    for(const x of list){
+      if(x.kind==='dm'){
+        const k = x.to_member;
+        if(dmLatest[k]) continue;
+        dmLatest[k] = true;
+        rows.push({...x, _thread:true});
+      } else rows.push(x);
+    }
+    const chatLinks = lines.filter(l=>l.chat)
+      .map(l=>`<a class="ask chat" href="${l.chat}" target="_blank" rel="noopener">💬 <b>${esc(l.name)} 오픈채팅</b> ›</a>`).join('');
+    body.innerHTML = (rows.length ? rows.map(x=>{
+      const unread = x.kind==='dm'
+        ? list.some(y=>y.kind==='dm'&&y.to_member===x.to_member&&!reads.has(y.id))
+        : !reads.has(x.id);
+      const from = x.kind==='notice' ? lineName(x.line)
+                 : x.kind==='system' ? '투넬'
+                 : (x.to_member!==me.id ? ('@'+(memNick[x.to_member]||'회원'))
+                    : (x.from_member===me.id ? '나' : '운영진'));
+      return `<div class="msg${unread?' unread':''}" data-id="${x.id}" data-kind="${x.kind}" data-thread="${x._thread?x.to_member:''}">
+        <span class="k ${x.kind}">${KLBL[x.kind]}</span>
+        <div class="m">
+          ${x.title?`<div class="t">${esc(x.title)}</div>`:''}
+          <div class="b2">${esc(x.body).slice(0,120)}</div>
+          <div class="w">${esc(from)} · ${fmtW(x.created_at)}</div>
+        </div></div>`;
+    }).join('') : '<p class="bnote" style="text-align:center;padding:18px 0">아직 알림이 없어요</p>')
+    + (isStaffMe()
+        ? `<a class="ask" id="noticeBtn">📢 <b>공지 쓰기</b> ›</a>`
+        : `<a class="ask" id="askBtn">운영진에게 <b>문의하기</b> ›</a>`)
+    + chatLinks;
+
+    body.querySelectorAll('.msg').forEach(el=>{
+      el.onclick = () => {
+        if(el.dataset.thread) renderThread(el.dataset.thread);
+        else markRead([el.dataset.id]) , el.classList.remove('unread');
+      };
+    });
+    const ask = document.getElementById('askBtn');
+    if(ask) ask.onclick = () => renderThread(me.id);
+    const nb = document.getElementById('noticeBtn');
+    if(nb) nb.onclick = renderCompose;
+    // 공지·시스템은 열어본 것으로 — 목록에 뜬 시점에 읽음 처리하지 않고 탭해야 지워짐
+  }
+
+  function renderThread(threadMember){
+    const th = msgs.filter(x=>x.kind==='dm' && x.to_member===threadMember)
+                   .sort((a,b)=>a.created_at.localeCompare(b.created_at));
+    titleEl.textContent = threadMember===me.id ? '운영진과의 쪽지'
+      : '@' + (memNick[threadMember]||'회원') + ' 와의 쪽지';
+    body.innerHTML = `<span class="back" id="backBtn">‹ 알림으로</span>
+      <div class="thread">
+        ${th.length ? th.map(x=>{
+          const mine = x.from_member === me.id;
+          const who = mine ? '나'
+            : x.from_member === threadMember ? ('@'+(memNick[threadMember]||'회원'))
+            : (x.from_member ? '운영진' : '투넬');
+          return `<div class="bub ${mine?'me':'them'}"><span class="who">${who} · ${fmtW(x.created_at)}</span>${esc(x.body)}</div>`;
+        }).join('') : '<p class="bnote" style="padding:8px 0">운영진에게 보낼 말을 아래에 적어주세요.<br>답장이 오면 여기와 왼쪽 버튼 빨간 점으로 알려드려요.</p>'}
+        <div class="reply">
+          <textarea id="dmText" placeholder="쪽지 쓰기…"></textarea>
+          <button id="dmSend">보내기</button>
+        </div>
+      </div>`;
+    document.getElementById('backBtn').onclick = renderList;
+    markRead(th.map(x=>x.id));
+    document.getElementById('dmSend').onclick = async () => {
+      const t = document.getElementById('dmText').value.trim();
+      if(!t) return;
+      const row = { kind:'dm', to_member:threadMember, from_member:me.id, body:t };
+      const { data, error } = await sbI.from('messages').insert(row).select('*').single();
+      if(error){ alert('전송 실패: '+error.message); return; }
+      msgs.unshift(data); reads.add(data.id);
+      renderThread(threadMember);
+    };
+  }
+
+  function renderCompose(){
+    titleEl.textContent = '공지 쓰기';
+    const opts = ['<option value="">투넬 전체</option>']
+      .concat(lines.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`)).join('');
+    body.innerHTML = `<span class="back" id="backBtn">‹ 알림으로</span>
+      <div class="thread" style="border-color:#35313A">
+        <select id="ntLine" style="width:100%;background:#26232A;border:1px solid #4A453E;border-radius:7px;
+          padding:9px 11px;font-size:12.5px;color:#E2DBCE;font-family:inherit;margin-bottom:8px">${opts}</select>
+        <input id="ntTitle" placeholder="제목" style="width:100%;background:#26232A;border:1px solid #4A453E;
+          border-radius:7px;padding:9px 11px;font-size:12.5px;color:#E2DBCE;font-family:inherit;margin-bottom:8px">
+        <textarea id="ntBody" placeholder="내용" style="width:100%;height:90px;background:#26232A;
+          border:1px solid #4A453E;border-radius:7px;padding:9px 11px;font-size:12.5px;color:#E2DBCE;
+          font-family:inherit;resize:vertical"></textarea>
+        <div class="reply" style="margin-top:9px">
+          <button id="ntSend" style="flex:1;padding:10px 0">모든 회원에게 공지 보내기</button>
+        </div>
+      </div>`;
+    document.getElementById('backBtn').onclick = renderList;
+    document.getElementById('ntSend').onclick = async () => {
+      const title = document.getElementById('ntTitle').value.trim();
+      const bodyT = document.getElementById('ntBody').value.trim();
+      const line  = document.getElementById('ntLine').value || null;
+      if(!bodyT){ alert('내용을 적어주세요'); return; }
+      if(!confirm('공지를 보낼까요? 모든 회원의 알림함에 뜹니다.')) return;
+      const { data, error } = await sbI.from('messages')
+        .insert({ kind:'notice', line, title:title||null, body:bodyT, from_member:me.id })
+        .select('*').single();
+      if(error){ alert('실패: '+error.message); return; }
+      msgs.unshift(data); reads.add(data.id);
+      try{ await sbI.from('message_reads').insert({message_id:data.id, member_id:me.id}); }catch(e){}
+      renderList();
+    };
+  }
+
+  try{ await load(); }catch(e){ console.warn('알림함 로드 실패', e); }
 })();
 
 /* ══ 내 활동 — 모든 노선을 한자리에 (노선 안에서는 그 노선만 본다) ══ */
