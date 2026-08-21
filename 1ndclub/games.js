@@ -96,6 +96,9 @@ const GAMES = [
     ] },
 
   // ── 파티 ──────────────────────────────────
+  { n:'장난꾸러기 호박벌', bl:{"rate": 6.6, "weight": 1.26, "players": "3-5", "minutes": "20-25", "age": 7, "url": "https://boardlife.co.kr/game/9583", "bgg": "https://boardgamegeek.com/boardgame/300956/cheating-bumblebee"}, img:'img/t/schummel-hummel.jpg', min:3, max:5, t:20, cat:'party', lv:'초보', out:false, host:false, own:'채연주', have:true,
+    d:'반칙이 공식적으로 허용되는 카드 게임. 몰래 버리고 시치미 떼기.',
+    r:'손의 카드를 먼저 다 버리면 승리. 규칙대로만 내면 느리니까 카드를 몰래 숨기고 떨어뜨려도 된다 — 단, 호박벌 감시자에게 걸리면 벌칙. 걸리느냐 못 본 척하느냐의 눈치 싸움.' },
   { n:'힛스터', bl:{"rate": 7.3, "weight": 1.01, "rank": 397, "players": "2-10", "minutes": "30", "age": 16, "url": "https://boardlife.co.kr/game/16056", "bgg": "https://boardgamegeek.com/boardgame/318243/hitster"}, img:'img/t/hitster.jpg', min:2, max:null, t:30, cat:'party', lv:'초보', out:false, host:false, own:'임햇살', have:true,
     d:'노래 듣고 연도 맞히기. 팀으로 나누면 인원 제한이 없다.',
     r:'QR을 찍어 노래를 틀고 발매 연도를 추측해 내 연표 사이에 끼워넣는다. 맞으면 카드 획득, 10장 모으면 승리.' },
