@@ -216,6 +216,10 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .inbox .ask b{color:#E8C36B}
 .inbox .ask.chat{border-style:solid;background:rgba(254,229,0,.05);border-color:#5c542f}
 .inbox .ask.chat b{color:#FEE500}
+.inbox .msg.rules{background:#241F17;border-color:#4A3B22}
+.inbox .k.rk{background:#3A2B15;color:#E8C36B}
+.inbox .rulesbody{font-size:12.5px;color:#CFC7B8;line-height:1.85;white-space:pre-line;
+  background:#1C1A1F;border:1px solid #35313A;border-radius:9px;padding:14px 15px;margin-bottom:10px}
 /* 알림함 팝업은 위로 덜 자라게 — 내용이 많으면 안에서 스크롤 */
 #navMdl .sh{max-height:72vh}
 /* 푸시 토글 — 알림함 머리줄에 심플하게 */
@@ -1212,10 +1216,26 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   }
   const lineName = id => lines.find(l=>l.id===id)?.name || '투넬';
 
+  async function renderRules(){
+    titleEl.textContent = '회칙';
+    body.innerHTML = '<p class="bnote">불러오는 중…</p>';
+    const { data } = await sbI.from('settings').select('value').eq('key','rules').maybeSingle();
+    body.innerHTML = `<div class="rulesbody">${(data?.value || '아직 회칙이 등록되지 않았어요.')
+        .replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>
+      <a class="ask" id="rulesBack">‹ <b>알림함으로</b></a>`;
+    document.getElementById('rulesBack').onclick = () => { renderList(); };
+  }
+
   function renderList(){
     titleEl.textContent = '알림 · INBOX';
     if(!me){
-      body.innerHTML = '<p class="bnote" style="text-align:center;padding:18px 0">로그인하면 공지와 쪽지가 여기 모여요</p>';
+      body.innerHTML = `<div class="msg rules" id="rulesBtn">
+          <span class="k rk">회칙</span>
+          <div class="m"><div class="t">투넬이 함께 지키는 약속</div>
+          <div class="w">누르면 모임 규칙이 열려요</div></div></div>
+        <p class="bnote" style="text-align:center;padding:18px 0">로그인하면 공지와 쪽지가 여기 모여요</p>`;
+      const rb0 = document.getElementById('rulesBtn');
+      if(rb0) rb0.onclick = renderRules;
       return;
     }
     const list = myMsgs();
@@ -1231,7 +1251,11 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     }
     const chatLinks = lines.filter(l=>l.chat)
       .map(l=>`<a class="ask chat" href="${l.chat}" target="_blank" rel="noopener">💬 <b>${esc(l.name)} 오픈채팅</b> ›</a>`).join('');
-    body.innerHTML = (rows.length ? rows.map(x=>{
+    const rulesRow = `<div class="msg rules" id="rulesBtn">
+      <span class="k rk">회칙</span>
+      <div class="m"><div class="t">투넬이 함께 지키는 약속</div>
+      <div class="w">누르면 모임 규칙이 열려요</div></div></div>`;
+    body.innerHTML = rulesRow + (rows.length ? rows.map(x=>{
       const unread = x.kind==='dm'
         ? list.some(y=>y.kind==='dm'&&y.to_member===x.to_member&&!reads.has(y.id))
         : !reads.has(x.id);
@@ -1254,7 +1278,9 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
         🔔 알림을 받으려면 홈 화면에 추가한 뒤 그 아이콘으로 열어주세요</p>`
     + chatLinks;
 
-    body.querySelectorAll('.msg').forEach(el=>{
+    const rb = document.getElementById('rulesBtn');
+    if(rb) rb.onclick = renderRules;
+    body.querySelectorAll('.msg:not(.rules)').forEach(el=>{
       el.onclick = () => {
         if(el.dataset.thread) renderThread(el.dataset.thread);
         else{
