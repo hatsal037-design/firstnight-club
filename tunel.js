@@ -142,7 +142,7 @@ const TUNEL = {
     const xl   = !past && m.kind === 'event';    // 대형 행사(MT·운동회)는 이벤트 180
     const big  = !past && !xl && m.status === 'open';   // 모집중은 규격 일반(150) 크기로
     const tbd  = m.data?.tbd === true;
-    const when = tbd ? '날짜 조율 중'
+    const when = tbd ? (m.data?.tbdtxt || '날짜 조율 중')
       : `${+m.d.slice(5,7)}/${+m.d.slice(8)} <small style="font-size:12px">(${m.dow||''})</small>`;
     const time = tbd ? '' : (m.s ? m.s + (m.e ? '~' + m.e : '') : '');
     const href = opt.href ?? m.line_path;
@@ -209,7 +209,7 @@ const TUNEL = {
     const dowEN = {'월':'MON','화':'TUE','수':'WED','목':'THU','금':'FRI','토':'SAT','일':'SUN'}[m.dow] || m.dow || '';
     const card  = opt.card ?? (sm && sk.cardSm ? sk.cardSm : sk.card);
     const no    = String(m.line_no || '').padStart(2,'0');
-    const dt    = tbd ? '미정' : `${+m.d.slice(5,7)}/${+m.d.slice(8)} ${dowEN}`;
+    const dt    = tbd ? (m.data?.tbdtxt || '미정') : `${+m.d.slice(5,7)}/${+m.d.slice(8)} ${dowEN}`;
     const open_ = (cls) => opt.href ? `<a class="${cls}" href="${opt.href}">`
                 : `<div class="${cls}"${opt.onclick ? ` onclick="${opt.onclick}"` : ''}>`;
     const close_ = opt.href ? '</a>' : '</div>';
@@ -221,7 +221,7 @@ const TUNEL = {
         <div class="in">
           <div class="no">PLATFORM ${no}</div>
           <div class="snm">${m.line_name || ''}</div>
-          ${sm ? `<div class="sub2">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
+          ${sm ? `<div class="sub2">${TUNEL.title(m)} · ${tbd ? (m.data?.tbdtxt || '날짜 조율 중') : TUNEL.fmt(m.d, m.dow)}</div>`
                : `<div class="g sg">
                     <div><i>DATE</i><b>${dt}</b></div>
                     <div><i>TIME</i><b>${m.s || ''}</b></div>
@@ -242,7 +242,7 @@ const TUNEL = {
           <div class="mlbl">PLATFORM ${no}${m.status === 'open' ? ' · OPEN' : ''}</div>
           <div class="rt">${m.line_name || ''}</div>
           ${sm ? '' : `<div class="evt">${TUNEL.title(m)}${m.place ? ' · ' + m.place : ''}</div>`}
-          <div class="when">${tbd ? '날짜 조율 중' : `${dt}　${m.s || ''}`}</div>
+          <div class="when">${tbd ? (m.data?.tbdtxt || '날짜 조율 중') : `${dt}　${m.s || ''}`}</div>
         </div>
         <div class="laser"></div>
         <div class="stub m2">${code ? `<div class="code">${code}</div><div class="mstx">TODAY'S CODE</div>`
@@ -253,7 +253,7 @@ const TUNEL = {
     if(sk.t === 'band'){   /* 어른이 놀이터 — 밴드 판지 + Dongle 헤드라인 */
       const xl2 = opt.size === 'xl';
       const body2 = sm
-        ? `<div class="bnm">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
+        ? `<div class="bnm">${TUNEL.title(m)} · ${tbd ? (m.data?.tbdtxt || '날짜 조율 중') : TUNEL.fmt(m.d, m.dow)}</div>`
         : `<div class="bnm">${TUNEL.title(m)}</div>
           ${xl2 && m.memo ? `<div class="bdesc">${m.memo}</div>` : ''}
           <div class="g bg2">
@@ -282,7 +282,7 @@ const TUNEL = {
           <div><i>PLACE</i><b>${m.place || ''}</b></div>
         </div>`;
     const body  = sm
-      ? `<div class="nm">${TUNEL.title(m)} · ${tbd ? '날짜 조율 중' : TUNEL.fmt(m.d, m.dow)}</div>`
+      ? `<div class="nm">${TUNEL.title(m)} · ${tbd ? (m.data?.tbdtxt || '날짜 조율 중') : TUNEL.fmt(m.d, m.dow)}</div>`
       : `<div class="nm">${TUNEL.title(m)} · ${m.line_name || ''}</div>
         ${xl && m.memo ? `<div class="desc">${m.memo}</div>` : ''}
         ${grid}`;
