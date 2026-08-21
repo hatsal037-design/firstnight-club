@@ -71,6 +71,29 @@ const GAMES = [
   { n:'사보타지', bl:{"rate": 6.9, "weight": 1.32, "rank": 935, "players": "3-10", "minutes": "30", "age": 8, "url": "https://boardlife.co.kr/game/1270"}, img:'img/t/saboteur.jpg', min:3, max:10, t:30, cat:'mafia', lv:'초보', out:false, host:false, own:'', have:true,
     d:'금을 캐는 광부 사이에 길을 막는 방해꾼이 섞여 있다.',
     r:'터널 카드를 이어 금까지 길을 낸다. 광부는 도착하면 승리, 방해꾼은 막으면 승리. 서로 정체를 모른 채 진행.' },
+  { n:'한밤의 늑대인간', bl:{"rate": 7.4, "weight": 1.38, "rank": 328, "players": "3-10", "minutes": "10", "age": 8, "url": "https://boardlife.co.kr/game/2500", "bgg": "https://boardgamegeek.com/boardgame/147949/one-night-ultimate-werewolf"}, img:'img/t/onuw.jpg', min:3, max:10, t:10, cat:'mafia', lv:'초보', out:false, host:false, own:'임햇살', have:true,
+    d:'단 한 번의 밤, 단 한 번의 투표. 10분 만에 끝나는 늑대인간.',
+    r:'전원 역할을 받고 한 번의 밤에 역할별 행동을 한다. 밤사이 역할이 바뀌었을 수도 있다. 낮 토론 한 번, 동시 지목 한 번으로 끝. 늑대를 잡으면 마을 승리.',
+    rules:[
+      { h:'준비', p:'인원+3장의 역할 카드를 섞어 한 장씩 받고, 남은 3장은 가운데에 엎어둡니다. 앱이나 진행자가 밤 순서를 불러줍니다.' },
+      { h:'밤에 하는 일', list:[
+        '늑대인간끼리 눈을 떠 서로를 확인합니다. 늑대가 혼자면 가운데 카드 한 장을 볼 수 있습니다.',
+        '예언자는 다른 사람 카드 한 장 또는 가운데 카드 두 장을 봅니다.',
+        '강도는 다른 사람과 카드를 바꾸고 새 카드를 확인합니다.',
+        '말썽꾸러기는 다른 두 사람의 카드를 서로 바꿉니다(보지 않고).',
+      ]},
+      { h:'낮과 투표', p:'모두 눈을 뜨고 토론합니다. 내 역할이 밤사이 바뀌었을 수 있다는 게 핵심. 시간이 되면 셋을 세고 동시에 한 명을 지목합니다. 최다 득표자가 처형됩니다.' },
+      { h:'이기는 조건', p:'늑대인간이 한 명이라도 처형되면 마을 승리. 늑대가 아무도 안 죽으면 늑대 승리. 무두장이는 자기가 죽어야 승리합니다.' },
+      { h:'우리 모임에서는', p:'탈락이 없고 10분이면 끝나서 몇 판이고 돌립니다. 공식 앱 나레이션으로 진행자 없이 진행해요.' },
+    ] },
+  { n:'한밤의 늑대인간2 황혼에서새벽까지', bl:{"rate": 7.1, "weight": 1.44, "players": "3-7", "minutes": "10", "age": 8, "url": "https://boardlife.co.kr/game/4549", "bgg": "https://boardgamegeek.com/boardgame/157703/one-night-ultimate-werewolf-daybreak"}, img:'img/t/onuw2.jpg', min:3, max:7, t:10, cat:'mafia', lv:'중급', out:false, host:false, own:'임햇살', have:true,
+    d:'늑대인간 2탄. 새 역할 11종, 1탄과 섞으면 판이 커진다.',
+    r:'기본 진행은 1탄과 같고 역할이 전부 새것. 단독으로 3~7인, 1탄과 합치면 10인 이상도 가능하다.',
+    rules:[
+      { h:'1탄과 다른 점', p:'꿈꾸는 늑대·미치광이·주정뱅이 심화판 같은 새 역할 11종이 들어 있습니다. 역할 간 상호작용이 복잡해져서 1탄을 몇 판 해본 뒤에 섞는 걸 추천합니다.' },
+      { h:'섞어서 크게', p:'1탄 카드와 합치면 대인원 판이 됩니다. 앱 나레이션이 두 세트 역할을 모두 지원합니다.' },
+      { h:'우리 모임에서는', p:'1탄으로 몸을 풀고, 익숙해진 테이블에 2탄 역할을 한두 장씩 끼워 넣는 방식으로 돌립니다.' },
+    ] },
 
   // ── 파티 ──────────────────────────────────
   { n:'힛스터', bl:{"rate": 7.3, "weight": 1.01, "rank": 397, "players": "2-10", "minutes": "30", "age": 16, "url": "https://boardlife.co.kr/game/16056", "bgg": "https://boardgamegeek.com/boardgame/318243/hitster"}, img:'img/t/hitster.jpg', min:2, max:null, t:30, cat:'party', lv:'초보', out:false, host:false, own:'임햇살', have:true,
