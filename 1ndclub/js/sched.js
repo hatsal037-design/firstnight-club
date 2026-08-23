@@ -9,6 +9,9 @@ const PAST_PAGE = 10;
 let pastShown = PAST_PAGE;   // 최신 N개만 먼저 보여주고, 위로 더 올리면 늘려간다
 
 function renderSched(){
+  /* 회차가 끝나거나 모집이 닫히는 순간에 맞춰 저절로 다시 그린다.
+     파생값(openRound·upcoming·pastList)을 먼저 다시 만들고 그린다 */
+  TUNEL.autoPast(ROUNDS, () => { recalcRounds(); if(view==='sched') renderSched(); });
   const names = myNames();
   const allPast = pastList().slice().sort((a,b)=>a.d.localeCompare(b.d));   // 오래된 것부터
   const shown = Math.min(pastShown, allPast.length);

@@ -27,10 +27,78 @@ function sb(){
   return _sb;
 }
 
-/* 오늘 00:00 — 날짜 비교 기준 */
-function today(){ const t = new Date(); t.setHours(0,0,0,0); return t; }
-const isPast = m => m.status === 'done' || m.status === 'cancelled'
-                 || new Date(m.d) < today();
+/* ══ 회차가 끝났나 — 판정은 여기 한 곳에서만 한다 ══
+   예전에는 "날짜가 지났나"만 봐서, 저녁 7시에 끝난 모임이 자정까지 '모집중'으로 남았다.
+   이제 끝 시각 + 여유시간을 넘기면 지난 회차가 된다.
+   화면·API 어디서도 자기 판정을 새로 만들지 말고 TUNEL.isPast(m) 를 부를 것. */
+
+const PAST_GRACE_H  = 1;   /* 끝나고 몇 시간 뒤에 지난 회차로 넘길지 */
+const NO_END_H      = 6;   /* 끝 시각이 안 적힌 회차의 기본 길이 */
+const CLOSE_BEFORE_H = 3;  /* 시작 몇 시간 전에 신청을 닫을지 (그 뒤로는 '모집 완료') */
+
+/* 'YYYY-MM-DD' + 'HH:MM' → 그 시각의 Date (사는 곳 시간 기준).
+   new Date('2026-08-29') 는 UTC 자정으로 읽혀서 아홉 시간이 어긋난다 — 그래서 직접 만든다. */
+function at(d, hm){
+  const [y, mo, dd] = String(d || '').split('-').map(Number);
+  if(!y || !mo || !dd) return null;
+  const [h, mi] = String(hm || '00:00').split(':').map(Number);
+  return new Date(y, mo - 1, dd, h || 0, mi || 0, 0, 0);
+}
+
+/* 이 회차가 끝나는 시각 (여유시간 포함). 날짜를 모르면 null */
+function endsAt(m){
+  if(!m || !m.d || m.data?.tbd) return null;          /* 날짜 조율 중이면 끝나지 않는다 */
+  const start = at(m.d, m.s);
+  if(!start) return null;
+  let end;
+  if(m.e){
+    end = at(m.d, m.e);
+    if(end <= start) end = new Date(end.getTime() + 864e5);   /* 자정을 넘기는 회차 */
+  } else if(m.s){
+    end = new Date(start.getTime() + NO_END_H * 36e5);        /* 시작만 있으면 기본 길이 */
+  } else {
+    end = at(m.d, '23:59');                                   /* 시각이 아예 없으면 그날 끝 */
+  }
+  return new Date(end.getTime() + PAST_GRACE_H * 36e5);
+}
+
+const isPast = m => {
+  if(m.status === 'done' || m.status === 'cancelled') return true;
+  const end = endsAt(m);
+  return end ? new Date() >= end : false;
+};
+
+/* 신청이 닫히는 시각 — 시작 3시간 전. 날짜·시각을 모르면 null(안 닫힘) */
+function closesAt(m){
+  if(!m || !m.d || m.data?.tbd || !m.s) return null;
+  const start = at(m.d, m.s);
+  return start ? new Date(start.getTime() - CLOSE_BEFORE_H * 36e5) : null;
+}
+
+/* 아직 신청을 받나 — 모집중이면서 마감 전이고 끝나지도 않았을 때만 */
+const isOpen = m => {
+  if(!m || m.status !== 'open' || isPast(m)) return false;
+  const close = closesAt(m);
+  return close ? new Date() < close : true;
+};
+
+/* 모집중이었는데 마감 시각을 넘긴 것 — 티켓에 '모집 완료' 로 나온다 */
+const isClosed = m => m && m.status === 'open' && !isPast(m) && !isOpen(m);
+
+/* 화면을 켜둔 채로도 넘어가게 — 가장 가까운 회차가 끝나는 순간에 맞춰 한 번 다시 그린다.
+   회차 목록을 그린 뒤 부르면 된다. 다시 부르면 앞의 예약은 취소된다. */
+let _flipT = null;
+function autoPast(rows, redraw){
+  if(_flipT){ clearTimeout(_flipT); _flipT = null; }
+  if(typeof redraw !== 'function') return;
+  const now = Date.now();
+  const next = (rows || []).flatMap(m => [endsAt(m), closesAt(m)]).filter(Boolean)
+    .map(d => d.getTime()).filter(t => t > now).sort((a,b) => a - b)[0];
+  if(!next) return;
+  /* setTimeout 은 약 24.8일이 한계다. 그보다 멀면 하루 뒤에 다시 계산한다 */
+  const wait = Math.min(next - now + 1000, 864e5);
+  _flipT = setTimeout(() => { _flipT = null; try{ redraw(); }catch(e){} }, wait);
+}
 
 /* ── 캐시 ── */
 let _lines = null, _meP = null;
@@ -131,7 +199,7 @@ const TUNEL = {
 
   /* ── 화면 조각 ────────────────────────────────────────── */
 
-  isPast,
+  isPast, isOpen, isClosed, endsAt, closesAt, autoPast,
 
   /* 회차 이름 — 없으면 회차 번호로 지어준다 */
   title(m){
@@ -144,7 +212,8 @@ const TUNEL = {
   statusLabel(m){
     if(m.status === 'cancelled') return '취소';
     if(isPast(m)) return 'USED';
-    if(m.status === 'open') return '모집중';
+    if(isOpen(m)) return '모집중';
+    if(isClosed(m)) return '모집 완료';
     return '예정';
   },
 
@@ -314,22 +383,31 @@ const TUNEL = {
        스텁   모집중 → '모집중 · BOARDING'(신청 뒤에는 내 상태 도장으로 바뀐다) · 그 밖 → '예정'
      opt: onclick(티켓 클릭) · card(티켓 배경 덮어쓰기) · bar(false면 신청 바 생략) · slim(true면 항상 슬림) */
   ticketOne(m, opt = {}){
-    const past = opt.past || TUNEL.isPast(m);
-    const open = m.status === 'open' && !past;
+    const past   = opt.past || TUNEL.isPast(m);
+    const open   = !past && isOpen(m);      /* 신청을 받는 중 */
+    const closed = !past && isClosed(m);    /* 모집중이었는데 시작 3시간 전을 넘김 */
+    /* 아직 모집 전이든 마감 뒤든, 지나지 않았으면 티켓은 그대로 크게 둔다.
+       달라지는 건 스텁 글자와 신청 바 유무뿐 */
+    const live = open || closed;
     /* 스킨이 없는 노선은 옛 소형 티켓으로 — 그래도 신청 바는 같은 규칙으로 붙는다 */
     if(!TUNEL.hasSkin(m.line))
-      return TUNEL.ticket(m, { past }) + (open && opt.bar !== false ? TUNEL.signupBar(m) : '');
+      return TUNEL.ticket(m, { past }) + (live && opt.bar !== false ? TUNEL.signupBar(m) : '');
     const sk = TUNEL._skins[m.line];
     if(past) return TUNEL.ticket(m, { past });
     /* 예정 회차를 슬림으로 두는 노선(soonTkt)은 그 규칙을 따른다 */
-    if(!open && m.kind !== 'event' && sk.soonTkt) return TUNEL.ticket(m);
-    const size = opt.slim ? 'sm' : (m.kind === 'event' ? 'xl' : open ? undefined : 'sm');
+    if(!live && m.kind !== 'event' && sk.soonTkt) return TUNEL.ticket(m);
+    const size = opt.slim ? 'sm' : (m.kind === 'event' ? 'xl' : live ? undefined : 'sm');
     const stub = open
       ? `<span class="sstub" data-mid="${m.id}" data-d="${m.d}"
            onclick="event.stopPropagation();TUNEL.signupOpen('${m.id}')">${TUNEL.stubOpen(m)}</span>`
+      : closed
+      ? `<span class="sstub" data-mid="${m.id}" data-d="${m.d}"
+           onclick="event.stopPropagation();TUNEL.signupOpen('${m.id}')">${TUNEL.stubClosed(m)}</span>`
       : TUNEL.stubSoon(m);
     const tk = TUNEL.boardingTicket(m, { onclick: opt.onclick, card: opt.card, size, stub });
-    return tk + (open && opt.bar !== false ? TUNEL.signupBar(m) : '');
+    /* 마감된 회차도 바를 단다 — 신청한 사람이 자기 상태를 확인해야 하니까.
+       신청 안 한 사람에겐 paintBar 가 버튼을 지운다 */
+    return tk + (live && opt.bar !== false ? TUNEL.signupBar(m) : '');
   },
 
   boardingTicket(m, opt = {}){
@@ -541,6 +619,12 @@ const TUNEL = {
     if(m && m.line === 'play') return `<div class="bring">예정</div>`;
     return `<div class="soon">예정</div>`;
   },
+  /* 신청은 닫혔지만 아직 안 지난 회차 — 도장 자리에 '신청 마감' 도장이 찍힌다.
+     눌러 보면 내 신청 상태가 나온다 */
+  stubClosed(m){
+    const dd = m && m.d ? m.d.slice(5).replace('-', '.') : '';
+    return `<div class="shut"><b>신청 마감</b>${dd ? `<small>${dd}</small>` : ''}</div>`;
+  },
 
   /* 티켓 CSS 주입 — 페이지마다 복사하지 않고 여기 한 벌만.
      절취선 구멍 색은 페이지 배경 몫이라 --tnl-hole 로 넘겨받는다 */
@@ -597,6 +681,14 @@ div.btk{cursor:pointer}
 .btk.sm .nm{top:64px;font-size:9.5px}
 .btk .soon{font-family:'Do Hyeon',sans-serif;font-size:14px;letter-spacing:5px;text-indent:5px;
   color:rgba(236,238,242,.55);text-shadow:0 1px 1px rgba(70,0,6,.6)}
+/* 신청 마감 도장 — 잉크로 비스듬히 눌러 찍은 사각 도장 */
+.btk .shut{font-family:'Do Hyeon',sans-serif;transform:rotate(-8deg);
+  border:2px solid currentColor;border-radius:3px;padding:5px 7px 4px;line-height:1;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  color:var(--tnl-shut,rgba(232,117,106,.82));opacity:.9;
+  box-shadow:inset 0 0 0 1px currentColor}
+.btk .shut b{font-size:13px;font-weight:400;letter-spacing:1px}
+.btk .shut small{font-family:'Nanum Gothic Coding',monospace;font-size:6px;letter-spacing:1.2px;opacity:.85}
 .btk .flat{position:absolute;inset:0;display:block}
 .btk.paper .flat{background:linear-gradient(180deg,#FBFAF6,#F2F0E9);border:1px solid #E2DED2;border-radius:inherit}
 .btk.paper .ov .lbl{letter-spacing:.16em}
@@ -849,17 +941,21 @@ div.btk .stub{cursor:pointer}
     const my = mine[mid];
     const seatsEl = bar.querySelector('.seats');
     const btn = bar.querySelector('button');
-    seatsEl.innerHTML = cap
+    const closed = TUNEL.isClosed(m);   /* 시작 3시간 전을 넘겨 신청이 닫힘 */
+    seatsEl.innerHTML = closed
+      ? (cap ? `모집 완료 · <b>${st.taken}</b>명` : `모집 완료 · ${st.taken}명`)
+      : cap
       ? (left > 0 ? `남은 자리 <b>${left}</b> / ${cap}` : `만석 · 대기 ${st.wait}명`)
       : `신청 ${st.taken}명`;
     btn.className = '';
     if(my === 'confirmed'){ btn.textContent = '확정됨 ✓'; btn.classList.add('done'); }
     else if(my === 'paid'){ btn.textContent = '입금 확인 중'; btn.classList.add('wait'); }
-    else if(my === 'applied'){ btn.textContent = '입금하러 가기'; }
+    else if(my === 'applied'){ btn.textContent = closed ? '내 신청 확인' : '입금하러 가기'; }
     else if(my === 'waitlist'){ btn.textContent = '대기 중'; btn.classList.add('wait'); }
+    else if(closed){ btn.remove(); }   /* 마감 뒤 신청 안 한 사람에겐 버튼을 두지 않는다 */
     else if(cap && left === 0){ btn.textContent = '대기 등록'; btn.classList.add('ghost'); }
     else btn.textContent = '신청하기';
-    btn.onclick = () => openSign(mid);
+    if(btn.isConnected) btn.onclick = () => openSign(mid);
     TUNEL.me().then(me => {
       if(me && (me.is_admin || me.role==='staff') && !bar.querySelector('[data-act="mgr"]')){
         const g = document.createElement('button');
@@ -930,6 +1026,15 @@ div.btk .stub{cursor:pointer}
         <p class="cap2" style="margin-top:14px">자리가 나면 알림으로 알려드려요.</p>
         <div class="act"><button class="ghost" id="tnlCancel">대기 취소</button></div>`;
       hookCancel(mid); return;
+    }
+
+    /* 시작 3시간 전에 신청이 닫힌다 — 이미 신청한 사람은 위에서 자기 상태를 봤고,
+       여기 오는 건 아직 신청 안 한 사람이다 */
+    if(!my && TUNEL.isClosed(m)){
+      body.innerHTML = `<p class="big">모집이 끝났어요</p>${meetingRows(m)}
+        <p class="cap2" style="margin-top:14px">시작 ${CLOSE_BEFORE_H}시간 전부터는 신청을 받지 않아요.<br>
+          다음 회차에서 만나요.</p>`;
+      return;
     }
 
     const cap = capOf(m);
@@ -1048,6 +1153,8 @@ div.btk .stub{cursor:pointer}
         el.innerHTML = `${sk.stamp ? `<img src="${sk.stamp}" alt="" style="opacity:.55">` : ''}<div class="stx">${dest}<small>${dd}</small></div><div class="sl">${st === 'paid' ? '입금 확인 중' : '입금 전'}</div>`;
       else if(st === 'waitlist')
         el.innerHTML = `<div class="holo2">대기중<i></i></div><div class="sl">WAITLIST</div>`;
+      else if(TUNEL.isClosed(m))
+        el.innerHTML = TUNEL.stubClosed(m);   /* 마감인데 내 신청이 없으면 마감 도장 */
       else
         el.innerHTML = TUNEL.stubOpen(m);
     });

@@ -220,7 +220,7 @@ footer a{color:#98A0A6}
 
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=29"></script>
+<script src="../tunel.js?v=30"></script>
 <script>
 function setView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
@@ -230,13 +230,14 @@ function setView(v){
 setView((location.hash||'#sched').slice(1));
 
 /* 일정 — 서버(meetings)에서 이 노선 것만. 지난 회차는 아래에 흐리게 */
-(async function(){
+(async function paintSched(){
   const el = document.getElementById('schedList');
   /* 티켓은 공용 한 벌 — 허브(tunel.kr)와 같은 모양 (개발/티켓_규칙.md) */
   const card = (m, past) =>
     TUNEL.ticketOne(m, { onclick:'TUNEL.ticketToggle(this)', past }) + (past ? '' : TUNEL.ticketDetail(m));
   try{
     const rows = await TUNEL.meetings({ line:'library' });
+    TUNEL.autoPast(rows, paintSched);   /* 끝나는·마감되는 순간에 저절로 다시 그린다 */
     const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
     const past = rows.filter(TUNEL.isPast);
     let html = '';

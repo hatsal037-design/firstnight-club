@@ -192,7 +192,7 @@ footer a{color:#8A9188}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=29"></script>
+<script src="../tunel.js?v=30"></script>
 <script>
 function setView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
@@ -202,10 +202,11 @@ function setView(v){
 setView((location.hash||'#sched').slice(1));
 
 /* 일정 — 서버(meetings)에서 이 노선 것만. 날짜 미정(TBD)도 예정으로 보여준다 */
-(async function(){
+(async function paintSched(){
   const el = document.getElementById('schedList');
   try{
     const rows = await TUNEL.meetings({ line:'play', status:'upcoming' });
+    TUNEL.autoPast(rows, paintSched);   /* 끝나는·마감되는 순간에 저절로 다시 그린다 */
     if(!rows.length){ el.innerHTML = '<p class="note">아직 잡힌 모임이 없어요.</p>'; return; }
     /* 티켓은 공용 한 벌 — 허브(tunel.kr)와 같은 모양이 나온다 (개발/티켓_규칙.md) */
     el.innerHTML = rows.map(v =>

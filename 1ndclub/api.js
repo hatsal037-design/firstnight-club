@@ -214,11 +214,10 @@ API.roundsList = async function(){
 };
 
 API.pastList = async function(){
-  const today = new Date(); today.setHours(0,0,0,0);
   const { data: ms } = await sb.from('meetings').select('*')
     .eq('line', LINE).order('d', { ascending:false });
-  const rows = (ms||[]).filter(m =>
-    m.status === 'done' || (m.status !== 'cancelled' && new Date(m.d) < today));
+  /* 끝났나 판정은 tunel.js 한 곳에서만 한다 (끝 시각 + 여유 1시간) */
+  const rows = (ms||[]).filter(m => m.status !== 'cancelled' && TUNEL.isPast(m));
   if(!rows.length) return [];
   const { data: atts } = await sb.from('v_attendance')
     .select('meeting_id,member_id,guest_name,who')

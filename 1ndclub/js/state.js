@@ -51,15 +51,17 @@ const lineInfo = () => (TUNEL.lineSync && TUNEL.lineSync(LINE_ID)) || LINE_FALLB
    (티켓·상세는 회차 객체를 손대지 않고 받는다 — 개발/티켓_규칙.md) */
 ROUNDS = ROUNDS.map(r => Object.assign({}, r, {
   id: r.id || ('local-' + r.d),
-  status: r.st === 'open' ? 'open' : r.st === 'done' ? 'done' : 'planned',
+  status: r.st === 'open' ? 'open' : r.st === 'done' ? 'done'
+        : r.st === 'cancelled' ? 'cancelled' : 'planned',
   kind: r.kind || (r.name ? 'event' : 'regular'),
   memo: r.note || '',
   ...(TUNEL.lineSync ? (TUNEL.lineSync(LINE_ID) || LINE_FALLBACK) : LINE_FALLBACK),
   data: { cap: r.cap ?? null, h: r.h ?? null, mapq: r.mapq || null, route: r.route || null, special: r.special || null },
 }));
-let openRound = ROUNDS.find(r=>r.st==='open');
-let upcoming  = ROUNDS.filter(r=>new Date(r.d) >= TODAY);
+/* 끝났나 판정은 tunel.js 한 곳에서만 한다 — 끝 시각 + 여유 1시간 (TUNEL.isPast) */
+let openRound = ROUNDS.find(r=>r.st==='open' && !TUNEL.isPast(r));
+let upcoming  = ROUNDS.filter(r=>!TUNEL.isPast(r));
 function recalcRounds(){
-  openRound = ROUNDS.find(r=>r.st==='open');
-  upcoming  = ROUNDS.filter(r=>r.st!=='done' && r.st!=='cancelled' && new Date(r.d) >= TODAY);
+  openRound = ROUNDS.find(r=>r.st==='open' && !TUNEL.isPast(r));
+  upcoming  = ROUNDS.filter(r=>!TUNEL.isPast(r));
 }

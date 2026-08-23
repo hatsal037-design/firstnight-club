@@ -746,7 +746,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=29"></script>
+<script src="tunel.js?v=30"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -864,11 +864,13 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 
 /* ══ 통합 일정 — meetings 한 곳에서 읽는다 (노선이 늘어도 코드는 그대로) ══
    모집중(open) 회차의 신청 바·팝업은 공통 모듈(tunel.js signup)이 그린다 */
-(async function(){
+(async function paintSched(){
   const upEl   = document.getElementById('tktList');
   const pastEl = document.getElementById('tktPast');
   try{
     const rows = await TUNEL.meetings();
+    /* 회차가 끝나거나 모집이 닫히는 순간에 맞춰 저절로 다시 그린다 (tunel.js autoPast) */
+    TUNEL.autoPast(rows, paintSched);
     const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
     const past = rows.filter(TUNEL.isPast);
     upEl.innerHTML = up.map(m => {

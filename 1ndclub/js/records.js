@@ -7,7 +7,7 @@ function pastList(){
      날짜가 지났는데 아직 기록이 안 들어간 예정 회차만 빈 껍데기로 채워 보여준다.
      past.js(씨앗)와 로컬 편집본은 서버로 이사를 마쳐서 더 읽지 않는다. */
   const by = {};
-  ROUNDS.filter(r=>new Date(r.d) < TODAY).forEach(r=>{
+  ROUNDS.filter(r=>TUNEL.isPast(r)).forEach(r=>{   /* 끝났나 판정은 tunel.js 한 곳 */
     by[r.d] = { r:r.r, d:r.d, dow:r.dow, s:r.s, e:r.e, kind:'round',
                 place:r.place, n:null, fee:r.fee||'', played:[], people:[],
                 after:'', memo:'', auto:true };
