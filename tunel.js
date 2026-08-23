@@ -48,9 +48,21 @@ const TUNEL = {
     return _lines;
   },
 
+  /* 노선 한 곳 — 운영값(DB lines)과 생김새(_skins)를 합쳐 돌려준다.
+     화면은 노선 이름·경로·번호를 직접 적지 말고 이걸 읽는다 (개발/티켓_규칙.md) */
   async line(id){
-    return (await TUNEL.lines()).find(l => l.id === id) || null;
+    const l = (await TUNEL.lines()).find(x => x.id === id) || null;
+    return l ? TUNEL.lineOf(l) : null;
   },
+  lineOf(l){
+    const sk = TUNEL._skins[l.id] || TUNEL._skins[l.skin] || null;
+    return { ...l, skin: sk,
+      /* 회차 자료(v_meetings)가 쓰는 이름과 맞춰 둔다 — 티켓이 그대로 읽는다 */
+      line: l.id, line_no: l.no, line_name: l.name, line_short: (sk && sk.short) || l.name,
+      line_path: '/' + String(l.path || '').replace(/^\//, '') };
+  },
+  /* 노선 값을 미리 받아 두면 화면에서 동기로 쓸 수 있다 */
+  lineSync(id){ const l = (_lines || []).find(x => x.id === id); return l ? TUNEL.lineOf(l) : null; },
 
   /* 로그인 회원. 로그인 전이면 null */
   me(){

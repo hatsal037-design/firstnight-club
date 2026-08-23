@@ -583,11 +583,11 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=21"></script>
+<script src="../tunel.js?v=22"></script>
 <script src="api.js?v=inbox1"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
-<script src="schedule.js?v=r4open10"></script>
+<script src="schedule.js?v=r4open11"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -630,6 +630,10 @@ const myNames = () => acc ? [acc.nick, ...(acc.aliases||[])] : [];
 const FKEY = () => 'botc_fav_' + (acc?.uid||'anon');
 
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+/* 노선 값은 중앙(DB lines + TUNEL._skins)에서 읽는다. 아래는 서버를 못 읽을 때만 쓰는 최소값 */
+const LINE_ID = 'botc';
+const LINE_FALLBACK = { line:'botc', line_no:2, line_name:'첫밤 사망자 클럽', line_short:'첫밤', line_path:'/1ndclub/' };
+const LINE = () => (TUNEL.lineSync && TUNEL.lineSync(LINE_ID)) || LINE_FALLBACK;
 /* 회차는 서버(meetings)가 최종이다. schedule.js 값은 서버를 못 읽을 때만 쓰는 폴백.
    부팅에서 ROUNDS 를 갈아끼운 뒤 recalcRounds() 로 파생값을 다시 만든다.
    폴백도 티켓이 그대로 읽을 수 있게 서버 자료와 같은 모양으로 맞춰 둔다
@@ -639,7 +643,7 @@ ROUNDS = ROUNDS.map(r => Object.assign({}, r, {
   status: r.st === 'open' ? 'open' : r.st === 'done' ? 'done' : 'planned',
   kind: r.kind || (r.name ? 'event' : 'regular'),
   memo: r.note || '',
-  line: 'botc', line_name: '첫밤 사망자 클럽', line_path: '/1ndclub/', line_no: 2, line_short: '첫밤',
+  ...(TUNEL.lineSync ? (TUNEL.lineSync(LINE_ID) || LINE_FALLBACK) : LINE_FALLBACK),
   data: { cap: r.cap ?? null, h: r.h ?? null, mapq: r.mapq || null, route: r.route || null, special: r.special || null },
 }));
 let openRound = ROUNDS.find(r=>r.st==='open');
@@ -1323,10 +1327,10 @@ function icsStamp(d, t){                       // '2026-08-15','11:00' → '2026
   return d.replace(/-/g,'') + 'T' + t.replace(':','') + '00';
 }
 function makeICS(r){
-  const title = `첫밤 사망자 클럽${r.r?` ${r.r}회차`:''}`;
+  const title = `${LINE().line_name}${r.r?` ${r.r}회차`:''}`;
   const desc  = [r.place, r.addr, r.fee?`참가비 ${r.fee}`:'', r.after?`2차 ${r.after} (자율)`:'']
                   .filter(Boolean).join('\\n');
-  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//첫밤 사망자 클럽//KR','CALSCALE:GREGORIAN',
+  return ['BEGIN:VCALENDAR','VERSION:2.0',`PRODID:-//${LINE().line_name}//KR`,'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
     `UID:botc-${r.d}@firstnight.club`,
     `DTSTAMP:${icsStamp(new Date().toISOString().slice(0,10), '00:00')}Z`,
@@ -2325,7 +2329,7 @@ function fmtDate(d){ const [y,m,dd]=d.split('-'); return `${+m}/${+dd}`; }
 async function shareTicket(d){
   const r = (ROUNDS||[]).find(x=>x.d===d); if(!r) return;
   const url = `https://tunel.kr/1ndclub/?apply=${d}`;
-  const title = (r.name || `${r.r?r.r+'회차 ':''}정모`) + ' · 첫밤 사망자 클럽';
+  const title = (r.name || `${r.r?r.r+'회차 ':''}정모`) + ' · ' + LINE().line_name;
   const text = [`${title}`,
     `${fmtDate(d)}(${r.dow}) ${r.s}~${r.e} · ${r.place}`,
     r.fee ? `참가비 ${r.fee}` : '', '', url].filter(Boolean).join('\n');
