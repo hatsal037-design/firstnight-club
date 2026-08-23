@@ -584,7 +584,7 @@ footer a{color:#7a8290}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../tunel.js?v=25"></script>
-<script src="api.js?v=inbox1"></script>
+<script src="api.js?v=boot1"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=r4open13"></script>
@@ -685,10 +685,16 @@ async function bootSession(){
   try{ NOTICES = await API.noticeList(); }catch(e){}
   if(acc){ try{ readIds = await API.getRead(acc.uid); }catch(e){} }
   // 공지 대상 판정용: 내 참석·게임선택만 있으면 된다 (남의 것은 서버가 안 줌)
+  // 회차마다 되묻지 않는다 — 내 것 전부를 두 번에 받아 날짜별로 나눈다 (회차 11개면 33질의 → 2질의)
   try{
-    if(acc) for(const r of upcoming){
-      MY_RSVP[r.d]  = await API.getMyRsvp(r.d, acc.uid);
-      MY_PICKS[r.d] = (await API.getMyPicks(r.d, acc.uid)).length > 0;
+    if(acc){
+      const [rsvpMap, pickedIds] = await Promise.all([
+        API.myRsvpMap(acc.uid), API.myPickedMeetings(acc.uid),
+      ]);
+      for(const r of upcoming){
+        MY_RSVP[r.d]  = rsvpMap[r.d] || null;
+        MY_PICKS[r.d] = !!(r.id && pickedIds.has(r.id));
+      }
     }
   }catch(e){}
   try{ if(openRound) await loadRsvpCnt(); }catch(e){}

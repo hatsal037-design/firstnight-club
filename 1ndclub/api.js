@@ -150,6 +150,12 @@ API.getMyPicks = async function(date, uid){
     .eq('meeting_id', mid).eq('role','picked').eq('member_id', uid);
   return (data||[]).map(r => im.byId[r.item_id]?.name).filter(Boolean);
 };
+/* 내가 게임을 고른 회차 id 전부 — 한 번에. 회차마다 되묻던 것을 대신한다 */
+API.myPickedMeetings = async function(uid){
+  const { data } = await sb.from('meeting_items').select('meeting_id')
+    .eq('role','picked').eq('member_id', uid);
+  return new Set((data||[]).map(r => r.meeting_id));
+};
 API.allPicks = async function(date){
   const mid = await meetingIdOf(date); if(!mid) return [];
   const im = await itemsMap();
@@ -263,6 +269,12 @@ API.setRsvp = async function(date, uid, v){
 API.getMyRsvp = async function(date, uid){
   const { data } = await T('rsvps').select('v').eq('d',date).eq('member_id',uid).maybeSingle();
   return data?.v || null;
+};
+/* 내 참석 응답 전부 — 한 번에. { '2026-08-29': 'yes', … } */
+API.myRsvpMap = async function(uid){
+  const { data } = await T('rsvps').select('d, v').eq('member_id', uid);
+  const by = {}; (data||[]).forEach(r => { by[r.d] = r.v; });
+  return by;
 };
 API.allRsvp = async function(date){
   const { data } = await T('rsvps').select('member_id, v').eq('d', date);

@@ -826,7 +826,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=21"></script>
+<script src="tunel.js?v=25"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -1102,7 +1102,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       document.getElementById('aOut2').onclick = async () => { await sb.auth.signOut(); location.reload(); };
       return;
     }
-    const { data: m } = await sb.from('members').select('nick,no,joined,role,is_admin').eq('id', mid).single();
+    const { data: m } = await sb.from('members').select('id,nick,no,joined,role,is_admin').eq('id', mid).single();
     if(!m) return acctOut();
     acctIn(m);
     if(m.is_admin) initMemAdmin(sb);
