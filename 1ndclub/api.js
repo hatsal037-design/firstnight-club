@@ -6,10 +6,10 @@
    로그인: Supabase Auth의 카카오 OAuth. 비밀번호 로그인은 폐지(카카오 전용).
    세션: supabase-js가 localStorage에 알아서 관리. 우리가 uid를 직접 저장하지 않는다. */
 
-const SB_URL = 'https://yguvfogtzazoawtclqvf.supabase.co';
-const SB_KEY = 'sb_publishable_KeezD9hmEnxSTEWA_w8x-A_Tgk3roUf';   // 공개용 키 (노출 정상)
-const sb = window.supabase.createClient(SB_URL, SB_KEY);
-window.__TNL_SB = sb;   // 공통 모듈(tunel.js)도 이 클라이언트를 쓴다 — 둘이면 로그인이 꼬인다
+/* 서버 주소·공개키는 tunel.js 한 곳에만 둔다 — 여기서 다시 적으면 값이 갈라진다.
+   클라이언트도 하나여야 한다 (둘이면 로그인이 꼬인다 — 2026-08-20에 겪음).
+   tunel.js 를 먼저 불러온 뒤 이 파일을 부른다. */
+const sb = TUNEL.sb();
 
 /* ── 행 → 앱 계정 모양 변환 ── */
 function rowToAcc(row, payname){
