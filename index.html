@@ -826,7 +826,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=17"></script>
+<script src="tunel.js?v=18"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -955,13 +955,10 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       /* 판지 실물 티켓은 확정 스킨이 있을 때 — 단 soonTkt 노선의 예정 회차는 기존 소형 티켓이 더 읽기 좋다 */
       const useBP = TUNEL.hasSkin(m.line)
         && !(m.status!=='open' && m.kind!=='event' && TUNEL._skins[m.line].soonTkt);
-      const tk = !useBP ? TUNEL.ticket(m)
-        : TUNEL.boardingTicket(m, { onclick:'TUNEL.ticketToggle(this)',
-            size: m.kind==='event' ? 'xl' : m.status==='open' ? undefined : 'sm',
-            stub: m.status==='open' ? TUNEL.stubOpen(m) : TUNEL.stubSoon(m) });
-      return tk + (m.status==='open' ? TUNEL.signupBar(m) : '')
-        + (useBP ? TUNEL.ticketDetail(m,
-            { more: m.line_path, moreLabel: m.line==='botc' ? '첫밤 페이지' : '노선 페이지' }) : '');
+      /* 티켓 한 벌은 공용 함수가 만든다 — 노선 페이지(첫밤 등)와 같은 모양 */
+      if(!useBP) return TUNEL.ticket(m) + (m.status==='open' ? TUNEL.signupBar(m) : '');
+      return TUNEL.ticketOne(m, { onclick:'TUNEL.ticketToggle(this)' })
+        + TUNEL.ticketDetail(m, { more: m.line_path, moreLabel: m.line==='botc' ? '첫밤 페이지' : '노선 페이지' });
     }).join('')
       || '<p class="bnote" style="text-align:center">예정된 모임이 아직 없어요</p>';
     document.getElementById('pastCnt').textContent = past.length + '개';

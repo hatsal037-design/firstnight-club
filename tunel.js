@@ -186,7 +186,7 @@ const TUNEL = {
      pass  = 보딩패스형 (첫밤·놀이터·찰칵) · score = 스코어카드 (올림픽) · metal = 각인 메탈 (방구석)
      새 노선 확정본이 나오면 여기 한 줄 더하면 어디서든 티켓이 뜬다 */
   _skins: {
-    botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2',
+    botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2', stamp:'/1ndclub/stamp_wax.png', dest:'첫밤行',
              ink:'#ECEEF2', lbl:'#B8A88E', rFont:"'Do Hyeon',sans-serif", rMd:21, rSm:16, acc:'#E8756A',
              perf:'rgba(0,0,0,.55)' },
     /* play(놀이터) — 손목밴드 판지 확정 (2026-08-20 햇살님 승인).
@@ -200,6 +200,22 @@ const TUNEL = {
     cyber: { t:'metal', card:'/v/tk_cyber_hairline.webp' }
   },
   hasSkin(line){ return !!TUNEL._skins[line]; },
+
+  /* ══ 티켓 한 벌 — 티켓 + (모집중이면) 신청 바까지 한 덩어리로 ══
+     허브(tunel.kr)와 노선 페이지(첫밤 등)가 이 함수 하나를 쓴다. 표기 규칙은 여기서만 정한다.
+       크기   kind=event → xl(180) · 모집중 → 기본(150) · 그 밖 → 슬림(100)
+       스텁   모집중 → '모집중 · BOARDING'(신청 뒤에는 내 상태 도장으로 바뀐다) · 그 밖 → '예정'
+     opt: onclick(티켓 클릭) · card(티켓 배경 덮어쓰기) · bar(false면 신청 바 생략) · slim(true면 항상 슬림) */
+  ticketOne(m, opt = {}){
+    const open = m.status === 'open';
+    const size = opt.slim ? 'sm' : (m.kind === 'event' ? 'xl' : open ? undefined : 'sm');
+    const stub = open
+      ? `<span class="sstub" data-mid="${m.id}" data-d="${m.d}"
+           onclick="event.stopPropagation();TUNEL.signupOpen('${m.id}')">${TUNEL.stubOpen(m)}</span>`
+      : TUNEL.stubSoon(m);
+    const tk = TUNEL.boardingTicket(m, { onclick: opt.onclick, card: opt.card, size, stub });
+    return tk + (open && opt.bar !== false ? TUNEL.signupBar(m) : '');
+  },
 
   boardingTicket(m, opt = {}){
     TUNEL._ticketCSS();
@@ -864,9 +880,29 @@ div.btk .stub{cursor:pointer}
     ensureUI();
     await TUNEL.signupRefresh();
   };
+  /* 내 신청 상태를 티켓 스텁에 찍는다 — 허브·노선 페이지 공통 */
+  function paintStubs(){
+    document.querySelectorAll('.sstub').forEach(el => {
+      const mid = el.dataset.mid, st = mine[mid] || null;
+      const m = byId[mid] || {};
+      const sk = TUNEL._skins[m.line] || {};
+      const dd = (el.dataset.d || '').slice(5).replace('-', '.');
+      const dest = m.data?.dest || sk.dest || '탑승';
+      if(st === 'confirmed')
+        el.innerHTML = `${sk.stamp ? `<img src="${sk.stamp}" alt="">` : ''}<div class="stx">${dest}<small>${dd}</small></div><div class="sl">STAMPED</div>`;
+      else if(st === 'paid' || st === 'applied')
+        el.innerHTML = `${sk.stamp ? `<img src="${sk.stamp}" alt="" style="opacity:.55">` : ''}<div class="stx">${dest}<small>${dd}</small></div><div class="sl">${st === 'paid' ? '입금 확인 중' : '입금 전'}</div>`;
+      else if(st === 'waitlist')
+        el.innerHTML = `<div class="holo2">대기중<i></i></div><div class="sl">WAITLIST</div>`;
+      else
+        el.innerHTML = TUNEL.stubOpen(m);
+    });
+  }
+  TUNEL.stubPaint = paintStubs;
   TUNEL.signupRefresh = async function(){
     await loadMine();
     document.querySelectorAll('.tnlbar').forEach(paintBar);
+    paintStubs();
     /* 페이지가 걸어둔 훅 — 신청 상태가 바뀌면 도장·명단을 다시 그리라고 알린다 */
     if(typeof TUNEL.onSignupChange === 'function'){ try{ TUNEL.onSignupChange(); }catch(e){} }
   };
