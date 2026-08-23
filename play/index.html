@@ -191,7 +191,7 @@ footer a{color:#8A9188}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=17"></script>
+<script src="../tunel.js?v=22"></script>
 <script>
 function setView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
@@ -206,22 +206,11 @@ setView((location.hash||'#sched').slice(1));
   try{
     const rows = await TUNEL.meetings({ line:'play', status:'upcoming' });
     if(!rows.length){ el.innerHTML = '<p class="note">아직 잡힌 모임이 없어요.</p>'; return; }
-    el.innerHTML = rows.map(v=>{
-      const tbd  = v.data && v.data.tbd;
-      const day  = tbd ? '날짜 조율 중' : `${+v.d.slice(5,7)}/${+v.d.slice(8)}`;
-      const time = tbd ? '' : `${v.dow||''} · ${v.s||''}~${v.e||''}`;
-      const note = (v.data && v.data.note) || v.memo || '';
-      return `<div class="tkt">
-        <span class="tbody">
-          <span class="tno">PLATFORM 01</span>
-          <span class="trow"><span class="td">${day}</span><span class="tt">${time}</span>
-            <span class="tst">${v.status==='open'?'모집중':'예정'}</span></span>
-          <span class="tp">${TUNEL.title(v)} · ${v.place||''}</span>
-          ${note?`<span class="tnote">${note}</span>`:''}
-        </span>
-        <span class="tstub"><span>TÜNEL</span></span>
-      </div>`;
-    }).join('');
+    /* 티켓은 공용 한 벌 — 허브(tunel.kr)와 같은 모양이 나온다 (개발/티켓_규칙.md) */
+    el.innerHTML = rows.map(v =>
+      TUNEL.ticketOne(v, { onclick:'TUNEL.ticketToggle(this)' }) + TUNEL.ticketDetail(v)
+    ).join('');
+    try{ await TUNEL.signupInit(); }catch(e){}
   }catch(e){
     el.innerHTML = '<p class="note">일정을 못 불러왔어요.<br>' + (e.message||'') + '</p>';
   }
