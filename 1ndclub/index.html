@@ -584,7 +584,7 @@ footer a{color:#7a8290}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../tunel.js?v=25"></script>
-<script src="api.js?v=boot2"></script>
+<script src="api.js?v=boot3"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=r4open13"></script>
@@ -627,7 +627,6 @@ const isStaff = () => !!acc && (acc.admin || acc.role==='staff');
 const canRecord = () => isStaff() || !!acc?.scribe;
 const SCRIBE_MIN = 10;
 const myNames = () => acc ? [acc.nick, ...(acc.aliases||[])] : [];
-const FKEY = () => 'botc_fav_' + (acc?.uid||'anon');
 
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 /* 노선 값은 중앙(DB lines + TUNEL._skins)에서 읽는다. 아래는 서버를 못 읽을 때만 쓰는 최소값 */
@@ -1334,65 +1333,6 @@ async function openPast(d){
 }
 
 
-/* ══ 캘린더 저장 ══
-   .ics 파일을 즉석에서 만들어 연다. 아이폰은 캘린더 앱이, 안드로이드는 선택창이 뜬다.
-   구글 캘린더로 바로 넣고 싶은 사람을 위해 링크도 같이 준다. */
-function icsStamp(d, t){                       // '2026-08-15','11:00' → '20260815T110000'
-  return d.replace(/-/g,'') + 'T' + t.replace(':','') + '00';
-}
-function makeICS(r){
-  const title = `${lineInfo().line_name}${r.r?` ${r.r}회차`:''}`;
-  const desc  = [r.place, r.addr, r.fee?`참가비 ${r.fee}`:'', r.after?`2차 ${r.after} (자율)`:'']
-                  .filter(Boolean).join('\\n');
-  return ['BEGIN:VCALENDAR','VERSION:2.0',`PRODID:-//${lineInfo().line_name}//KR`,'CALSCALE:GREGORIAN',
-    'BEGIN:VEVENT',
-    `UID:botc-${r.d}@firstnight.club`,
-    `DTSTAMP:${icsStamp(new Date().toISOString().slice(0,10), '00:00')}Z`,
-    `DTSTART;TZID=Asia/Seoul:${icsStamp(r.d, r.s)}`,
-    `DTEND;TZID=Asia/Seoul:${icsStamp(r.d, r.e)}`,
-    `SUMMARY:${title}`,
-    `LOCATION:${(r.addr||r.place).replace(/,/g,'\\,')}`,
-    `DESCRIPTION:${desc}`,
-    'BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:내일 첫밤 사망자 클럽','END:VALARM',
-    'END:VEVENT','END:VCALENDAR'].join('\r\n');
-}
-function saveCal(){
-  const r = openRound; if(!r) return;
-  const ics = makeICS(r);
-  const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `첫밤사망자클럽_${r.d}.ics`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 4000);
-}
-function googleCal(){
-  const r = openRound; if(!r) return '#';
-  const p = new URLSearchParams({
-    action:'TEMPLATE',
-    text:`첫밤 사망자 클럽${r.r?` ${r.r}회차`:''}`,
-    dates:`${icsStamp(r.d,r.s)}/${icsStamp(r.d,r.e)}`,
-    details:[r.place, r.fee?`참가비 ${r.fee}`:''].filter(Boolean).join('\n'),
-    location:r.addr||r.place, ctz:'Asia/Seoul',
-  });
-  return 'https://calendar.google.com/calendar/render?'+p.toString();
-}
-
-/* ══ 신청자 명단 — 허브와 같은 signups 를 읽는다 (rsvps 참석투표는 은퇴) ══ */
-async function renderApplicants(){
-  const box=document.getElementById('rsvpBox'); if(!box||!openRound) return;
-  let list=[]; try{ list = await TUNEL.signupList(openRound.id); }catch(e){}
-  const grp={confirmed:[],paid:[],applied:[],waitlist:[]};
-  list.forEach(r=>{ (grp[r.status]||[]).push(r); });
-  const chips=a=>a.map(p=>`<span class="pf" onclick="openProfile('${p.member_id}')">${avHtml(p.member_id,p.nick)}${p.nick}</span>`).join('');
-  const going=grp.confirmed.length+grp.paid.length+grp.applied.length;
-  box.innerHTML = `
-    <div class="rt">🎟 신청 현황 <span class="rc">${going?`지금까지 <b>${going}명</b>`:''}</span></div>
-    ${grp.confirmed.length?`<div class="rn2">확정 —<br>${chips(grp.confirmed)}</div>`:''}
-    ${(grp.paid.length+grp.applied.length)?`<div class="rn2">입금·신청 중 —<br>${chips(grp.paid.concat(grp.applied))}</div>`:''}
-    ${grp.waitlist.length?`<div class="rn2">대기 —<br>${chips(grp.waitlist)}</div>`:''}
-    ${!acc?'<div class="rn2">로그인하면 신청하고 명단도 볼 수 있어요</div>':(list.length?'':'<div class="rn2">아직 신청자가 없어요 — 티켓의 도장 자리나 신청하기를 눌러주세요</div>')}`;
-}
 /* 스터브 도장 — 공용(TUNEL.stubPaint)이 찍는다. 신청 상태가 바뀔 때 같이 부른다 */
 function updateStubs(){ if(TUNEL.stubPaint) TUNEL.stubPaint(); }
 
@@ -1482,12 +1422,6 @@ function pIsMe(x){
   if(typeof x === 'object') return x.uid === acc.uid;
   return myNames().includes(x);
 }
-function pTag(x){
-  const m = pMember(x);
-  return m ? `<span class="tg m">@${m.nick}</span>`
-           : `<span class="tg p">${pName(x)}</span>`;
-}
-
 /* ══ 프로필 (썸네일 + 카드) ══ */
 const PFP = {};   // uid → dataURL(사진) 또는 null(없음). 세션 캐시
 async function loadPfps(uids){
@@ -1540,52 +1474,6 @@ async function openProfile(key, backD){
     ${back}<button class="mclose" onclick="closeM()">닫기</button>`;
   document.getElementById('ov').style.display='flex';
 }
-/* 내 프로필 사진 올리기 — 기기에서 골라 128px 정사각 jpeg로 줄여 저장 */
-function pickPfp(){
-  const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
-  inp.onchange=async()=>{
-    const f=inp.files[0]; if(!f) return;
-    try{
-      const url=await pfpShrink(f);
-      await API.pfpSet(acc.uid,url);
-      PFP[acc.uid]=url;
-      myAccountSheet(); renderApplicants();
-    }catch(e){ alert('사진을 저장하지 못했어요: '+e.message); }
-  };
-  inp.click();
-}
-async function delPfp(){
-  await API.pfpDel(acc.uid); PFP[acc.uid]=null;
-  myAccountSheet(); renderApplicants();
-}
-function pfpShrink(file){
-  return new Promise((res,rej)=>{
-    const img=new Image();
-    img.onload=()=>{
-      URL.revokeObjectURL(img.src);
-      let size=128, q=0.72, out='';
-      const draw=(S)=>{
-        const c=document.createElement('canvas'); c.width=c.height=S;
-        const x=c.getContext('2d');
-        const s=Math.min(img.width,img.height);
-        x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,S,S);
-        return c;
-      };
-      out=draw(size).toDataURL('image/jpeg',q);
-      if(out.length>15000) out=draw(size).toDataURL('image/jpeg',0.5);   // kvdb 값 크기 여유 확보
-      if(out.length>15000) out=draw(96).toDataURL('image/jpeg',0.5);
-      res(out);
-    };
-    img.onerror=()=>rej(new Error('이미지를 읽지 못했어요'));
-    img.src=URL.createObjectURL(file);
-  });
-}
-/* 내가 이 사람을 몇 번 만났나 — 나와 같은 회차에 참여했던 사람별 횟수.
-   아직 화면에 표기하는 곳은 없지만, 참여자 기록(@태그)만 쌓이면 언제든 소급 계산되는 구조라
-   따로 저장하는 카운터 없이 이 함수 하나로 끝난다. key는 회원이면 uid, 비회원 수기는 이름.
-   반환 예: { "0b25749c-…": 5, "지민": 2 } */
-/* 참여자 항목을 회원과 연결 — 가입 전에 이름 문자열로 기록됐어도,
-   지금 그 닉네임(또는 옛 닉네임)을 쓰는 회원이 있으면 그 사람으로 본다 */
 function meetKeyOf(x){
   if(typeof x==='object') return x.uid;
   const m = MEMBERS.find(m=>m.nick===x || (m.aliases||[]).includes(x));
