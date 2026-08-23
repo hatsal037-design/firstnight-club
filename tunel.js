@@ -153,22 +153,24 @@ const TUNEL = {
     if(document.getElementById('tunel-tk-css')) return;
     const st = document.createElement('style'); st.id = 'tunel-tk-css';
     st.textContent = `
-.tk{background:#17141A;border:1px solid #3A2B2E;border-radius:2px;overflow:hidden;display:flex;position:relative;
-  color:#F0E6DA;box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 0 60px rgba(217,142,50,.06)}
-.tk::before{content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse at 18% 0%, rgba(255,180,90,.14), transparent 58%)}
-.tk .stub{width:44px;flex:none;order:2;border-left:1px dashed rgba(232,200,160,.35);
-  background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;padding:8px 0}
-.tk .stub span{writing-mode:vertical-rl;font-size:9px;letter-spacing:4px;font-weight:800;color:#C6A87C}
-.tk .body{flex:1;min-width:0;padding:14px 15px 13px}
-.tk .no{font-size:9px;letter-spacing:2px;color:#8A6B4E;text-align:right}
-.tk .nm{font-size:25px;color:#F0E6DA;margin-top:5px;letter-spacing:-.5px}
-.tk .ds{font-size:11.5px;color:#8E8288;margin-top:7px;line-height:1.6}
-.tk .foot{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:9px;
-  border-top:1px dotted rgba(232,200,160,.22)}
-.tk .st{font-size:9.5px;letter-spacing:1.5px;color:#E8323C;border:1px solid rgba(232,50,60,.55);padding:3px 8px}
-.tk .arrow{margin-left:auto;font-size:10px;color:#6E6169}
-.tk.past{opacity:.72}`;
+.tkt{display:flex;width:358px;max-width:calc(100% - 8px);margin:0 auto 12px;min-height:100px;
+  text-decoration:none;position:relative;overflow:hidden;border-radius:2px;
+  background:#1C1A1F;color:#E6E0D6;border:1px solid #35313A}
+.tkt .tbody{flex:1;min-width:0;padding:12px 14px 11px;display:flex;flex-direction:column;justify-content:center}
+.tkt .tstub{width:40px;flex:none;display:flex;align-items:center;justify-content:center;
+  border-left:1px dashed rgba(255,255,255,.22)}
+.tkt .tstub span{writing-mode:vertical-rl;font-size:8px;letter-spacing:3px;font-weight:800;opacity:.75}
+.tkt .tno{font-size:8.5px;letter-spacing:1.5px;text-align:right;opacity:.6}
+.tkt .trow{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.tkt .td{font-size:19px;font-weight:800;letter-spacing:-.3px}
+.tkt .tt{font-size:11px;opacity:.75}
+.tkt .tst{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:1px;border-radius:3px;padding:3px 7px;
+  border:1px solid rgba(255,255,255,.25)}
+.tkt .tp{font-size:11.5px;margin-top:5px;opacity:.85}
+.tkt .tdesc{font-size:11px;opacity:.7;line-height:1.5;margin-top:8px}
+.tkt.lg{min-height:150px}
+.tkt.xl{min-height:180px}
+.tkt.past{opacity:.72}`;
     document.head.appendChild(st);
   },
   ticket(m, opt = {}){
