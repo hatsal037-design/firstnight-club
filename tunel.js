@@ -36,13 +36,22 @@ const PAST_GRACE_H  = 1;   /* 끝나고 몇 시간 뒤에 지난 회차로 넘�
 const NO_END_H      = 6;   /* 끝 시각이 안 적힌 회차의 기본 길이 */
 const CLOSE_BEFORE_H = 3;  /* 시작 몇 시간 전에 신청을 닫을지 (그 뒤로는 '모집 완료') */
 
-/* 'YYYY-MM-DD' + 'HH:MM' → 그 시각의 Date (사는 곳 시간 기준).
-   new Date('2026-08-29') 는 UTC 자정으로 읽혀서 아홉 시간이 어긋난다 — 그래서 직접 만든다. */
+/* 모임 시각은 서울에서 일어난다 — 보는 사람이 어디에 있든 기준은 KST 다.
+   ISO 8601 에 시간대까지 붙여 만든다: '2026-08-29T13:00:00+09:00'
+     · 시간대를 안 붙이면 브라우저가 제 기기 시간대로 읽는다 → 해외에 있는 회원은 마감이 어긋난다
+     · 날짜만 준 '2026-08-29' 는 UTC 자정으로 읽힌다 (표준이 그렇게 정한다) → 아홉 시간 어긋남
+   두 함정 다 시간대를 명시하면 사라진다. */
+const TZ = '+09:00';                         /* 모임이 열리는 곳의 시간대 (Asia/Seoul) */
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;      /* ISO 8601 달력 날짜 */
+const TIME_RE = /^\d{1,2}:\d{2}$/;           /* 'HH:MM' — 한 자리 시각도 받는다 */
+
 function at(d, hm){
-  const [y, mo, dd] = String(d || '').split('-').map(Number);
-  if(!y || !mo || !dd) return null;
-  const [h, mi] = String(hm || '00:00').split(':').map(Number);
-  return new Date(y, mo - 1, dd, h || 0, mi || 0, 0, 0);
+  if(!DATE_RE.test(String(d || ''))) return null;
+  const t = TIME_RE.test(String(hm || '')) ? hm : '00:00';
+  const [h, mi] = t.split(':');
+  const iso = `${d}T${String(h).padStart(2, '0')}:${mi}:00${TZ}`;
+  const dt = new Date(iso);
+  return isNaN(dt) ? null : dt;
 }
 
 /* 이 회차가 끝나는 시각 (여유시간 포함). 날짜를 모르면 null */
@@ -199,7 +208,7 @@ const TUNEL = {
 
   /* ── 화면 조각 ────────────────────────────────────────── */
 
-  isPast, isOpen, isClosed, endsAt, closesAt, autoPast,
+  isPast, isOpen, isClosed, endsAt, closesAt, autoPast, at,
 
   /* 회차 이름 — 없으면 회차 번호로 지어준다 */
   title(m){
@@ -559,7 +568,8 @@ const TUNEL = {
     const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//TUNEL//KR','CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
       `UID:tunel-${m.line || 'x'}-${m.d}@tunel.kr`,
-      `DTSTAMP:${st(new Date().toISOString().slice(0,10), '00:00')}Z`,
+      /* DTSTAMP 는 만든 순간을 UTC 기본형으로 (RFC 5545) — 20260829T040000Z */
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}`,
       `DTSTART;TZID=Asia/Seoul:${st(m.d, m.s)}`,
       `DTEND;TZID=Asia/Seoul:${st(m.d, m.e || m.s)}`,
       `SUMMARY:${title}`,

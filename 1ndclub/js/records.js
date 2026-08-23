@@ -199,13 +199,14 @@ function renderMePage(){
   const mineRounds = list.filter(p=>(p.people||[]).some(pIsMe)).sort((a,b)=>a.d.localeCompare(b.d));
   const cnt = mineRounds.length;
   const first = mineRounds[0], last = mineRounds[cnt-1];
-  const daysSince = first ? Math.floor((TODAY - new Date(first.d))/86400000) : null;
+  /* 날짜 계산도 모임이 열리는 곳(KST) 기준 — TUNEL.at 이 시간대를 붙여 만든다 */
+  const daysSince = first ? Math.floor((TODAY - TUNEL.at(first.d))/86400000) : null;
 
   const playedSet = new Set();
   mineRounds.forEach(p=>(p.played||[]).forEach(g=>playedSet.add(g)));
   const wish = favs.filter(n=>!playedSet.has(n));
   const next = upcoming[0];
-  const dday = next ? Math.round((new Date(next.d)-TODAY)/86400000) : null;
+  const dday = next ? Math.round((TUNEL.at(next.d) - TODAY)/86400000) : null;
 
   body.innerHTML=`
     <div class="hero" style="text-align:center">
