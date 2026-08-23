@@ -587,7 +587,7 @@ footer a{color:#7a8290}
 <script src="api.js?v=inbox1"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
-<script src="schedule.js?v=r4open4"></script>
+<script src="schedule.js?v=r4open5"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -1405,7 +1405,7 @@ function updateStubs(){
     else if(st==='waitlist')
       el.innerHTML = `<div class="holo2">대기중<i></i></div><div class="sl">WAITLIST</div>`;
     else
-      el.innerHTML = `<div class="holo2">신청<i></i></div><div class="sl">STAMP HERE</div>`;
+      el.innerHTML = TUNEL.stubOpen({});   // 아직 신청 전 — 허브(tunel.kr) 티켓과 같은 표기
   });
 }
 
