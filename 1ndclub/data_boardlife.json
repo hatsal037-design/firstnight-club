@@ -424,5 +424,17 @@
   "url": "https://boardlife.co.kr/game/17925",
   "rank": 1723,
   "bgg": "https://boardgamegeek.com/boardgame/400205/5-towers"
+ },
+ "시계탑에 흐른 피": {
+  "status": "ok",
+  "src": "boardlife",
+  "rate": 8.0,
+  "weight": 3.05,
+  "age": 15,
+  "players": "6-21",
+  "minutes": "30-120",
+  "url": "https://boardlife.co.kr/game/15664",
+  "rank": 43,
+  "bgg": "https://boardgamegeek.com/boardgame/240980/blood-on-the-clocktower"
  }
 }

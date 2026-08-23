@@ -26,6 +26,9 @@
 
 const GAMES = [
   // ── 마피아류 ──────────────────────────────
+  { n:'시계탑에 흐른 피', bl:{"rate": 8.0, "weight": 3.05, "rank": 43, "players": "6-21", "minutes": "30-120", "age": 15, "url": "https://boardlife.co.kr/game/15664", "bgg": "https://boardgamegeek.com/boardgame/240980/blood-on-the-clocktower"}, img:'img/t/botc.jpg', min:6, max:21, t:90, cat:'mafia', lv:'고급', out:false, host:true, own:'', have:true,
+    d:'마피아류의 끝판왕. 시계탑에 흐르는 피라고도 불러요. 죽어도 판에 남아 끝까지 함께합니다.',
+    r:'밤엔 악마가 한 명을 데려가고, 낮엔 토론과 처형으로 악마를 찾습니다. 죽어도 자리를 지키며 계속 말할 수 있고, 투표만 평생 한 번(유령표) 남아요. 정보를 얻는 역할이 스무 종 넘게 나오는데, 중독이나 취함 때문에 그 정보가 거짓일 수 있어서 누구 말을 믿을지가 승부를 가릅니다. 진행자가 판 전체를 조율하며 굴러가는 게임이라, 처음엔 진행자만 룰을 알면 됩니다.' },
   { n:'오리지널 마피아', img:'img/t/mafia.jpg', min:6, max:16, t:30, cat:'mafia', lv:'초보', out:true, host:true, own:'임햇살', have:true,
     d:'모든 것의 시작. 밤에 죽이고 낮에 지목한다.',
     r:'밤에 마피아가 한 명을 지목해 죽이고, 낮에 전원이 토론해 한 명을 처형한다. 마피아를 전부 찾으면 시민 승리.',
