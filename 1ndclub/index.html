@@ -587,7 +587,7 @@ footer a{color:#7a8290}
 <script src="api.js?v=route1"></script>
 <script src="games.js?v=4"></script>
 <script src="games_db.js"></script>
-<script src="schedule.js?v=r4open2"></script>
+<script src="schedule.js?v=r4open3"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -604,6 +604,7 @@ let acc   = null;                              // 로그인한 계정 (서버에
 const NAME_FIX = Object.fromEntries(GAMES.flatMap(g=>(g.old||[]).map(o=>[o,g.n])));
 const fixName  = n => NAME_FIX[n] || n;
 const fixNames = a => [...new Set((a||[]).map(fixName))];
+let PENDING_APPLY = new URLSearchParams(location.search).get('apply') || null;   // ?apply=날짜 로 들어오면 그 회차 신청까지 연다
 let favs  = [];                                // 즐겨찾기 — 이 기기에만 저장
 let picks = fixNames(JSON.parse(localStorage.getItem('botc_picks_anon')||'[]'));   // 로그인 전에는 이 기기, 로그인하면 서버
 let edits = JSON.parse(localStorage.getItem(RKEY)||'{}');   // 서버 이전 시절의 로컬 기록(백업용)
@@ -2336,7 +2337,6 @@ bootSession();
    https://tunel.kr/1ndclub/?apply=2026-08-29  ← 이 주소로 들어오면
    정모일정 탭 → 그 회차 상세 펼침 → 신청 팝업까지 한 번에 열린다.
    카톡에 붙이면 미리보기(og)도 함께 뜬다. */
-let PENDING_APPLY = new URLSearchParams(location.search).get('apply') || null;
 function openApplyByDate(d){
   const r = (ROUNDS||[]).find(x=>x.d===d);
   if(!r) return false;
