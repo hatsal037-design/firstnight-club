@@ -587,7 +587,7 @@ footer a{color:#7a8290}
 <script src="api.js?v=route1"></script>
 <script src="games.js?v=4"></script>
 <script src="games_db.js"></script>
-<script src="schedule.js?v=r4open"></script>
+<script src="schedule.js?v=r4open2"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -1220,11 +1220,16 @@ function renderSched(){
       ${r.st==='open'?`<div class="btns">
         <span class="b" onclick="saveCal()">📅 캘린더에 저장</span>
         <a class="b" href="${googleCal()}" target="_blank" rel="noopener">구글 캘린더</a>
+      </div>
+      <div class="btns">
+        <span class="b p" onclick="shareTicket('${r.d}')">🎟 티켓 공유하기</span>
       </div>`:''}
       ${canRecord()?`<div class="ad" style="margin-top:9px;opacity:.6">예정 회차 수정은 schedule.js에서 · 끝난 뒤 지난 모임으로 옮기면 여기서 편집돼요</div>`:''}
       </div>`;
   });
 
+  if(PENDING_APPLY){ const want=PENDING_APPLY; PENDING_APPLY=null;
+    setTimeout(()=>{ try{ openApplyByDate(want); }catch(e){} }, 300); }   // 신청 링크로 들어온 경우
   const banned = acc?.role==='banned';
   document.getElementById('schedTop').innerHTML = banned
     ? `<div class="banbox">활동이 정지된 계정이에요. 일정과 기록은 볼 수 있지만
@@ -2321,10 +2326,47 @@ function closeM(){
 renderMe(); renderGames();
 {
   const v=(location.hash||'#games').slice(1);
-  if(['sched','me','members'].includes(v)) setView(v,true);
+  if(PENDING_APPLY) setView('sched',true);
+  else if(['sched','me','members'].includes(v)) setView(v,true);
 }
 bootSession();
 /* 카카오 인가 복귀(?code=)는 supabase-js가 알아서 세션으로 바꿔준다 — 별도 처리 불필요 */
+
+/* ══ 티켓 공유 / 바로 신청 링크 ══
+   https://tunel.kr/1ndclub/?apply=2026-08-29  ← 이 주소로 들어오면
+   정모일정 탭 → 그 회차 상세 펼침 → 신청 팝업까지 한 번에 열린다.
+   카톡에 붙이면 미리보기(og)도 함께 뜬다. */
+let PENDING_APPLY = new URLSearchParams(location.search).get('apply') || null;
+function openApplyByDate(d){
+  const r = (ROUNDS||[]).find(x=>x.d===d);
+  if(!r) return false;
+  const tk = [...document.querySelectorAll('#schedList [onclick*="toggleDetail"]')]
+    .find(e=>e.textContent.includes(fmtDate(d)) || e.textContent.includes(d.slice(5).replace('-','/').replace(/^0/,'')));
+  if(tk){ const box = (()=>{ let x=tk.nextElementSibling; while(x && !x.classList.contains('rdx')) x=x.nextElementSibling; return x; })();
+    if(box && getComputedStyle(box).display==='none') toggleDetail(tk);
+    tk.scrollIntoView({block:'center', behavior:'smooth'}); }
+  if(r.st==='open' && r.id && window.TUNEL?.signupOpen){ setTimeout(()=>TUNEL.signupOpen(r.id), 400); return true; }
+  return true;
+}
+function fmtDate(d){ const [y,m,dd]=d.split('-'); return `${+m}/${+dd}`; }
+/* 티켓 공유 — 공유 시트가 되면 그걸로, 안 되면 링크 복사 */
+async function shareTicket(d){
+  const r = (ROUNDS||[]).find(x=>x.d===d); if(!r) return;
+  const url = `https://tunel.kr/1ndclub/?apply=${d}`;
+  const title = (r.name || `${r.r?r.r+'회차 ':''}정모`) + ' · 첫밤 사망자 클럽';
+  const text = [`${title}`,
+    `${fmtDate(d)}(${r.dow}) ${r.s}~${r.e} · ${r.place}`,
+    r.fee ? `참가비 ${r.fee}` : '', '', url].filter(Boolean).join('\n');
+  try{
+    if(navigator.share){ await navigator.share({ title, text: text.replace(url,'').trim(), url }); return; }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  try{
+    await navigator.clipboard.writeText(text);
+    ask('링크를 복사했어요.<br><span style="font-size:12px;color:var(--sub)">단톡방에 붙여넣으면 눌러서 바로 신청할 수 있어요.</span>', null);
+  }catch(e){
+    ask(`아래 주소를 복사해서 쓰세요.<br><span style="font-size:12px;color:var(--sub);word-break:break-all">${url}</span>`, null);
+  }
+}
 
 /* 주소에 ?rules=게임이름 을 붙이면 그 게임 룰이 바로 열린다.
    "달무티 룰 여기서 봐" 하고 링크만 던지면 되게. */
