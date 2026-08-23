@@ -840,6 +840,11 @@ div.btk .stub{cursor:pointer}
           options:{ redirectTo: location.origin + location.pathname + '?li=' + Date.now() } });
       return;
     }
+    /* 내 신청 상태를 반드시 확인하고 나서 화면을 고른다 —
+       ?apply=… 딥링크는 상태를 다 읽기 전에 팝업을 열 수 있다.
+       그때 mine 이 비어 있으면 이미 확정된 사람에게 결제 화면을 내밀고,
+       뒤이어 나가는 자리 선점 upsert 는 서버가 막아 400 이 났다. */
+    await loadMine();   /* mine 은 신청이 있는 회차만 담아서 "없음"과 "아직 안 읽음"이 구분되지 않는다 */
     const my = mine[mid];
     if(my === 'confirmed'){
       body.innerHTML = `<p class="big">확정됐어요 🎉</p>${meetingRows(m)}
