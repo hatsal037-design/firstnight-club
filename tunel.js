@@ -54,6 +54,28 @@ function at(d, hm){
   return isNaN(dt) ? null : dt;
 }
 
+/* 절대 시각(서버 timestamptz 등)을 서울 기준 조각으로 나눈다.
+   서버는 UTC 로 준다 — 그 글자를 그대로 잘라 쓰면 아홉 시간 어긋난 값이 화면에 나온다.
+   표기 모양은 부르는 쪽이 정하고, 여기서는 '어느 시간대의 몇 시인가'만 명확히 한다. */
+function kstParts(ts){
+  const d = ts instanceof Date ? ts : new Date(ts);
+  if(isNaN(d)) return null;
+  const p = {};
+  for(const x of new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul',
+        year:'numeric', month:'2-digit', day:'2-digit',
+        hour:'2-digit', minute:'2-digit', hour12:false }).formatToParts(d))
+    if(x.type !== 'literal') p[x.type] = x.value;
+  if(p.hour === '24') p.hour = '00';                 /* 자정을 24 로 주는 환경 대비 */
+  return p;
+}
+
+/* 서울 기준 오늘 자정 — 날짜 경계를 세는 모든 계산의 기준.
+   new Date().setHours(0,0,0,0) 은 보는 사람 기기의 자정이라 해외에서 하루가 밀린다. */
+function todayKST(){
+  const p = kstParts(new Date());
+  return at(`${p.year}-${p.month}-${p.day}`);
+}
+
 /* 이 회차가 끝나는 시각 (여유시간 포함). 날짜를 모르면 null */
 function endsAt(m){
   if(!m || !m.d || m.data?.tbd) return null;          /* 날짜 조율 중이면 끝나지 않는다 */
@@ -208,7 +230,7 @@ const TUNEL = {
 
   /* ── 화면 조각 ────────────────────────────────────────── */
 
-  isPast, isOpen, isClosed, endsAt, closesAt, autoPast, at,
+  isPast, isOpen, isClosed, endsAt, closesAt, autoPast, at, kstParts, todayKST,
 
   /* 회차 이름 — 없으면 회차 번호로 지어준다 */
   title(m){

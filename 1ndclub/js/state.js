@@ -40,7 +40,7 @@ const canRecord = () => isStaff() || !!acc?.scribe;
 const SCRIBE_MIN = 10;
 const myNames = () => acc ? [acc.nick, ...(acc.aliases||[])] : [];
 
-const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const TODAY = TUNEL.todayKST();   /* 서울 기준 오늘 자정 — 해외에서 봐도 하루가 안 밀린다 */
 /* 노선 값은 중앙(DB lines + TUNEL._skins)에서 읽는다. 아래는 서버를 못 읽을 때만 쓰는 최소값 */
 const LINE_ID = 'botc';
 const LINE_FALLBACK = { line:'botc', line_no:2, line_name:'첫밤 사망자 클럽', line_short:'첫밤', line_path:'/1ndclub/' };

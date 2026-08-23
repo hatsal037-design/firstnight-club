@@ -90,6 +90,11 @@ function renderMe(){
 }
 
 /* ── 공지 대상 판정 — 내 상태만 보면 된다 ── */
+/* 공지 시각 — 서버는 UTC 로 준다. 그 글자를 자르면 아홉 시간 어긋난다 (2026-08-23에 실제로 그랬다) */
+function noticeWhen(ts){
+  const p = TUNEL.kstParts(ts);
+  return p ? `${p.month}-${p.day} ${p.hour}:${p.minute}` : '';
+}
 function noticeForMe(n){
   if(!acc) return false;
   if(n.to) return n.to === acc.uid;      // 개인·대상 지정 공지 (메인 허브 알림함과 같은 규칙)
@@ -126,7 +131,7 @@ function openNotices(){
       return `<div class="ntc${unread?' unread':''}">
         <div class="nh"><b>${n.title}</b>${unread?'<span class="nu">NEW</span>':''}</div>
         <div class="nb2">${n.body.replace(/\n/g,'<br>')}</div>
-        <div class="nm2">${tgt} · ${(n.at||'').slice(5,16).replace('T',' ')}${isAdmin()?` · <span style="color:var(--red-lite);cursor:pointer" onclick="delNotice('${n.id}')">삭제</span>`:''}</div>
+        <div class="nm2">${tgt} · ${noticeWhen(n.at)}${isAdmin()?` · <span style="color:var(--red-lite);cursor:pointer" onclick="delNotice('${n.id}')">삭제</span>`:''}</div>
       </div>`;
     }).join('') : `<div class="empty" style="padding:30px">아직 온 공지가 없어요.</div>`}
     <button class="mclose" onclick="markAllRead();closeM()">닫기</button>`;
