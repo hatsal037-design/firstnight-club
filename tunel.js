@@ -290,7 +290,7 @@ const TUNEL = {
      pass  = 보딩패스형 (첫밤·놀이터·찰칵) · score = 스코어카드 (올림픽) · metal = 각인 메탈 (방구석)
      새 노선 확정본이 나오면 여기 한 줄 더하면 어디서든 티켓이 뜬다 */
   _skins: {
-    botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2', stamp:'/1ndclub/stamp_wax.png', stampDest:'첫밤行',
+    botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2', stamp:'/1ndclub/stamp_wax.png?v2', stampDest:'첫밤行',
              ink:'#ECEEF2', lbl:'#B8A88E', rFont:"'Do Hyeon',sans-serif", rMd:21, rSm:16, acc:'#E8756A',
              perf:'rgba(0,0,0,.55)' },
     /* play(놀이터) — 손목밴드 판지 확정 (2026-08-20 햇살님 승인).
@@ -347,7 +347,7 @@ const TUNEL = {
 
     if(sk.t === 'score'){   /* 우리끼리 올림픽 — 스코어카드 */
       return `${open_(`btk score${sm ? ' sm' : ''}`)}
-        <img src="${card}" alt="">
+        <img src="${card}" alt="" loading="lazy" decoding="async">
         <div class="sov"></div><div class="sperf"></div>
         <div class="in">
           <div class="no">PLATFORM ${no}</div>
@@ -367,7 +367,7 @@ const TUNEL = {
     if(sk.t === 'metal'){   /* 방구석 디스코드 — 헤어라인 메탈 + 레이저 각인 */
       const code = m.data?.code;
       return `${open_(`btk metal${sm ? ' sm' : ''}`)}
-        <img src="${card}" alt="">
+        <img src="${card}" alt="" loading="lazy" decoding="async">
         <div class="gl"></div>
         <div class="etch">
           <div class="mlbl">PLATFORM ${no}${m.status === 'open' ? ' · OPEN' : ''}</div>
@@ -393,7 +393,7 @@ const TUNEL = {
             <div><i>PLACE</i><b>${m.place || ''}</b></div>
           </div>`;
       return `${open_(`btk band${sm ? ' sm' : xl2 ? ' xl' : ''}`)}
-        <img src="${opt.card ?? sk.card}" alt="">
+        <img src="${opt.card ?? sk.card}" alt="" loading="lazy" decoding="async">
         <div class="bdim"></div>
         <div class="perf" style="background:repeating-linear-gradient(180deg,rgba(255,255,255,.5) 0 5px,transparent 5px 10px)"></div>
         <div class="ov bov">
@@ -418,7 +418,7 @@ const TUNEL = {
         ${xl && m.memo ? `<div class="desc">${m.memo}</div>` : ''}
         ${grid}`;
     return `${open_(`btk${sk.flat ? ' ' + sk.flat : ''}${sm ? ' sm' : xl ? ' xl' : ''}`)}
-      ${sk.flat ? '<span class="flat"></span>' : `<img src="${card}" alt="">`}
+      ${sk.flat ? '<span class="flat"></span>' : `<img src="${card}" alt="" loading="lazy" decoding="async">`}
       <div class="perf" style="background:repeating-linear-gradient(180deg,${sk.perf} 0 5px,transparent 5px 10px)"></div>
       <div class="ov" style="color:${sk.ink}">
         <div class="lbl" style="color:${sk.lbl}">TÜNEL BOARDING PASS</div>
