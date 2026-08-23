@@ -149,7 +149,30 @@ const TUNEL = {
   },
 
   /* 통합 일정 티켓 한 장. 노선 스킨은 lines.skin 이 정한다 */
+  _tkCSS(){
+    if(document.getElementById('tunel-tk-css')) return;
+    const st = document.createElement('style'); st.id = 'tunel-tk-css';
+    st.textContent = `
+.tk{background:#17141A;border:1px solid #3A2B2E;border-radius:2px;overflow:hidden;display:flex;position:relative;
+  color:#F0E6DA;box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 0 60px rgba(217,142,50,.06)}
+.tk::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%, rgba(255,180,90,.14), transparent 58%)}
+.tk .stub{width:44px;flex:none;order:2;border-left:1px dashed rgba(232,200,160,.35);
+  background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;padding:8px 0}
+.tk .stub span{writing-mode:vertical-rl;font-size:9px;letter-spacing:4px;font-weight:800;color:#C6A87C}
+.tk .body{flex:1;min-width:0;padding:14px 15px 13px}
+.tk .no{font-size:9px;letter-spacing:2px;color:#8A6B4E;text-align:right}
+.tk .nm{font-size:25px;color:#F0E6DA;margin-top:5px;letter-spacing:-.5px}
+.tk .ds{font-size:11.5px;color:#8E8288;margin-top:7px;line-height:1.6}
+.tk .foot{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:9px;
+  border-top:1px dotted rgba(232,200,160,.22)}
+.tk .st{font-size:9.5px;letter-spacing:1.5px;color:#E8323C;border:1px solid rgba(232,50,60,.55);padding:3px 8px}
+.tk .arrow{margin-left:auto;font-size:10px;color:#6E6169}
+.tk.past{opacity:.72}`;
+    document.head.appendChild(st);
+  },
   ticket(m, opt = {}){
+    TUNEL._tkCSS();
     const past = opt.past ?? isPast(m);
     const xl   = !past && m.kind === 'event';    // 대형 행사(MT·운동회)는 이벤트 180
     const big  = !past && !xl && m.status === 'open';   // 모집중은 규격 일반(150) 크기로
