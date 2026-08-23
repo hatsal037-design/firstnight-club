@@ -208,6 +208,9 @@ const TUNEL = {
     snap:  { t:'pass', short:'나들이', card:'/tk/TK_sopung.jpg', cardSm:'/tk/TK_sopung_slim.jpg',
              ink:'#6B4A52', lbl:'#C4788F', rFont:"'Nanum Pen Script',cursive", rMd:27, rSm:21, acc:'#D9407A',
              perf:'rgba(140,80,100,.4)' },
+    library:{ t:'pass', short:'서재', flat:'paper',
+             ink:'#26282B', lbl:'#8A8578', rFont:"'Pretendard',system-ui,sans-serif", rMd:19, rSm:15, acc:'#6B7A5E',
+             perf:'rgba(0,0,0,.18)' },
     sport: { t:'score', card:'/v/tk_sport.webp', cardSm:'/v/tk_sport_slim.webp' },
     cyber: { t:'metal', card:'/v/tk_cyber_hairline.webp' }
   },
@@ -502,6 +505,9 @@ div.btk{cursor:pointer}
 .btk.sm .nm{top:64px;font-size:9.5px}
 .btk .soon{font-family:'Do Hyeon',sans-serif;font-size:14px;letter-spacing:5px;text-indent:5px;
   color:rgba(236,238,242,.55);text-shadow:0 1px 1px rgba(70,0,6,.6)}
+.btk .flat{position:absolute;inset:0;display:block}
+.btk.paper .flat{background:linear-gradient(180deg,#FBFAF6,#F2F0E9);border:1px solid #E2DED2;border-radius:inherit}
+.btk.paper .ov .lbl{letter-spacing:.16em}
 .tnlx{display:none;width:358px;max-width:calc(100% - 24px);margin:-6px auto 16px;padding:12px 15px 13px;
   background:#1C1A1F;color:#E6E0D6;border:1px solid #35313A;border-top:0;border-radius:0 0 9px 9px}
 .tnlx *{color:inherit}

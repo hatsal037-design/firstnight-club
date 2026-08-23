@@ -220,7 +220,7 @@ footer a{color:#98A0A6}
 
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=17"></script>
+<script src="../tunel.js?v=23"></script>
 <script>
 function setView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
@@ -232,31 +232,9 @@ setView((location.hash||'#sched').slice(1));
 /* 일정 — 서버(meetings)에서 이 노선 것만. 지난 회차는 아래에 흐리게 */
 (async function(){
   const el = document.getElementById('schedList');
-  const card = (m, past) => {
-    const d = m.data || {};
-    const full = d.cap && d.joined && d.joined >= d.cap;
-    return `<article class="badge${past?' done':''}">
-      <div class="clip"></div>
-      <div class="body">
-        <div class="main">
-          <div class="bpl">TÜNEL BOARDING PASS · LIBRARY</div>
-          <div class="when"><b>${+m.d.slice(5,7)}/${+m.d.slice(8)}</b>
-            <span>${m.dow||''}${m.s?` · ${m.s}~${m.e||''}`:''}</span></div>
-          <div class="what">${TUNEL.title(m)}</div>
-          <div class="where">${m.place||''}${m.addr?`<br>${m.addr}`:''}</div>
-          <dl class="rows">
-            ${m.fee?`<dt>참가비</dt><dd>${m.fee}</dd>`:''}
-            ${d.cap?`<dt>정원</dt><dd>${d.joined??'-'} / ${d.cap}명</dd>`:''}
-            ${d.host?`<dt>모집</dt><dd>${d.host}</dd>`:''}
-          </dl>
-        </div>
-        <div class="stub">
-          <div class="stamp ${past?'done':full?'full':'open'}">${past?'다녀옴':full?'모집<br>마감':'모집<br>중'}</div>
-          <div class="slb">${past?'USED':full?'FULL':'OPEN'}</div>
-        </div>
-      </div>
-    </article>`;
-  };
+  /* 티켓은 공용 한 벌 — 허브(tunel.kr)와 같은 모양 (개발/티켓_규칙.md) */
+  const card = (m, past) =>
+    TUNEL.ticketOne(m, { onclick:'TUNEL.ticketToggle(this)', past }) + (past ? '' : TUNEL.ticketDetail(m));
   try{
     const rows = await TUNEL.meetings({ line:'library' });
     const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
@@ -269,6 +247,7 @@ setView((location.hash||'#sched').slice(1));
             + past.map(m=>card(m,true)).join('');
     }
     el.innerHTML = html;
+    try{ await TUNEL.signupInit(); }catch(e){}
   }catch(e){
     el.innerHTML = '<p class="note">일정을 못 불러왔어요.<br>' + (e.message||'') + '</p>';
   }
