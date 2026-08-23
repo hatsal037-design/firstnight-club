@@ -587,7 +587,7 @@ footer a{color:#7a8290}
 <script src="api.js?v=inbox1"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
-<script src="schedule.js?v=r4open12"></script>
+<script src="schedule.js?v=r4open13"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -658,6 +658,8 @@ function recalcRounds(){
    기존 회원이면 claim으로 자동 연결, 처음이면 가입 시트를 띄운다. */
 async function bootSession(){
   let needOnboard = false;
+  /* 노선 값(이름·경로·오픈채팅)을 중앙에서 한 번 받아 둔다 — 이후 lineInfo() 가 동기로 읽는다 */
+  try{ await TUNEL.lines(); }catch(e){}
   /* 회차부터 받아온다 — 아래 로직이 전부 openRound/upcoming 을 본다 */
   try{
     const rows = await API.roundsList();
