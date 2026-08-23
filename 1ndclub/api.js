@@ -196,7 +196,10 @@ API.roundsList = async function(){
     place: m.place || '', addr: m.addr || '',
     mapq: (m.data && m.data.mapq) || null,
     cap: (m.data && m.data.cap) ?? null,
-    fee: m.fee || '', note: m.memo || '', after: m.after || null
+    fee: m.fee || '', note: m.memo || '', after: m.after || null,
+    route: (m.data && m.data.route) || null,   // {img, tip} — 찾아오는 길 안내
+    name: m.name || null,                      // 회차 제목(특집이면 여기에)
+    special: (m.data && m.data.special) || null   // {label, text} — 이번 회차만의 특별 안내
   }));
 };
 

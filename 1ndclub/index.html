@@ -264,6 +264,16 @@ nav .nb:active{transform:translateY(1px)}
   box-shadow:0 5px 10px rgba(0,0,0,.35)}
 .rdx .ad{font-size:11.5px;color:var(--sub);line-height:1.6;margin-top:0}
 .rdx .ad+.ad{margin-top:4px}
+.rdx .spc{margin-top:11px;background:linear-gradient(180deg,rgba(214,58,58,.14),rgba(214,58,58,.05));
+  border:1px solid rgba(214,58,58,.45);border-radius:8px;padding:11px 12px}
+.rdx .spc .sl{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#F0C9C0;
+  background:rgba(214,58,58,.28);border-radius:99px;padding:3px 9px;margin-bottom:7px}
+.rdx .spc .st{font-size:12px;color:var(--ink);line-height:1.7;white-space:pre-line}
+.rdx .way{margin-top:11px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:10px 11px}
+.rdx .way .wh{font-size:11.5px;font-weight:800;color:var(--ink);margin-bottom:5px}
+.rdx .way .wt{font-size:11.5px;color:var(--sub);line-height:1.65;white-space:pre-line}
+.rdx .way img{width:100%;margin-top:8px;border-radius:6px;background:#fff;display:block}
+.rdx .way .wc{font-size:10.5px;color:var(--sub);opacity:.75;margin-top:5px;text-align:center}
 .rdx .nt{font-size:12px;color:var(--sub);line-height:1.65;background:rgba(255,255,255,.03);
   border-left:2px solid rgba(232,50,60,.5);padding:8px 10px;margin-top:9px}
 .rdx .b{background:#221f29;border-color:#332f3d}
@@ -574,10 +584,10 @@ footer a{color:#7a8290}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../tunel.js?v=17"></script>
-<script src="api.js?v=name1"></script>
+<script src="api.js?v=route1"></script>
 <script src="games.js?v=4"></script>
 <script src="games_db.js"></script>
-<script src="schedule.js?v=lines1"></script>
+<script src="schedule.js?v=r4open"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -1181,7 +1191,7 @@ function renderSched(){
         card:'tk_card.jpg?v2', onclick:'toggleDetail(this)',
         stub: `<span class="sstub" data-mid="${r.id}" data-d="${r.d}"
             onclick="event.stopPropagation();TUNEL.signupOpen('${r.id}')"><div class="holo2">신청<i></i></div><div class="sl">STAMP HERE</div></span>` })
-      + TUNEL.signupBar({ id:r.id, d:r.d, dow:r.dow, s:r.s, e:r.e, r:r.r,
+      + TUNEL.signupBar({ id:r.id, d:r.d, dow:r.dow, s:r.s, e:r.e, r:r.r, name:r.name,
           place:r.place, fee:r.fee, line_name:'첫밤 사망자 클럽', data:{ cap:r.cap } })
     : TUNEL.boardingTicket({ ...r, line_name:'첫밤 사망자 클럽' }, {
         card:'tk_card.jpg?v2', size:'sm', onclick:'toggleDetail(this)',
@@ -1193,6 +1203,16 @@ function renderSched(){
       ${r.st==='open'&&r.after?`<div class="ad">2차 · ${r.after} (자율)</div>`:''}
       ${r.st==='open'?`<div class="rsvp" id="rsvpBox"></div>`:''}
       ${r.st==='open'?`<div class="picked" id="schedPicked" style="margin:11px 0 0;padding:11px 12px"></div>`:''}
+      ${r.special?`<div class="spc">
+        <div class="sl">${r.special.label||'특별 회차'}</div>
+        <div class="st">${r.special.text||''}</div>
+      </div>`:''}
+      ${r.route?`<div class="way">
+        <div class="wh">🚇 찾아오는 길</div>
+        ${r.route.tip?`<div class="wt">${r.route.tip}</div>`:''}
+        ${r.route.img?`<a href="${r.route.img}" target="_blank" rel="noopener"><img src="${r.route.img}" alt="찾아오는 길 안내" loading="lazy"></a>
+          <div class="wc">눌러서 크게 보기</div>`:''}
+      </div>`:''}
       <div class="btns">
         <a class="b" href="${MAPN(r.mapq)}" target="_blank" rel="noopener">📍 지도</a>
         ${r.st==='open'?`<span class="b p" onclick="openPick()">🔪 할 게임 고르기</span>`:''}
