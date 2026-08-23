@@ -198,6 +198,7 @@ API.roundsList = async function(){
     cap: (m.data && m.data.cap) ?? null,
     fee: m.fee || '', note: m.memo || '', after: m.after || null,
     route: (m.data && m.data.route) || null,   // {img, tip} — 찾아오는 길 안내
+    kind: m.kind || 'regular',                 // event면 티켓이 커진다(메인 허브와 같은 규칙)
     name: m.name || null,                      // 회차 제목(특집이면 여기에)
     special: (m.data && m.data.special) || null   // {label, text} — 이번 회차만의 특별 안내
   }));
@@ -291,24 +292,46 @@ API.setOwner = async function(gameName, uid){
 
 /* ══ 공지 ══ */
 API.noticeList = async function(){
-  const { data } = await T('notices').select('*').order('at', {ascending:false});
-  return (data||[]).map(r=>({ id:r.id, title:r.title, body:r.body, target:r.target,
-                              roundDate:r.round_d, by:r.by_id, at:r.at }));
+  /* 알림은 투넬 전체가 한 곳(messages)에서 돈다 — 메인 허브 알림함과 같은 자료.
+     여기 공지는 kind='notice' · line='botc' 로 들어가고, 대상·회차는 payload에 담는다.
+     (옛 notices 테이블은 2026-08-23 통합 때 이관 후 읽기만 남겨 뒀다) */
+  const { data } = await sb.from('messages').select('*')
+    .eq('kind','notice').or(`line.eq.${LINE},line.is.null`)
+    .order('created_at', {ascending:false}).limit(100);
+  return (data||[]).map(r=>({ id:r.id, title:r.title, body:r.body, to:r.to_member,
+                              target:(r.payload&&r.payload.target)||'all',
+                              roundDate:(r.payload&&r.payload.round_d)||null,
+                              by:r.from_member, at:r.created_at }));
 };
 API.noticeCreate = async function(n){
-  const { data, error } = await T('notices')
-    .insert({ title:n.title, body:n.body, target:n.target, round_d:n.roundDate||null, by_id:n.by||null })
-    .select().single();
+  const payload = { target:n.target||'all', round_d:n.roundDate||null };
+  const base = { kind:'notice', line:LINE, title:n.title, body:n.body, from_member:n.by||null, payload };
+  /* 전체 공지는 한 줄, 대상이 정해진 공지는 그 사람들에게 한 줄씩 —
+     그래야 메인 허브 알림함에서도 "내게 온 것"만 정확히 보인다 */
+  let rows = [base];
+  if(n.target === 'rsvp' && n.roundDate){
+    const ids = (await API.allRsvp(n.roundDate)).filter(x=>x.v==='yes').map(x=>x.member_id);
+    rows = ids.map(id => ({ ...base, to_member:id }));
+  } else if(n.target === 'picks' && n.roundDate){
+    const ids = [...new Set((await API.allPicks(n.roundDate)).map(x=>x.member_id || x.uid).filter(Boolean))];
+    rows = ids.map(id => ({ ...base, to_member:id }));
+  }
+  if(!rows.length) throw new Error('이 조건에 해당하는 회원이 없어요.');
+  const { data, error } = await sb.from('messages').insert(rows).select();
   throwErr(error, '공지 저장 실패');
   return data;
 };
-API.noticeDelete = async function(id){ await T('notices').delete().eq('id', id); };
+API.noticeDelete = async function(id){ await sb.from('messages').delete().eq('id', id); };
+/* 읽음 표시도 메인 허브와 같은 표(message_reads)를 쓴다 — 한 곳에서 읽으면 양쪽 다 읽음 */
 API.getRead = async function(uid){
-  const { data } = await T('notice_reads').select('read_ids').eq('member_id', uid).maybeSingle();
-  return data?.read_ids || [];
+  const { data } = await sb.from('message_reads').select('message_id').eq('member_id', uid);
+  return (data||[]).map(x=>x.message_id);
 };
 API.setRead = async function(uid, ids){
-  await T('notice_reads').upsert({ member_id:uid, read_ids:ids });
+  if(!ids || !ids.length) return;
+  await sb.from('message_reads').upsert(
+    ids.map(id=>({ message_id:id, member_id:uid })),
+    { onConflict:'message_id,member_id', ignoreDuplicates:true });
 };
 
 /* ══ 프로필 사진 ══ */

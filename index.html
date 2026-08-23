@@ -1195,7 +1195,8 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   }
   function myMsgs(){
     /* 운영진은 회원 문의(남의 쪽지 스레드)도 받아본다 */
-    return msgs.filter(x => x.kind==='notice' || x.to_member === me.id
+    /* 공지는 받는 사람이 비어 있을 때만 전체 공개 — 대상이 정해진 공지는 그 사람에게만 */
+    return msgs.filter(x => (x.kind==='notice' && !x.to_member) || x.to_member === me.id
       || (isStaffMe() && x.kind==='dm'));
   }
   function updateDot(){

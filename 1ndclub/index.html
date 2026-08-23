@@ -584,7 +584,7 @@ footer a{color:#7a8290}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../tunel.js?v=17"></script>
-<script src="api.js?v=route1"></script>
+<script src="api.js?v=inbox1"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=r4open4"></script>
@@ -716,7 +716,9 @@ function renderMe(){
 /* ── 공지 대상 판정 — 내 상태만 보면 된다 ── */
 function noticeForMe(n){
   if(!acc) return false;
-  if(n.target==='all') return true;
+  if(n.to) return n.to === acc.uid;      // 개인·대상 지정 공지 (메인 허브 알림함과 같은 규칙)
+  if(n.target==='all' || !n.target) return true;
+  /* 옛 공지(대상만 적혀 있고 받는 사람이 없는 것) 호환 */
   if(n.target==='rsvp' && n.roundDate) return MY_RSVP[n.roundDate]==='yes';
   if(n.target==='picks' && n.roundDate) return !!MY_PICKS[n.roundDate];
   return false;
@@ -1188,15 +1190,16 @@ function renderSched(){
     const m=r.d.slice(5,7);
     if(m!==lastM){ html+=`<div class="monthlab">${+m}월</div>`; lastM=m; }
     html+= r.st==='open'
-    ? TUNEL.boardingTicket({ ...r, line_name:'첫밤 사망자 클럽' }, {
+    ? TUNEL.boardingTicket({ ...r, memo:r.note, line_name:'첫밤 사망자 클럽' }, {
         card:'tk_card.jpg?v2', onclick:'toggleDetail(this)',
+        size: r.kind==='event' ? 'xl' : undefined,   // 표기는 투넬 허브(tunel.kr) 티켓과 같은 규칙으로
         stub: `<span class="sstub" data-mid="${r.id}" data-d="${r.d}"
-            onclick="event.stopPropagation();TUNEL.signupOpen('${r.id}')"><div class="holo2">신청<i></i></div><div class="sl">STAMP HERE</div></span>` })
+            onclick="event.stopPropagation();TUNEL.signupOpen('${r.id}')">${TUNEL.stubOpen(r)}</span>` })
       + TUNEL.signupBar({ id:r.id, d:r.d, dow:r.dow, s:r.s, e:r.e, r:r.r, name:r.name,
           place:r.place, fee:r.fee, line_name:'첫밤 사망자 클럽', data:{ cap:r.cap } })
-    : TUNEL.boardingTicket({ ...r, line_name:'첫밤 사망자 클럽' }, {
+    : TUNEL.boardingTicket({ ...r, memo:r.note, line_name:'첫밤 사망자 클럽' }, {
         card:'tk_card.jpg?v2', size:'sm', onclick:'toggleDetail(this)',
-        stub: TUNEL.stubSoon() });
+        stub: TUNEL.stubSoon(r) });
     html+=`<div class="rdx${r.st==='open'?' open':''}">
       ${r.addr?`<div class="ad">${r.addr}</div>`:''}
       ${r.note?`<div class="nt">${r.note}</div>`:''}
