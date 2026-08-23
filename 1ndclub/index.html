@@ -587,7 +587,7 @@ footer a{color:#7a8290}
 <script src="api.js?v=inbox1"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
-<script src="schedule.js?v=r4open7"></script>
+<script src="schedule.js?v=r4open8"></script>
 <script>
 /* ══ 상태 ══ */
 const RKEY='botc_past_edit';
@@ -1201,7 +1201,6 @@ function renderSched(){
         line_name:'첫밤 사망자 클럽',
         data:{ cap:r.cap, mapq:r.mapq, special:r.special, route:r.route } },
       { extra: r.st==='open' ? `
-          <div class="rsvp" id="rsvpBox"></div>
           <div class="picked" id="schedPicked" style="margin:11px 0 0;padding:11px 12px"></div>
           <div class="xb">
             <a onclick="openPick()">🔪 할 게임 고르기</a>
@@ -1224,7 +1223,7 @@ function renderSched(){
        </div>` : '';
   document.getElementById('schedList').innerHTML = html;
   renderPicked();
-  TUNEL.onSignupChange = () => { updateStubs(); renderApplicants(); };
+  TUNEL.onSignupChange = () => { updateStubs(); };   // 도장·명단 모두 공용이 갱신한다
   TUNEL.signupInit();   // 신청 바·팝업·신청자 명단 — 허브와 같은 공통 모듈
 
   // 가장 가까운 앞으로의 일정이 화면 맨 위에 오도록 (더보기로 다시 그릴 때는 건너뛴다)
@@ -1241,7 +1240,7 @@ function renderSched(){
 }
 /* 상세 패널은 티켓의 형제 요소라 클릭이 티켓으로 번지지 않는다 — 따로 막을 필요 없음 */
 /* 공용 상세가 열릴 때 첫밤 고유 영역(참석 응답·고른 게임)을 채운다 */
-TUNEL.onDetailOpen = () => { try{ renderApplicants(); renderPicked(); }catch(e){} };
+TUNEL.onDetailOpen = () => { try{ renderPicked(); }catch(e){} };   // 신청 명단은 공용 상세가 그린다
 function toggleDetail(el){
   /* 티켓과 상세 사이에 신청 바(.tnlbar)가 끼어 있어서, 바로 다음이 아니라
      .rdx 가 나올 때까지 형제를 따라간다 */
