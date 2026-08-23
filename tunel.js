@@ -751,10 +751,15 @@ div.btk .stub{cursor:pointer}
     TUNEL.signupRefresh();
   }
 
+  /* 서버가 준 회차인가 — 폴백 회차는 'local-2026-08-29' 같은 임시 id 를 쓴다.
+     서버를 못 읽은 채 화면이 먼저 그려지면 그 임시 id 로 질의가 나가 400 이 난다.
+     (?apply=… 딥링크로 들어오면 일정 화면이 부팅보다 먼저 그려진다) */
+  const isServerId = id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
+
   async function loadMine(){
     const me = await TUNEL.me();
     if(!me) return;
-    const ids = Object.keys(byId);
+    const ids = Object.keys(byId).filter(isServerId);
     if(!ids.length) return;
     const { data } = await sb().from('signups').select('meeting_id,status')
       .eq('member_id', me.id).in('meeting_id', ids);
@@ -762,6 +767,7 @@ div.btk .stub{cursor:pointer}
     (data||[]).forEach(r => { if(r.status!=='cancelled') mine[r.meeting_id] = r.status; });
   }
   async function loadSeats(mid){
+    if(!isServerId(mid)) return (seats[mid] = { taken:0, wait:0 });
     const { data } = await sb().rpc('signup_seats', { p_meeting: mid });
     seats[mid] = data || { taken:0, wait:0 };
     return seats[mid];
@@ -988,6 +994,7 @@ div.btk .stub{cursor:pointer}
   TUNEL.signupStatus = mid => mine[mid] || null;
   /* 회차 신청자 명단 (닉네임 포함) — 회원끼리 서로 보인다 */
   TUNEL.signupList = async function(mid){
+    if(!isServerId(mid)) return [];
     const [{ data: rows }, { data: mems }] = await Promise.all([
       sb().from('signups').select('member_id,status,created_at')
         .eq('meeting_id', mid).neq('status','cancelled').order('created_at'),
