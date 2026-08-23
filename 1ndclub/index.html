@@ -583,7 +583,7 @@ footer a{color:#7a8290}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=18"></script>
+<script src="../tunel.js?v=19"></script>
 <script src="api.js?v=inbox1"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
@@ -1192,7 +1192,7 @@ function renderSched(){
     /* 티켓은 한 벌만 만든다 — 허브(tunel.kr)와 여기가 같은 함수(TUNEL.ticketOne)를 쓴다 */
     html+= TUNEL.ticketOne(
       { ...r, status:r.st==='open'?'open':'planned', memo:r.note, line:'botc',
-        line_name:'첫밤 사망자 클럽', data:{ cap:r.cap, dest:'첫밤行' } },
+        line_name:'첫밤 사망자 클럽', data:{ cap:r.cap } },
       { onclick:'toggleDetail(this)', card:'tk_card.jpg?v2' });
     html+=`<div class="rdx${r.st==='open'?' open':''}">
       ${r.addr?`<div class="ad">${r.addr}</div>`:''}

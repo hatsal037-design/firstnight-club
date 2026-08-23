@@ -186,7 +186,7 @@ const TUNEL = {
      pass  = 보딩패스형 (첫밤·놀이터·찰칵) · score = 스코어카드 (올림픽) · metal = 각인 메탈 (방구석)
      새 노선 확정본이 나오면 여기 한 줄 더하면 어디서든 티켓이 뜬다 */
   _skins: {
-    botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2', stamp:'/1ndclub/stamp_wax.png', dest:'첫밤行',
+    botc:  { t:'pass', short:'첫밤',  card:'/1ndclub/tk_card.jpg?v2', stamp:'/1ndclub/stamp_wax.png', stampDest:'첫밤行',
              ink:'#ECEEF2', lbl:'#B8A88E', rFont:"'Do Hyeon',sans-serif", rMd:21, rSm:16, acc:'#E8756A',
              perf:'rgba(0,0,0,.55)' },
     /* play(놀이터) — 손목밴드 판지 확정 (2026-08-20 햇살님 승인).
@@ -887,7 +887,7 @@ div.btk .stub{cursor:pointer}
       const m = byId[mid] || {};
       const sk = TUNEL._skins[m.line] || {};
       const dd = (el.dataset.d || '').slice(5).replace('-', '.');
-      const dest = m.data?.dest || sk.dest || '탑승';
+      const dest = sk.stampDest || m.line_short || sk.short || '탑승';   // 도장에 찍는 행선지(티켓 노선 표기와 별개)
       if(st === 'confirmed')
         el.innerHTML = `${sk.stamp ? `<img src="${sk.stamp}" alt="">` : ''}<div class="stx">${dest}<small>${dd}</small></div><div class="sl">STAMPED</div>`;
       else if(st === 'paid' || st === 'applied')
