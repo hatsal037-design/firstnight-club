@@ -183,25 +183,23 @@ function rowToPast(m, atts){
   };
 }
 
-/* 회차 전체 — 앱이 쓰던 ROUNDS 모양으로 돌려준다 (schedule.js 대체) */
+/* ══ 회차 — 허브(tunel.kr)와 같은 자료를 그대로 받는다 ══
+   TUNEL.meetings() 가 주는 원본(v_meetings)을 손대지 않고 돌려주고,
+   앱이 쓰던 짧은 이름(st·cap·note…)만 덧붙인다.
+   티켓·상세는 이 객체를 그대로 받으므로 두 화면이 어긋날 수 없다.
+   (2026-08-23 통합. 예전엔 여기서 모양을 바꿔 넘기다가 필드가 자꾸 빠졌다) */
 API.roundsList = async function(){
-  const { data } = await sb.from('meetings').select('*')
-    .eq('line', LINE).order('d', { ascending:true });
-  return (data||[]).map(m => ({
-    id: m.id,
-    r: m.r ?? null, d: m.d, dow: m.dow || '', s: m.s || '', e: m.e || '',
-    h: (m.data && m.data.h) ?? null,
-    st: m.status === 'open' ? 'open' : m.status === 'done' ? 'done'
+  const rows = await TUNEL.meetings({ line: LINE });
+  return rows.map(m => Object.assign(m, {
+    st  : m.status === 'open' ? 'open' : m.status === 'done' ? 'done'
         : m.status === 'cancelled' ? 'cancelled' : 'soon',
-    place: m.place || '', addr: m.addr || '',
-    mapq: (m.data && m.data.mapq) || null,
-    cap: (m.data && m.data.cap) ?? null,
-    fee: m.fee || '', note: m.memo || '', after: m.after || null,
-    route: (m.data && m.data.route) || null,   // {img, tip} — 찾아오는 길 안내
-    kind: m.kind || 'regular',                 // event면 티켓이 커진다(메인 허브와 같은 규칙)
-    name: m.name || null,                      // 회차 제목(특집이면 여기에)
-    special: (m.data && m.data.special) || null   // {label, text} — 이번 회차만의 특별 안내
-  }));
+    cap : m.data?.cap ?? null,
+    h   : m.data?.h ?? null,
+    mapq: m.data?.mapq || null,
+    route  : m.data?.route || null,
+    special: m.data?.special || null,
+    note: m.memo || '',
+  })).sort((a,b) => a.d.localeCompare(b.d));
 };
 
 API.pastList = async function(){
