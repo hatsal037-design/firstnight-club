@@ -574,8 +574,8 @@ footer a{color:#7a8290}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../tunel.js?v=17"></script>
-<script src="api.js?v=nick1"></script>
-<script src="games.js?v=3"></script>
+<script src="api.js?v=name1"></script>
+<script src="games.js?v=4"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=lines1"></script>
 <script>
@@ -589,8 +589,13 @@ const ADMINS = ['투넬'];                       // 관리자 닉네임
 const ADMIN_HASH = '743e7841942f0114c9ca60aa5742af91fae437bac9161fb88b595f368f12c930';
 
 let acc   = null;                              // 로그인한 계정 (서버에서 받아온 것)
+/* 도감에서 이름이 바뀐 게임 — 서버에 옛 이름으로 저장된 즐겨찾기·선택·플레이 기록을 새 이름으로 읽는다.
+   (games.js 의 old:[…] 에서 자동으로 만든다. 저장은 늘 새 이름으로 되므로 시간이 지나면 자연히 정리된다) */
+const NAME_FIX = Object.fromEntries(GAMES.flatMap(g=>(g.old||[]).map(o=>[o,g.n])));
+const fixName  = n => NAME_FIX[n] || n;
+const fixNames = a => [...new Set((a||[]).map(fixName))];
 let favs  = [];                                // 즐겨찾기 — 이 기기에만 저장
-let picks = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');   // 로그인 전에는 이 기기, 로그인하면 서버
+let picks = fixNames(JSON.parse(localStorage.getItem('botc_picks_anon')||'[]'));   // 로그인 전에는 이 기기, 로그인하면 서버
 let edits = JSON.parse(localStorage.getItem(RKEY)||'{}');   // 서버 이전 시절의 로컬 기록(백업용)
 let serverPast = [];        // 서버에 저장된 지난 모임 기록 — 시작할 때 불러온다
 let NOTICES = [];           // 서버 공지 전체
@@ -637,9 +642,9 @@ async function bootSession(){
     acc = await API.myMember();
     if(!acc && await API.hasSession()) needOnboard = true;   // 카카오 인증은 됐는데 회원이 아직 아님
     if(acc){
-      favs = acc.favs || [];                                 // 즐겨찾기는 이제 서버(내 계정)에서
+      favs = fixNames(acc.favs);                                 // 즐겨찾기는 이제 서버(내 계정)에서
       if(openRound){
-        picks = await API.getMyPicks(openRound.d, acc.uid);
+        picks = fixNames(await API.getMyPicks(openRound.d, acc.uid));
         myRsvp = await API.getMyRsvp(openRound.d, acc.uid);
       }
     }
@@ -862,9 +867,9 @@ const NICK_RE = /^[가-힣]{1,10}$/;   // 닉네임은 한글 1~10자만
 
 async function afterAuth(a){
   acc = a;
-  favs = acc.favs || [];
+  favs = fixNames(acc.favs);
   const anon = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');
-  picks = openRound ? await API.getMyPicks(openRound.d, acc.uid) : [];
+  picks = openRound ? fixNames(await API.getMyPicks(openRound.d, acc.uid)) : [];
   myRsvp = openRound ? await API.getMyRsvp(openRound.d, acc.uid) : null;
   if(anon.length && openRound){                    // 로그인 전에 골라둔 게 있으면 합쳐서 올린다
     picks = [...new Set([...picks, ...anon])];
@@ -959,7 +964,7 @@ function computeMyPlayed(){
   MYPLAYED = new Set();
   if(!acc) return;
   pastList().filter(p=>(p.people||[]).some(pIsMe))
-    .forEach(p=>(p.played||[]).forEach(n=>MYPLAYED.add(n)));
+    .forEach(p=>(p.played||[]).forEach(n=>MYPLAYED.add(fixName(n))));
 }
 let FAVCOUNT = {};
 async function computeFavCount(){

@@ -89,6 +89,9 @@ async function itemsMap(){
   const { data } = await sb.from('catalog_items').select('id,key,name').eq('line', LINE);
   _items = { byName:{}, byId:{} };
   (data||[]).forEach(r => { _items.byName[r.name] = r; _items.byId[r.id] = r; });
+  /* 도감에서 이름이 바뀐 게임(games.js old:[…]) — 서버 항목은 옛 이름 그대로일 수 있으니 새 이름으로도 찾게 잇는다 */
+  try{ (typeof GAMES!=='undefined'?GAMES:[]).forEach(g => (g.old||[]).forEach(o => {
+    if(!_items.byName[g.n] && _items.byName[o]) _items.byName[g.n] = _items.byName[o]; })); }catch(e){}
   return _items;
 }
 

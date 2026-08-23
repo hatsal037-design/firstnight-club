@@ -161,9 +161,6 @@
   "bgg": "https://boardgamegeek.com/boardgame/427278/roaring-20s",
   "blname": "파티사우루스 20s"
  },
- "5타워": {
-  "status": "못 찾음"
- },
  "굿페이스밷페이스": {
   "status": "못 찾음"
  },
@@ -415,5 +412,17 @@
  },
  "체스 (미니)": {
   "status": "수집 제외"
+ },
+ "다섯 개의 탑": {
+  "status": "ok",
+  "src": "boardlife",
+  "rate": 6.4,
+  "weight": 1.25,
+  "age": 7,
+  "players": "2-5",
+  "minutes": "15-30",
+  "url": "https://boardlife.co.kr/game/17925",
+  "rank": 1723,
+  "bgg": "https://boardgamegeek.com/boardgame/400205/5-towers"
  }
 }
