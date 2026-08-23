@@ -329,6 +329,11 @@ const TUNEL = {
   ticketDetail(m, opt = {}){
     TUNEL._dt[m.id] = m;
     const mapq = m.data?.mapq || m.addr || m.place || '';
+    const sp = m.data?.special || null;              // {label, text} — 이번 회차만의 안내
+    const rt = m.data?.route || null;                // {img, tip} — 찾아오는 길
+    /* 노선 페이지 안에서는 상대경로, 허브에서는 노선 폴더 기준으로 읽는다 */
+    const rtImg = rt && rt.img ? (/^(https?:|\/)/.test(rt.img) ? rt.img
+      : (m.line_path ? m.line_path.replace(/\/$/, '') + '/' : '') + rt.img) : '';
     const st = (d,t) => d.replace(/-/g,'') + 'T' + String(t||'').replace(':','') + '00';
     /* 구글 캘린더 링크 — 첫밤 googleCal() 과 같은 구성 */
     const gc = (!m.d || !m.s) ? '' :
@@ -342,7 +347,13 @@ const TUNEL = {
       ${m.memo ? `<div class="xn">${m.memo}</div>` : ''}
       ${m.fee ? `<div class="xr">참가비 ${m.fee}</div>` : ''}
       ${m.after ? `<div class="xr">2차 · ${m.after} (자율)</div>` : ''}
+      ${sp ? `<div class="xspc"><div class="xsl">${sp.label || '특별 회차'}</div><div class="xst">${sp.text || ''}</div></div>` : ''}
+      ${rt ? `<div class="xway"><div class="xwh">🚇 찾아오는 길</div>
+        ${rt.tip ? `<div class="xwt">${rt.tip}</div>` : ''}
+        ${rt.img ? `<a href="${rtImg}" target="_blank" rel="noopener"><img src="${rtImg}" alt="찾아오는 길 안내" loading="lazy"></a>
+          <div class="xwc">눌러서 크게 보기</div>` : ''}</div>` : ''}
       ${m.status === 'open' ? `<div class="xapl" data-mid="${m.id}"></div>` : ''}
+      ${opt.extra || ''}
       <div class="xb">
         ${mapq ? `<a href="https://map.naver.com/p/search/${encodeURIComponent(mapq)}" target="_blank" rel="noopener">📍 지도</a>` : ''}
         ${m.d && m.s ? `<a onclick="TUNEL.calSave('${m.id}')">📅 캘린더에 저장</a>` : ''}
@@ -386,7 +397,8 @@ const TUNEL = {
     if(!x) return;
     const willOpen = !x.classList.contains('show');
     document.querySelectorAll('.tnlx.show').forEach(o => o.classList.remove('show'));
-    if(willOpen){ x.classList.add('show'); TUNEL._fillApplicants(x); }
+    if(willOpen){ x.classList.add('show'); TUNEL._fillApplicants(x);
+      if(typeof TUNEL.onDetailOpen === 'function'){ try{ TUNEL.onDetailOpen(x); }catch(e){} } }   // 페이지 고유 영역 채우기
   },
 
   /* 상세를 열면 신청 현황(확정·입금/신청·대기 명단)을 채운다 — 회원에게만 보인다 */
@@ -483,6 +495,16 @@ div.btk{cursor:pointer}
 .tnlx.show{display:block;animation:tnlxopen .2s ease}
 @keyframes tnlxopen{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .tnlx .xr{font-size:11.5px;color:#A79E8F;line-height:1.7}
+.tnlx .xspc{margin-top:10px;background:linear-gradient(180deg,rgba(214,58,58,.14),rgba(214,58,58,.05));
+  border:1px solid rgba(214,58,58,.45);border-radius:8px;padding:10px 11px}
+.tnlx .xspc .xsl{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;color:#F0C9C0;
+  background:rgba(214,58,58,.28);border-radius:99px;padding:3px 9px;margin-bottom:6px}
+.tnlx .xspc .xst{font-size:12px;color:#E6E0D6;line-height:1.7;white-space:pre-line}
+.tnlx .xway{margin-top:10px;background:rgba(255,255,255,.03);border:1px solid #35313A;border-radius:8px;padding:10px 11px}
+.tnlx .xway .xwh{font-size:11.5px;font-weight:800;color:#E6E0D6;margin-bottom:5px}
+.tnlx .xway .xwt{font-size:11.5px;color:#A79E8F;line-height:1.65;white-space:pre-line}
+.tnlx .xway img{width:100%;margin-top:8px;border-radius:6px;background:#fff;display:block}
+.tnlx .xway .xwc{font-size:10.5px;color:#A79E8F;opacity:.75;margin-top:5px;text-align:center}
 .tnlx .xn{font-size:12px;color:#A79E8F;line-height:1.65;background:rgba(255,255,255,.03);
   border-radius:7px;padding:8px 10px;margin:7px 0}
 .tnlx .xb{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
