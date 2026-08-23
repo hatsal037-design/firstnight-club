@@ -503,7 +503,10 @@ div.btk{cursor:pointer}
 .btk .soon{font-family:'Do Hyeon',sans-serif;font-size:14px;letter-spacing:5px;text-indent:5px;
   color:rgba(236,238,242,.55);text-shadow:0 1px 1px rgba(70,0,6,.6)}
 .tnlx{display:none;width:358px;max-width:calc(100% - 24px);margin:-6px auto 16px;padding:12px 15px 13px;
-  background:#1C1A1F;border:1px solid #35313A;border-top:0;border-radius:0 0 9px 9px}
+  background:#1C1A1F;color:#E6E0D6;border:1px solid #35313A;border-top:0;border-radius:0 0 9px 9px}
+.tnlx *{color:inherit}
+.tnlx .xr,.tnlx .xn,.tnlx .xwt,.tnlx .xwc{color:#A79E8F}
+.tnlx .xb a{color:#CFC7B8}
 .tnlx.show{display:block;animation:tnlxopen .2s ease}
 @keyframes tnlxopen{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .tnlx .xr{font-size:11.5px;color:#A79E8F;line-height:1.7}
