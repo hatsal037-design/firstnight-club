@@ -83,9 +83,12 @@ API.list = async function(){
 /* ══ 항목 참조(catalog) — 게임 이름 ↔ 고정키 변환 ══
    2026-08-20 회원 활동 통합. 통계·기록은 이름이 아니라 catalog_items 참조로 잇는다.
    설계: 브랜드/회원활동_설계.md */
-let _items = null;
+let _items = null, _itemsP = null;
 async function itemsMap(){
   if(_items) return _items;
+  /* 약속을 캐시한다 — 여러 곳이 동시에 부르면 결과 캐시만으로는 catalog_items 를 중복해서 받는다 */
+  if(_itemsP) return _itemsP;
+  _itemsP = (async () => {
   const { data } = await sb.from('catalog_items').select('id,key,name').eq('line', LINE);
   _items = { byName:{}, byId:{} };
   (data||[]).forEach(r => { _items.byName[r.name] = r; _items.byId[r.id] = r; });
@@ -93,6 +96,8 @@ async function itemsMap(){
   try{ (typeof GAMES!=='undefined'?GAMES:[]).forEach(g => (g.old||[]).forEach(o => {
     if(!_items.byName[g.n] && _items.byName[o]) _items.byName[g.n] = _items.byName[o]; })); }catch(e){}
   return _items;
+  })();
+  return _itemsP;
 }
 
 /* 즐겨찾기 — members.favs(빠른 부팅용) + member_items(통계·통합용) 이중 기록 */

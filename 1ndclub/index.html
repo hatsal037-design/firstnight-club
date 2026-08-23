@@ -584,7 +584,7 @@ footer a{color:#7a8290}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="../tunel.js?v=25"></script>
-<script src="api.js?v=boot1"></script>
+<script src="api.js?v=boot2"></script>
 <script src="games.js?v=5"></script>
 <script src="games_db.js"></script>
 <script src="schedule.js?v=r4open13"></script>
@@ -658,47 +658,53 @@ function recalcRounds(){
    기존 회원이면 claim으로 자동 연결, 처음이면 가입 시트를 띄운다. */
 async function bootSession(){
   let needOnboard = false;
-  /* 노선 값(이름·경로·오픈채팅)을 중앙에서 한 번 받아 둔다 — 이후 lineInfo() 가 동기로 읽는다 */
-  try{ await TUNEL.lines(); }catch(e){}
-  /* 회차부터 받아온다 — 아래 로직이 전부 openRound/upcoming 을 본다 */
+  const ok = p => p.catch(() => null);
+  /* 노선 값 · 회차 · 내 계정 — 서로를 기다릴 이유가 없다. 동시에 보낸다.
+     노선 값은 lineInfo() 가, 회차는 openRound/upcoming 이 그린 뒤부터 쓴다 */
+  const [, rows, a] = await Promise.all([
+    ok(TUNEL.lines()), ok(API.roundsList()), ok(API.myMember()),
+  ]);
+  if(rows && rows.length){ ROUNDS = rows; recalcRounds(); }
+  else if(!rows) console.warn('회차를 서버에서 못 받아 폴백을 씁니다');
+  acc = a || null;
   try{
-    const rows = await API.roundsList();
-    if(rows.length){ ROUNDS = rows; recalcRounds(); }
-  }catch(e){ console.warn('회차를 서버에서 못 받아 폴백을 씁니다', e); }
-  try{
-    acc = await API.myMember();
     if(!acc && await API.hasSession()) needOnboard = true;   // 카카오 인증은 됐는데 회원이 아직 아님
     if(acc){
       favs = fixNames(acc.favs);                                 // 즐겨찾기는 이제 서버(내 계정)에서
       if(openRound){
-        picks = fixNames(await API.getMyPicks(openRound.d, acc.uid));
-        myRsvp = await API.getMyRsvp(openRound.d, acc.uid);
+        const [pk, rv] = await Promise.all([
+          ok(API.getMyPicks(openRound.d, acc.uid)), ok(API.getMyRsvp(openRound.d, acc.uid)),
+        ]);
+        picks = fixNames(pk || []);
+        myRsvp = rv;
       }
     }
   }catch(e){ /* 오프라인이면 그냥 비로그인으로 둔다 */ }
-  try{ serverPast = await API.pastList(); }catch(e){}
-  try{ MEMBERS = await API.list(); }catch(e){}
-  try{ await computeFavCount(); }catch(e){}
+  /* 아래 여섯도 마찬가지 — 한 줄로 세우지 않는다 */
+  const [sp, mem, fc, own, nt, rd] = await Promise.all([
+    ok(API.pastList()), ok(API.list()), ok(API.favCounts()),
+    ok(API.ownerMap()), ok(API.noticeList()),
+    acc ? ok(API.getRead(acc.uid)) : null,
+  ]);
+  if(sp)  serverPast = sp;
+  if(mem) MEMBERS = mem;
+  if(fc)  FAVCOUNT = fc;
+  if(own) OWNERS = own;
+  if(nt)  NOTICES = nt;
+  if(rd)  readIds = rd;
   computeMyPlayed();
-  try{ if(acc) await loadPfps([acc.uid]); }catch(e){}
-  try{ OWNERS = await API.ownerMap(); }catch(e){}
-  try{ NOTICES = await API.noticeList(); }catch(e){}
-  if(acc){ try{ readIds = await API.getRead(acc.uid); }catch(e){} }
-  // 공지 대상 판정용: 내 참석·게임선택만 있으면 된다 (남의 것은 서버가 안 줌)
-  // 회차마다 되묻지 않는다 — 내 것 전부를 두 번에 받아 날짜별로 나눈다 (회차 11개면 33질의 → 2질의)
-  try{
-    if(acc){
-      const [rsvpMap, pickedIds] = await Promise.all([
-        API.myRsvpMap(acc.uid), API.myPickedMeetings(acc.uid),
-      ]);
-      for(const r of upcoming){
+  /* 공지 대상 판정용 내 참석·게임선택은 회차마다 되묻지 않는다 —
+     내 것 전부를 두 번에 받아 날짜별로 나눈다 (회차 11개면 33질의 → 2질의) */
+  await Promise.all([
+    acc ? ok(loadPfps([acc.uid])) : null,
+    acc ? ok(Promise.all([API.myRsvpMap(acc.uid), API.myPickedMeetings(acc.uid)])
+      .then(([rsvpMap, pickedIds]) => { for(const r of upcoming){
         MY_RSVP[r.d]  = rsvpMap[r.d] || null;
         MY_PICKS[r.d] = !!(r.id && pickedIds.has(r.id));
-      }
-    }
-  }catch(e){}
-  try{ if(openRound) await loadRsvpCnt(); }catch(e){}
-  try{ await checkScribe(); }catch(e){}
+      } })) : null,
+    openRound ? ok(loadRsvpCnt()) : null,
+    ok(checkScribe()),
+  ]);
   renderMe(); renderGames();
   if(view==='sched') renderSched();
   if(view==='me') renderMePage();
