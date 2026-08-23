@@ -75,26 +75,27 @@ nav .nb.on::after{content:'';position:absolute;left:-3px;right:-3px;bottom:0;hei
   margin:26px 0 11px;display:flex;align-items:center;gap:9px}
 .lab::after{content:'';flex:1;height:1px;background:var(--line)}
 
-/* 일정 티켓 — 투넬 공통 규격 (본체 + 절취선 + 세로 스터브), 스킨은 초록 전단 */
-.tkt{display:flex;width:100%;margin:0 auto 14px;
+/* 일정 티켓 — 뼈대와 기본 스킨은 tunel.js 의 _tkCSS() 가 준다.
+   여기는 놀이터 전용 덮어쓰기 (같은 자릿수 선택자 + 나중에 오므로 이쪽이 이긴다) */
+.tkt.play{display:flex;width:100%;margin:0 auto 14px;
   text-decoration:none;position:relative;overflow:hidden;
   background:var(--green);border:2px solid var(--ink);box-shadow:5px 5px 0 var(--ink)}
-.tkt::after{content:'';position:absolute;right:34px;bottom:-16px;width:74px;height:74px;border-radius:50%;
+.tkt.play::after{content:'';position:absolute;right:34px;bottom:-16px;width:74px;height:74px;border-radius:50%;
   background:var(--yellow);opacity:.34;mix-blend-mode:multiply;pointer-events:none}
-.tkt .tbody{flex:1;min-width:0;padding:13px 15px 12px;position:relative;z-index:2}
-.tkt .tstub{width:40px;flex:none;order:2;display:flex;align-items:center;justify-content:center;
+.tkt.play .tbody{flex:1;min-width:0;padding:13px 15px 12px;position:relative;z-index:2}
+.tkt.play .tstub{width:40px;flex:none;order:2;display:flex;align-items:center;justify-content:center;
   border-left:2px dashed rgba(14,42,22,.4);background:rgba(255,228,92,.2)}
-.tkt .tstub span{writing-mode:vertical-rl;font-family:'Cinzel',serif;font-size:8px;
+.tkt.play .tstub span{writing-mode:vertical-rl;font-family:'Cinzel',serif;font-size:8px;
   letter-spacing:3px;font-weight:800;color:var(--ink)}
-.tkt .tno{font-family:'Nanum Gothic Coding',monospace;font-size:8.5px;letter-spacing:1.5px;
+.tkt.play .tno{font-family:'Nanum Gothic Coding',monospace;font-size:8.5px;letter-spacing:1.5px;
   color:#CFEDC2;text-align:right}
-.tkt .trow{display:flex;align-items:baseline;gap:8px;margin-top:3px}
-.tkt .td{font-family:'Dongle',sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--ink)}
-.tkt .tt{font-size:11px;color:#1B5C2C}
-.tkt .tst{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:1px;
+.tkt.play .trow{display:flex;align-items:baseline;gap:8px;margin-top:3px}
+.tkt.play .td{font-family:'Dongle',sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--ink)}
+.tkt.play .tt{font-size:11px;color:#1B5C2C}
+.tkt.play .tst{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:1px;
   background:var(--ink);color:var(--yellow);padding:3px 7px}
-.tkt .tp{font-size:11.5px;color:#123A1F;margin-top:6px;line-height:1.6}
-.tkt .tnote{font-size:11px;color:#1B5C2C;margin-top:8px;padding-top:8px;
+.tkt.play .tp{font-size:11.5px;color:#123A1F;margin-top:6px;line-height:1.6}
+.tkt.play .tnote{font-size:11px;color:#1B5C2C;margin-top:8px;padding-top:8px;
   border-top:2px dashed rgba(14,42,22,.25);line-height:1.6}
 
 .card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:16px 17px}
@@ -191,7 +192,7 @@ footer a{color:#8A9188}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=27"></script>
+<script src="../tunel.js?v=28"></script>
 <script>
 function setView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));

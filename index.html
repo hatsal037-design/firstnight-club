@@ -88,87 +88,7 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
 .label::before{content:'';width:22px;height:3px;background:var(--red)}
 .label::after{content:'';flex:1;height:1px;background:rgba(244,235,217,.20)}
 
-/* ── 통합 일정 티켓 — 각 노선의 티켓 디자인을 그대로 축약 ── */
-.tkt{display:flex;width:358px;max-width:calc(100% - 8px);margin:0 auto 12px;min-height:100px;
-  text-decoration:none;position:relative;overflow:hidden;border-radius:2px}
-.tkt .tbody{display:flex;flex-direction:column;justify-content:center}
-.tkt .tbody{flex:1;min-width:0;padding:12px 14px 11px}
-.tkt .tstub{width:40px;flex:none;display:flex;align-items:center;justify-content:center}
-.tkt .tstub span{writing-mode:vertical-rl;font-family:'Cinzel',serif;font-size:8px;
-  letter-spacing:3px;font-weight:800}
-.tkt .tno{font-family:'Nanum Gothic Coding',monospace;font-size:8.5px;letter-spacing:1.5px;text-align:right}
-.tkt .trow{display:flex;align-items:baseline;gap:8px;margin-top:4px}
-.tkt .td{font-size:19px;font-weight:800;letter-spacing:-.3px}
-.tkt .tt{font-size:11px;opacity:.75}
-.tkt .tst{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:1px;border-radius:3px;padding:3px 7px}
-.tkt .tp{font-size:11.5px;margin-top:5px;opacity:.85}
-/* 모집중 티켓 — 규격 일반 크기/* 모집중 티켓 — 규격 일반 크기 (폭 358 · 높이 150 · 절취선 258 · 스터브 100 · 모따기 14) */
-.tkt.lg{min-height:150px}
-.tkt.xl{min-height:180px}
-.tkt.xl .tbody{display:flex;flex-direction:column;padding:15px 16px 13px}
-.tkt.xl .tstub{width:100px}
-.tkt.xl .tstub span{font-size:10px;letter-spacing:4px}
-.tkt.xl .trow{margin-top:7px}
-.tkt.xl .td{font-size:31px}
-.tkt.xl .tt{font-size:12.5px}
-.tkt.xl .tst{font-size:10px;padding:4px 9px}
-.tkt.xl .tp{font-size:13px;margin-top:9px}
-.tkt.xl .tdesc{font-size:11px;opacity:.7;line-height:1.5;margin-top:auto;padding-top:8px}
-.tkt.lg .tbody{display:flex;flex-direction:column;padding:15px 16px 13px}
-.tkt.lg .tstub{width:100px}
-.tkt.lg .tstub span{font-size:10px;letter-spacing:4px}
-.tkt.lg .trow{margin-top:7px}
-.tkt.lg .td{font-size:27px}
-.tkt.lg .tt{font-size:12.5px}
-.tkt.lg .tst{font-size:10px;padding:4px 9px}
-.tkt.lg .tp{font-size:12.5px;margin-top:auto;padding-top:8px}
-.tkt.night.lg{clip-path:polygon(14px 0,100% 0,100% 100%,0 100%,0 14px)}
-/* 첫밤 — 야간열차 승차권 */
-.tkt.night{background:#17141A;border:1px solid #3A2B2E;
-  clip-path:polygon(12px 0,100% 0,100% 100%,0 100%,0 12px);
-  box-shadow:0 6px 14px rgba(0,0,0,.4), inset 0 0 44px rgba(217,142,50,.05)}
-.tkt.night .tstub{border-left:1px dashed rgba(232,200,160,.32);background:rgba(255,255,255,.02)}
-.tkt.night .tstub span{color:#C6A87C}
-.tkt.night .tno{color:#8A6B4E}
-.tkt.night .td{color:#F0E6DA;font-family:'Do Hyeon',sans-serif;font-weight:400}
-.tkt.night .tt,.tkt.night .tp{color:#8E8288}
-.tkt.night .tst{color:#FF8B92;border:1px solid rgba(232,50,60,.5)}
-/* 어른이 놀이터 — 초록 전단 */
-.tkt.play{background:#2FA24B;border:2px solid #102817;box-shadow:4px 4px 0 #102817;border-radius:0}
-.tkt.play .tstub{border-left:2px dashed rgba(14,42,22,.35);background:rgba(255,228,92,.18)}
-.tkt.play .tstub span{color:#0E2A16}
-.tkt.play .tno{color:#CFEDC2}
-.tkt.play .td{color:#0E2A16;font-family:'Bagel Fat One',cursive;font-weight:400;font-size:17px}
-.tkt.play .tt,.tkt.play .tp{color:#123A1F}
-.tkt.play .tst{background:#0E2A16;color:#FFE45C}
-/* 도서관 — 컨퍼런스 명찰 */
-.tkt.lib{background:#FBFBF9;border:1px solid #D8DED6;border-radius:6px;
-  box-shadow:0 3px 9px rgba(38,40,43,.14)}
-.tkt.lib .tstub{border-left:1px dashed #D8DED6;background:#F1F3EF}
-.tkt.lib .tstub span{color:#A6ADA2}
-.tkt.lib .tno{color:#98A0A6}
-.tkt.lib .td{color:#26282B}
-.tkt.lib .tt,.tkt.lib .tp{color:#6B7178}
-.tkt.lib .tst{background:#FFE45C;color:#3A3F45}
-/* 아직 스킨을 안 만든 노선 — 기본 승차권 (노선을 열면 전용 스킨으로 교체) */
-.tkt.snap,.tkt.view,.tkt.sport,.tkt.cyber,.tkt.craft{
-  background:#241F1A;border:1px solid #4A4038;border-radius:3px;
-  box-shadow:0 5px 12px rgba(0,0,0,.34)}
-.tkt.snap .tstub,.tkt.view .tstub,.tkt.sport .tstub,.tkt.cyber .tstub,.tkt.craft .tstub{
-  border-left:1px dashed rgba(232,200,160,.3);background:rgba(255,255,255,.02)}
-.tkt.snap .tstub span,.tkt.view .tstub span,.tkt.sport .tstub span,
-.tkt.cyber .tstub span,.tkt.craft .tstub span{color:#B49A72}
-.tkt.snap .tno,.tkt.view .tno,.tkt.sport .tno,.tkt.cyber .tno,.tkt.craft .tno{color:#8A7A62}
-.tkt.snap .td,.tkt.view .td,.tkt.sport .td,.tkt.cyber .td,.tkt.craft .td{color:#EFE6D6}
-.tkt.snap .tt,.tkt.snap .tp,.tkt.view .tt,.tkt.view .tp,.tkt.sport .tt,.tkt.sport .tp,
-.tkt.cyber .tt,.tkt.cyber .tp,.tkt.craft .tt,.tkt.craft .tp{color:#918473}
-.tkt.snap .tst,.tkt.view .tst,.tkt.sport .tst,.tkt.cyber .tst,.tkt.craft .tst{
-  background:#3A3229;color:#E8C36B}
-/* 지난 모임 */
-.tkt.past{opacity:.62;filter:saturate(.8)}
-.tkt.past .tst{border:none;background:rgba(127,127,127,.2);color:inherit;opacity:.8}
-/* 밝은 카드(낭만 스터디)는 USED 대비를 따로 잡아준다 */
-.tkt.lib.past .tst{background:#DDE2DC;color:#4E545A;opacity:1;font-weight:800}
+/* 옛 소형 티켓(.tkt)의 CSS 는 tunel.js 의 _tkCSS() 에 있다 — 네 화면이 함께 쓴다 */
 .pastfold{width:358px;max-width:calc(100% - 8px);margin:18px auto 0}
 .pastfold summary{cursor:pointer;list-style:none;text-align:center;font-size:11.5px;color:#9A9184;
   border:1px dashed #4A453E;border-radius:8px;padding:10px 0}
@@ -826,7 +746,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=27"></script>
+<script src="tunel.js?v=28"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
