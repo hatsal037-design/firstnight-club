@@ -207,7 +207,15 @@ const TUNEL = {
        스텁   모집중 → '모집중 · BOARDING'(신청 뒤에는 내 상태 도장으로 바뀐다) · 그 밖 → '예정'
      opt: onclick(티켓 클릭) · card(티켓 배경 덮어쓰기) · bar(false면 신청 바 생략) · slim(true면 항상 슬림) */
   ticketOne(m, opt = {}){
-    const open = m.status === 'open';
+    const past = opt.past || TUNEL.isPast(m);
+    const open = m.status === 'open' && !past;
+    /* 스킨이 없는 노선은 옛 소형 티켓으로 — 그래도 신청 바는 같은 규칙으로 붙는다 */
+    if(!TUNEL.hasSkin(m.line))
+      return TUNEL.ticket(m, { past }) + (open && opt.bar !== false ? TUNEL.signupBar(m) : '');
+    const sk = TUNEL._skins[m.line];
+    if(past) return TUNEL.ticket(m, { past });
+    /* 예정 회차를 슬림으로 두는 노선(soonTkt)은 그 규칙을 따른다 */
+    if(!open && m.kind !== 'event' && sk.soonTkt) return TUNEL.ticket(m);
     const size = opt.slim ? 'sm' : (m.kind === 'event' ? 'xl' : open ? undefined : 'sm');
     const stub = open
       ? `<span class="sstub" data-mid="${m.id}" data-d="${m.d}"
