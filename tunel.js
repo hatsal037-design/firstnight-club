@@ -547,9 +547,10 @@ const TUNEL = {
     const mapq = m.data?.mapq || m.addr || m.place || '';
     const sp = m.data?.special || null;              // {label, text} — 이번 회차만의 안내
     const rt = m.data?.route || null;                // {img, tip} — 찾아오는 길
-    /* 노선 페이지 안에서는 상대경로, 허브에서는 노선 폴더 기준으로 읽는다 */
+    /* 상대경로는 항상 루트 기준으로 편다 — 노선 폴더 상대로 붙이면
+       노선 페이지 안에서 /1ndclub/1ndclub/… 처럼 겹쳐 깨진다 (2026-08-24 실제로 겪음) */
     const rtImg = rt && rt.img ? (/^(https?:|\/)/.test(rt.img) ? rt.img
-      : (m.line_path ? m.line_path.replace(/\/$/, '') + '/' : '') + rt.img) : '';
+      : '/' + (m.line_path ? m.line_path.replace(/^\/+|\/+$/g, '') + '/' : '') + rt.img) : '';
     const st = (d,t) => d.replace(/-/g,'') + 'T' + String(t||'').replace(':','') + '00';
     /* 구글 캘린더 링크 — 첫밤 googleCal() 과 같은 구성 */
     const gc = (!m.d || !m.s) ? '' :
