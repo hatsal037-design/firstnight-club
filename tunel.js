@@ -583,29 +583,11 @@ const TUNEL = {
 
   /* 캘린더에 저장 (.ics 내려받기) — 첫밤 saveCal() 그대로 */
   calSave(mid){
+    /* iOS 에서 애플 캘린더 미리보기(추가 버튼)가 바로 뜨게 — 서버가 text/calendar 로
+       내려주는 주소를 연다 (엣지 함수 ics). 블롭 다운로드 방식은 iOS 에서 화면 반응 없이
+       파일만 받아져서 옮겼다 (2026-08-24). 데스크톱에선 .ics 파일로 받아진다. */
     const m = TUNEL._dt[mid]; if(!m || !m.d || !m.s) return;
-    const st = (d,t) => d.replace(/-/g,'') + 'T' + String(t).replace(':','') + '00';
-    const title = `${m.line_name || ''}${m.r ? ` ${m.r}회차` : ''}`.trim() || TUNEL.title(m);
-    const desc = [m.place, m.addr, m.fee ? `참가비 ${m.fee}` : '', m.after ? `2차 ${m.after} (자율)` : '']
-      .filter(Boolean).join('\\n');
-    const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//TUNEL//KR','CALSCALE:GREGORIAN',
-      'BEGIN:VEVENT',
-      `UID:tunel-${m.line || 'x'}-${m.d}@tunel.kr`,
-      /* DTSTAMP 는 만든 순간을 UTC 기본형으로 (RFC 5545) — 20260829T040000Z */
-      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}`,
-      `DTSTART;TZID=Asia/Seoul:${st(m.d, m.s)}`,
-      `DTEND;TZID=Asia/Seoul:${st(m.d, m.e || m.s)}`,
-      `SUMMARY:${title}`,
-      `LOCATION:${(m.addr || m.place || '').replace(/,/g,'\\,')}`,
-      `DESCRIPTION:${desc}`,
-      'BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY',`DESCRIPTION:내일 ${title}`,'END:VALARM',
-      'END:VEVENT','END:VCALENDAR'].join('\r\n');
-    const blob = new Blob([ics], { type:'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${(m.line_name || 'tunel').replace(/\s/g,'')}_${m.d}.ics`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    window.open(URL + '/functions/v1/ics?id=' + encodeURIComponent(m.id), '_blank');
   },
 
   /* 티켓을 누르면 바로 다음의 .tnlx 를 여닫는다 (신청 바는 건너뛴다) */
