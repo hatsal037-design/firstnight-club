@@ -230,8 +230,38 @@ async function kakaoJoin(){
   if(!NICK_RE.test(n)) return joinErr('닉네임은 한글만 쓸 수 있어요 (1~10자).');
   if(!pn) return joinErr('오픈톡방 닉네임을 적어주세요.');
   busy('가입 중');
-  try{ await afterAuth(await API.signupMember(n, pn)); }
+  try{ await afterAuth(await API.signupMember(n, pn)); welcomeChat(); }
   catch(e){ joinErr(e.message); }
+}
+
+/* 가입 직후 — 단톡방 합류가 가입의 마지막 단계 (2026-08-24)
+   확인 버튼은 단톡방 버튼을 눌러야 열린다. 배경 탭 닫기도 이 팝업 동안엔 잠근다. */
+function welcomeChat(){
+  const ov = document.getElementById('ov');
+  ov.onclick = null;                                  // 배경 탭으로 못 빠져나가게
+  document.getElementById('modal').innerHTML = `
+    <h2>🎉 가입 완료!</h2>
+    <div class="mdesc"><b style="color:var(--red-lite)">${acc.nick}</b> 님, 어서 오세요.<br>
+      회원번호가 발급됐어요 — <b>NO.${String(acc.no||0).padStart(4,'0')}</b><br>
+      <span style="color:var(--sub);font-size:12px">공지·회차 조율은 전부 단톡방에서 해요. 여기까지가 진짜 가입이에요.</span></div>
+    <button class="kakaobtn" id="wcChat" onclick="wcOpenChat()" style="margin-top:16px">
+      <span class="ksym">TALK</span> 단톡방 들어가기</button>
+    <div class="mbtns" style="margin-top:10px"><button class="mbtn" id="wcOk" disabled onclick="wcDone()">확인</button></div>
+    <div style="font-size:11px;color:var(--sub);text-align:center;margin-top:8px;line-height:1.7">
+      공지방 단톡방입니다<br>회원가입한 닉네임으로 들어와주세요</div>`;
+  ov.style.display='flex';
+}
+function wcOpenChat(){
+  window.open(CHAT_LINK, '_blank');
+  const b = document.getElementById('wcChat');
+  b.style.background='var(--surface2)'; b.style.color='var(--sub)';
+  b.innerHTML = '<span class="ksym" style="opacity:.5">TALK</span> 단톡방 열었어요 ✓';
+  document.getElementById('wcOk').disabled = false;
+}
+function wcDone(){
+  const ov = document.getElementById('ov');
+  ov.setAttribute('onclick', 'if(event.target===this)closeM()');   // 배경 탭 닫기 복원
+  closeM();
 }
 
 /* ══ 로그인 — 카카오 전용 ══ */
