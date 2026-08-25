@@ -23,6 +23,11 @@ function sb(){
     if(global.__TNL_SB){ _sb = global.__TNL_SB; return _sb; }
     if(!global.supabase) throw new Error('supabase-js 를 먼저 불러와야 합니다');
     _sb = global.supabase.createClient(URL, ANON);
+    /* 로그인·로그아웃·계정 갱신이 일어나면 회원 캐시를 버린다 — 안 그러면 로그아웃한 뒤에도
+       me() 가 앞사람을 돌려줘 신청 팝업이 열리고 서버 RLS 에서 막힌다 (2026-08-26) */
+    try{ _sb.auth.onAuthStateChange((ev) => {
+      if(['SIGNED_IN','SIGNED_OUT','USER_UPDATED','TOKEN_REFRESHED'].includes(ev)) _meP = null;
+    }); }catch(e){}
   }
   return _sb;
 }
@@ -41,6 +46,9 @@ const CLOSE_BEFORE_H = 3;  /* 시작 몇 시간 전에 신청을 닫을지 (그 
      · 시간대를 안 붙이면 브라우저가 제 기기 시간대로 읽는다 → 해외에 있는 회원은 마감이 어긋난다
      · 날짜만 준 '2026-08-29' 는 UTC 자정으로 읽힌다 (표준이 그렇게 정한다) → 아홉 시간 어긋남
    두 함정 다 시간대를 명시하면 사라진다. */
+/* 화면에 넣기 전에 반드시 통과시킨다 — 닉네임·장소·메모처럼 사람이 넣은 값 (2026-08-26 공용으로 올림) */
+const esc = t => String(t??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
 const TZ = '+09:00';                         /* 모임이 열리는 곳의 시간대 (Asia/Seoul) */
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;      /* ISO 8601 달력 날짜 */
 const TIME_RE = /^\d{1,2}:\d{2}$/;           /* 'HH:MM' — 한 자리 시각도 받는다 */
@@ -160,23 +168,32 @@ const TUNEL = {
       line: l.id, line_no: l.no, line_name: l.name, line_short: (sk && sk.short) || l.name,
       line_path: '/' + String(l.path || '').replace(/^\//, '') };
   },
+  /* 로그인 상태가 바뀌었을 때 부른다 — 다음 me() 가 서버에 다시 묻는다.
+     1ndclub 의 로그인·로그아웃(js/auth.js)과 auth 이벤트가 함께 쓴다 (2026-08-26) */
+  resetMe(){ _meP = null; },
+
   /* 노선 값을 미리 받아 두면 화면에서 동기로 쓸 수 있다 */
   lineSync(id){ const l = (_lines || []).find(x => x.id === id); return l ? TUNEL.lineOf(l) : null; },
 
   /* 로그인 회원. 로그인 전이면 null */
   me(){
     /* 약속을 캐시한다 — 결과를 캐시하면 동시에 부르는 두 번째 화면이
-       아직 비어 있는 값을 받아 로그아웃으로 그려진다 (2026-08-20에 실제로 겪음) */
+       아직 비어 있는 값을 받아 로그아웃으로 그려진다 (2026-08-20에 실제로 겪음)
+       단 «실패»는 캐시하지 않는다 — 지하철·카톡 인앱에서 한 번 끊긴 것이 판 내내 로그아웃으로 굳었다 (2026-08-26).
+       로그인·로그아웃 뒤에는 TUNEL.resetMe() 로 지운다(auth 변화에도 자동으로 걸어 둔다). */
     if(!_meP) _meP = (async () => {
+      let hadSession = false;
       try{
         const { data } = await sb().auth.getSession();
         if(!data?.session) return null;
+        hadSession = true;
         const { data: mid } = await sb().rpc('claim_my_account');
-        if(!mid) return null;
+        if(!mid){ _meP = null; return null; }            // 세션은 있는데 아직 계정이 안 붙음 — 다음에 다시 묻는다
         const { data: m } = await sb().from('members')
           .select('id,nick,no,joined,role,is_admin').eq('id', mid).single();
+        if(!m) _meP = null;
         return m || null;
-      }catch(e){ return null; }
+      }catch(e){ if(hadSession) _meP = null; return null; }   // 조회 실패는 굳히지 않는다
     })();
     return _meP;
   },
@@ -613,7 +630,7 @@ const TUNEL = {
       const list = await TUNEL.signupList(ap.dataset.mid);
       const grp = { confirmed:[], paid:[], applied:[], waitlist:[] };
       list.forEach(r => { (grp[r.status]||[]).push(r); });
-      const nx = a => a.map(p => p.nick).join(' · ');
+      const nx = a => a.map(p => esc(p.nick)).join(' · ');   /* 다른 명단 경로와 같이 이스케이프 (2026-08-26) */
       const going = grp.confirmed.length + grp.paid.length + grp.applied.length;
       ap.innerHTML = list.length
         ? `<div class="xr">🎟 신청 <b>${going}명</b>${grp.waitlist.length ? ` · 대기 ${grp.waitlist.length}명` : ''}</div>`
@@ -816,7 +833,7 @@ div.btk .stub{cursor:pointer}
    서버가 강제한다 — signups RLS · signup_seats · notify 트리거              ══ */
 (function(){
   const byId = {}, mine = {}, seats = {};
-  const esc = t => String(t??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  /* esc 는 파일 위쪽 공용 정의를 쓴다 */
   const capOf = m => m.data?.cap ?? null;
   let mdl=null, body=null, titleEl=null, PAYLINK=null, _qrP=null;
 
@@ -947,6 +964,30 @@ div.btk .stub{cursor:pointer}
     return seats[mid];
   }
 
+  /* 남은 자리 문구 — 화면과 떼어 둔다(검증: tests/signup.test.js).
+       cap 없음: 정원을 안 정한 회차라 «신청 N명»만 센다
+       마감 뒤: 남은 자리 대신 최종 인원
+       만석: 남은 자리 0 이면 대기 인원을 보여준다 */
+  function seatText(cap, st, closed){
+    const taken = (st && st.taken) || 0, wait = (st && st.wait) || 0;
+    const left = cap ? Math.max(0, cap - taken) : null;
+    if(closed) return cap ? `모집 완료 · <b>${taken}</b>명` : `모집 완료 · ${taken}명`;
+    if(!cap) return `신청 ${taken}명`;
+    return left > 0 ? `남은 자리 <b>${left}</b> / ${cap}` : `만석 · 대기 ${wait}명`;
+  }
+  /* 버튼 상태 — 내 신청 상태가 정원·마감보다 먼저다(이미 신청한 사람에게 «대기 등록»이 뜨면 안 된다).
+       remove:true 는 버튼 자체를 없앤다 — 마감 뒤 신청 안 한 사람 */
+  function btnView(my, cap, left, closed){
+    if(my === 'confirmed') return { text:'확정됨 ✓', cls:'done' };
+    if(my === 'paid')      return { text:'입금 확인 중', cls:'wait' };
+    if(my === 'applied')   return { text: closed ? '내 신청 확인' : '입금하러 가기', cls:'' };
+    if(my === 'waitlist')  return { text:'대기 중', cls:'wait' };
+    if(closed)             return { remove:true };
+    if(cap && left === 0)  return { text:'대기 등록', cls:'ghost' };
+    return { text:'신청하기', cls:'' };
+  }
+  TUNEL._seatText = seatText; TUNEL._btnView = btnView;   /* 검증용 — 화면은 아래 paintBar 가 쓴다 */
+
   async function paintBar(bar){
     const mid = bar.dataset.mid;
     const m = byId[mid]; if(!m) return;
@@ -956,21 +997,17 @@ div.btk .stub{cursor:pointer}
     const my = mine[mid];
     const seatsEl = bar.querySelector('.seats');
     const btn = bar.querySelector('button');
+    if(!seatsEl) return;                       /* 바가 이미 걷힌 뒤의 늦은 호출 */
     const closed = TUNEL.isClosed(m);   /* 시작 3시간 전을 넘겨 신청이 닫힘 */
-    seatsEl.innerHTML = closed
-      ? (cap ? `모집 완료 · <b>${st.taken}</b>명` : `모집 완료 · ${st.taken}명`)
-      : cap
-      ? (left > 0 ? `남은 자리 <b>${left}</b> / ${cap}` : `만석 · 대기 ${st.wait}명`)
-      : `신청 ${st.taken}명`;
-    btn.className = '';
-    if(my === 'confirmed'){ btn.textContent = '확정됨 ✓'; btn.classList.add('done'); }
-    else if(my === 'paid'){ btn.textContent = '입금 확인 중'; btn.classList.add('wait'); }
-    else if(my === 'applied'){ btn.textContent = closed ? '내 신청 확인' : '입금하러 가기'; }
-    else if(my === 'waitlist'){ btn.textContent = '대기 중'; btn.classList.add('wait'); }
-    else if(closed){ btn.remove(); }   /* 마감 뒤 신청 안 한 사람에겐 버튼을 두지 않는다 */
-    else if(cap && left === 0){ btn.textContent = '대기 등록'; btn.classList.add('ghost'); }
-    else btn.textContent = '신청하기';
-    if(btn.isConnected) btn.onclick = () => openSign(mid);
+    seatsEl.innerHTML = seatText(cap, st, closed);
+    /* 마감된 회차는 첫 렌더에서 버튼을 지운다 — 팝업을 닫으면 여기가 다시 불리므로 없는 버튼을 만지면 안 된다 (2026-08-26) */
+    const bv = btnView(my, cap, left, closed);
+    if(btn){
+      btn.className = '';
+      if(bv.remove) btn.remove();
+      else { btn.textContent = bv.text; if(bv.cls) btn.classList.add(bv.cls); }
+      if(btn.isConnected) btn.onclick = () => openSign(mid);
+    }
     TUNEL.me().then(me => {
       if(me && (me.is_admin || me.role==='staff') && !bar.querySelector('[data-act="mgr"]')){
         const g = document.createElement('button');
@@ -1002,11 +1039,30 @@ div.btk .stub{cursor:pointer}
       <div class="row"><span class="k">장소</span><span class="v">${esc(m.place||'')}</span></div>`;
   }
 
+  /* 팝업을 닫지 않고 안내만 바꾼다. 배경 스크롤은 close() 가 되돌린다 */
+  function signMsg(html){ body.innerHTML = html; }
   async function openSign(mid){
+    try{ await openSignBody(mid); }
+    catch(e){
+      /* 신호가 끊기면 여기까지 온다 — 예전에는 예외가 그대로 새서 팝업이 «불러오는 중…» 으로 굳었다 (2026-08-26) */
+      signMsg(`<p class="big">불러오지 못했어요</p>
+        <p class="cap2">연결이 불안정한 것 같아요. 잠시 뒤 다시 시도해 주세요.</p>
+        <div class="act"><button class="go" id="tnlRetry">다시 시도</button></div>`);
+      const b = document.getElementById('tnlRetry'); if(b) b.onclick = () => openSign(mid);
+    }
+  }
+  async function openSignBody(mid){
     const m = byId[mid];
     mdl.classList.add('on'); document.body.style.overflow='hidden';
     titleEl.textContent = '참가 신청';
     body.innerHTML = '<p class="bnote">불러오는 중…</p>';
+
+    /* 단톡방에 남은 옛 ?apply= 링크로 들어오면 그 회차가 목록에 없다 — 예외로 끝나면 «불러오는 중…»에서 멈춘다 (2026-08-26) */
+    if(!m){ signMsg(`<p class="big">지난 회차예요</p>
+      <p class="cap2">이 링크의 회차는 목록에 없어요. 홈에서 다음 회차를 확인해 주세요.</p>`); return; }
+    /* 서버와 연결이 안 돼 폴백으로 그려진 회차는 신청을 받을 수 없다(임시 id 라 서버가 거절한다) */
+    if(!isServerId(mid)){ signMsg(`<p class="big">지금은 신청을 받을 수 없어요</p>
+      <p class="cap2">서버와 연결이 안 돼 회차 정보를 임시로 보여주는 중이에요. 잠시 뒤 새로고침해 주세요.</p>`); return; }
 
     const me = await TUNEL.me();
     if(!me){
@@ -1189,10 +1245,15 @@ div.btk .stub{cursor:pointer}
   TUNEL.stubPaint = paintStubs;
   TUNEL.signupRefresh = async function(){
     await loadMine();
-    document.querySelectorAll('.tnlbar').forEach(paintBar);
+    /* 한 바가 실패해도 나머지는 그린다. forEach 로 두면 예외가 unhandledRejection 으로만 남고
+       기다릴 수도 없어 «다시 그렸는데 아직 옛 값»이 된다 (2026-08-26) */
+    const painted = await Promise.allSettled([...document.querySelectorAll('.tnlbar')].map(b => paintBar(b)));
+    const failed = painted.filter(r => r.status === 'rejected');
+    if(failed.length) console.warn('[tunel] 신청 바를 못 그린 것 ' + failed.length + '건', failed[0].reason);
     paintStubs();
     /* 페이지가 걸어둔 훅 — 신청 상태가 바뀌면 도장·명단을 다시 그리라고 알린다 */
     if(typeof TUNEL.onSignupChange === 'function'){ try{ TUNEL.onSignupChange(); }catch(e){} }
+    return { bars: painted.length, failed: failed.length };
   };
   /* 페이지에서 직접 팝업을 열 때 (첫밤 스터브 도장 등) */
   TUNEL.signupOpen = function(mid){ ensureUI(); openSign(mid); };

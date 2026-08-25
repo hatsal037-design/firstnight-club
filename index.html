@@ -750,7 +750,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="tunel.js?v=34"></script>
+<script src="tunel.js?v=35"></script>
 <script>
 /* ══ 탭 전환 + 좌우 스와이프 — 버튼도 같은 슬라이드로 넘어간다 ══ */
 (function(){
@@ -1005,7 +1005,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       if(error){ err.textContent = error.message; err.style.display='block'; return; }
       location.reload();   // 히어로·팝업·알림함이 새 닉네임으로
     };
-    document.getElementById('aOut').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+    document.getElementById('aOut').onclick = async () => { await signOutAll(); };
     document.getElementById('aAct').onclick = (ev) => {
       ev.preventDefault(); closeAcct();
       const tab = document.querySelector('.tn[data-v="me"]'); if(tab) tab.click();
@@ -1025,7 +1025,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
         <p class="as">첫밤 사망자 클럽에서 가입을 마치면<br>회원번호가 발급돼요.</p>
         <hr><a class="ar" href="1ndclub/">첫밤에서 가입하기<span>닉네임만 정하면 끝나요</span></a>
         <button class="out" id="aOut2">로그아웃</button>`;
-      document.getElementById('aOut2').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+      document.getElementById('aOut2').onclick = async () => { await signOutAll(); };
       return;
     }
     const { data: m } = await sb.from('members').select('id,nick,no,joined,role,is_admin').eq('id', mid).single();
@@ -1079,7 +1079,11 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     try{
       const reg = await navigator.serviceWorker.getRegistration();
       const sub = reg && await reg.pushManager.getSubscription();
-      return sub ? 'on' : 'off';
+      if(!sub) return 'off';
+      /* 이 기기의 구독이 «내» 것인지 서버에 확인한다 — 계정을 갈아탄 뒤 앞사람 구독을 «켜짐»으로 보여주면 안 된다 */
+      if(me){ const { data } = await sbI.from('push_subscriptions').select('member_id').eq('endpoint', sub.endpoint).maybeSingle();
+        if(data && data.member_id !== me.id) return 'off'; }
+      return 'on';
     }catch(e){ return 'off'; }
   }
   async function pushOn(){
@@ -1099,6 +1103,14 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     const sub = reg && await reg.pushManager.getSubscription();
     if(sub){ try{ await sbI.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); }catch(e){}
       await sub.unsubscribe(); }
+  }
+  /* 로그아웃은 이 기기의 «누구 것인지»까지 정리한다 — 안 하면 다음 사람이 앞사람 푸시 구독을 물려받고
+     알림 토글이 «켜짐»으로 보인다 (2026-08-26). */
+  async function signOutAll(){
+    try{ await pushOff(); }catch(e){}
+    try{ await sb.auth.signOut(); }catch(e){}
+    try{ TUNEL.resetMe(); }catch(e){}
+    location.reload();
   }
   function notifyPush(id){  /* 등록 직후 배달 — 실패해도 알림함에는 이미 있다 */
     try{ sbI.functions.invoke('send-push', { body:{ message_id:id } }); }catch(e){}

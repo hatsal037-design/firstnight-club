@@ -18,8 +18,16 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = e.notification.data?.url || '/';
-  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const c of list) { if ('focus' in c) return c.focus(); }
-    return clients.openWindow(url);
+  /* 알림을 누르면 «그 알림이 가리키는 화면»으로 가야 한다.
+     열린 창을 아무거나 앞으로 끌어오면 어느 모임 이야기였는지 알 수 없다 (2026-08-26). */
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async list => {
+    const target = new URL(url, self.location.origin).href;
+    for (const c of list) {                       /* ① 이미 그 화면이 열려 있으면 그 창으로 */
+      if (c.url === target && 'focus' in c) return c.focus();
+    }
+    for (const c of list) {                       /* ② 다른 화면이 열려 있으면 그 창을 옮긴다 */
+      if ('navigate' in c) { try { const n = await c.navigate(url); return (n || c).focus(); }catch(err){} }
+    }
+    return clients.openWindow(url);               /* ③ 창이 없거나 옮길 수 없으면 새로 */
   }));
 });

@@ -165,12 +165,12 @@ function savePast(){
     played: [...document.querySelectorAll('#gsel .gs.on')].map(el=>el.dataset.n).concat(extraPlayed),
   };
   const rec = edits[d];
-  localStorage.setItem(RKEY,JSON.stringify(edits));   // 일단 로컬에 남겨 유실을 막는다
+  lsSet(RKEY,JSON.stringify(edits));   // 일단 로컬에 남겨 유실을 막는다
   (async()=>{
     try{
       await API.pastSave(rec);
       serverPast = await API.pastList();
-      delete edits[d]; localStorage.setItem(RKEY,JSON.stringify(edits));   // 서버 성공 후에만 로컬 정리
+      delete edits[d]; lsSet(RKEY,JSON.stringify(edits));   // 서버 성공 후에만 로컬 정리
     }
     catch(e){ alert('서버 저장에 실패했어요. 이 기기에는 남아 있으니 네트워크 확인 후 다시 저장해주세요.'); }
     closeM(); schedScrolled=true; renderSched();
@@ -180,7 +180,7 @@ function savePast(){
    지워야 할 일이 생기면 서버(meetings)에서 직접 정리한다. */
 function delPast(d){
   if(!confirm('이 기록을 지울까요?')) return;
-  delete edits[d]; localStorage.setItem(RKEY,JSON.stringify(edits));
+  delete edits[d]; lsSet(RKEY,JSON.stringify(edits));
   (async()=>{
     try{ await API.pastDelete(d); serverPast = await API.pastList(); }catch(e){}
     closeM(); schedScrolled=true; renderSched();

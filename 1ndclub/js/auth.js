@@ -168,15 +168,16 @@ function busy(t){ const b=document.getElementById('authBtn'); if(b){ b.disabled=
 const NICK_RE = /^[가-힣]{1,10}$/;   // 닉네임은 한글 1~10자만
 
 async function afterAuth(a){
+  try{ TUNEL.resetMe(); }catch(e){}   /* 로그인·가입 직후 — 공용 모듈이 서버에 다시 묻게 (2026-08-26) */
   acc = a;
   favs = fixNames(acc.favs);
-  const anon = JSON.parse(localStorage.getItem('botc_picks_anon')||'[]');
+  const anon = lsJSON('botc_picks_anon', []);
   picks = openRound ? fixNames(await API.getMyPicks(openRound.d, acc.uid)) : [];
   myRsvp = openRound ? await API.getMyRsvp(openRound.d, acc.uid) : null;
   if(anon.length && openRound){                    // 로그인 전에 골라둔 게 있으면 합쳐서 올린다
     picks = [...new Set([...picks, ...anon])];
     try{ await API.setPicks(openRound.d, acc.uid, picks); }catch(e){}
-    localStorage.removeItem('botc_picks_anon');
+    lsDel('botc_picks_anon');
   }
   try{ MEMBERS = await API.list(); }catch(e){}
   try{ await computeFavCount(); }catch(e){}
@@ -186,6 +187,7 @@ async function afterAuth(a){
 }
 async function logout(){
   try{ await API.logout(); }catch(e){}
+  try{ TUNEL.resetMe(); }catch(e){}   /* 공용 모듈의 회원 캐시도 버린다 — 안 하면 신청 팝업이 앞사람으로 열린다 (2026-08-26) */
   acc=null; favs=[]; picks=[];
   renderMe(); closeM(); renderGames();
   if(view==='me') renderMePage(); if(view==='sched') renderSched();

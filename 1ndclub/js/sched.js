@@ -231,5 +231,5 @@ async function togPick(n){
   renderPicked();
   // 로그인 전에는 이 기기에만 담아두고, 로그인하면 서버로 올린다
   if(acc){ try{ await API.setPicks(openRound.d, acc.uid, picks); }catch(e){} }
-  else localStorage.setItem('botc_picks_anon', JSON.stringify(picks));
+  else lsSet('botc_picks_anon', JSON.stringify(picks));
 }

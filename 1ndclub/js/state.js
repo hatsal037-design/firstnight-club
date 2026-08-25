@@ -18,8 +18,14 @@ const fixName  = n => NAME_FIX[n] || n;
 const fixNames = a => [...new Set((a||[]).map(fixName))];
 let PENDING_APPLY = new URLSearchParams(location.search).get('apply') || null;   // ?apply=날짜 로 들어오면 그 회차 신청까지 연다
 let favs  = [];                                // 즐겨찾기 — 이 기기에만 저장
-let picks = fixNames(JSON.parse(localStorage.getItem('botc_picks_anon')||'[]'));   // 로그인 전에는 이 기기, 로그인하면 서버
-let edits = JSON.parse(localStorage.getItem(RKEY)||'{}');   // 서버 이전 시절의 로컬 기록(백업용)
+/* 저장소는 못 읽을 수 있다 — 사파리 프라이빗·쿠키 차단 인앱에서는 getItem 이 예외를 던진다.
+   여기서 안 잡으면 이 파일이 통째로 죽어 뒤따르는 start.js 까지 무너진다(빈 화면). 2026-08-26. */
+const lsGet = (k, d) => { try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } };
+const lsJSON = (k, d) => { try{ return JSON.parse(lsGet(k, '')) ?? d; }catch(e){ return d; } };
+const lsSet = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
+const lsDel = k => { try{ localStorage.removeItem(k); }catch(e){} };
+let picks = fixNames(lsJSON('botc_picks_anon', []));   // 로그인 전에는 이 기기, 로그인하면 서버
+let edits = lsJSON(RKEY, {});   // 서버 이전 시절의 로컬 기록(백업용)
 let serverPast = [];        // 서버에 저장된 지난 모임 기록 — 시작할 때 불러온다
 let MEMBERS = [];           // 전체 회원 — @태그(uid)를 현재 닉네임으로 바꿔 보여줄 때 쓴다
 let OWNERS = {};            // {게임이름: uid} — 관리자가 지정한 게임 소유자 (서버)
