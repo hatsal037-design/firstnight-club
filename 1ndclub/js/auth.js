@@ -28,28 +28,17 @@ async function bootSession(){
       }
     }
   }catch(e){ /* 오프라인이면 그냥 비로그인으로 둔다 */ }
-  /* 아래 여섯도 마찬가지 — 한 줄로 세우지 않는다 */
-  const [sp, mem, fc, own, nt, rd] = await Promise.all([
-    ok(API.pastList()), ok(API.list()), ok(API.favCounts()),
-    ok(API.ownerMap()), ok(API.noticeList()),
-    acc ? ok(API.getRead(acc.uid)) : null,
+  /* 아래 넷도 마찬가지 — 한 줄로 세우지 않는다 */
+  const [sp, mem, fc, own] = await Promise.all([
+    ok(API.pastList()), ok(API.list()), ok(API.favCounts()), ok(API.ownerMap()),
   ]);
   if(sp)  serverPast = sp;
   if(mem) MEMBERS = mem;
   if(fc)  FAVCOUNT = fc;
   if(own) OWNERS = own;
-  if(nt)  NOTICES = nt;
-  if(rd)  readIds = rd;
   computeMyPlayed();
-  /* 공지 대상 판정용 내 참석·게임선택은 회차마다 되묻지 않는다 —
-     내 것 전부를 두 번에 받아 날짜별로 나눈다 (회차 11개면 33질의 → 2질의) */
   await Promise.all([
     acc ? ok(loadPfps([acc.uid])) : null,
-    acc ? ok(Promise.all([API.myRsvpMap(acc.uid), API.myPickedMeetings(acc.uid)])
-      .then(([rsvpMap, pickedIds]) => { for(const r of upcoming){
-        MY_RSVP[r.d]  = rsvpMap[r.d] || null;
-        MY_PICKS[r.d] = !!(r.id && pickedIds.has(r.id));
-      } })) : null,
     openRound ? ok(loadRsvpCnt()) : null,
     ok(checkScribe()),
   ]);
@@ -86,120 +75,9 @@ function renderMe(){
   document.getElementById('hsub').textContent =
     `지금 보유 게임 ${GAMES.filter(g=>g.have!==false).length}종 · 잡아둔 회차 ${upcoming.length}개`;
   document.getElementById('navMembers').style.display = isStaff() ? '' : 'none';
-  renderBell();
 }
 
-/* ── 공지 대상 판정 — 내 상태만 보면 된다 ── */
-/* 공지 시각 — 서버는 UTC 로 준다. 그 글자를 자르면 아홉 시간 어긋난다 (2026-08-23에 실제로 그랬다) */
-function noticeWhen(ts){
-  const p = TUNEL.kstParts(ts);
-  return p ? `${p.month}-${p.day} ${p.hour}:${p.minute}` : '';
-}
-function noticeForMe(n){
-  if(!acc) return false;
-  if(n.to) return n.to === acc.uid;      // 개인·대상 지정 공지 (메인 허브 알림함과 같은 규칙)
-  if(n.target==='all' || !n.target) return true;
-  /* 옛 공지(대상만 적혀 있고 받는 사람이 없는 것) 호환 */
-  if(n.target==='rsvp' && n.roundDate) return MY_RSVP[n.roundDate]==='yes';
-  if(n.target==='picks' && n.roundDate) return !!MY_PICKS[n.roundDate];
-  return false;
-}
-let MY_RSVP = {};    // {날짜:'yes'|'no'|null} 내 응답 캐시
-let MY_PICKS = {};   // {날짜:bool} 내가 게임 골랐는지
-function myNotices(){ return NOTICES.filter(noticeForMe); }
-function unreadCount(){ return myNotices().filter(n=>!readIds.includes(n.id)).length; }
-function renderBell(){
-  const bell=document.getElementById('bell'), dot=document.getElementById('bellDot');
-  if(!bell) return;
-  if(!acc){ bell.style.display='none'; return; }
-  bell.style.display='';
-  const u=unreadCount();
-  if(u>0){ dot.style.display=''; dot.textContent=u>9?'9+':u; }
-  else dot.style.display='none';
-}
-
-/* ── 공지 보기 (참가자) ── */
-function openNotices(){
-  if(!acc){ askNick('login'); return; }
-  const mine=myNotices();
-  document.getElementById('modal').innerHTML=`
-    <h2>공지 🔔</h2>
-    ${isAdmin()?`<div class="mbtns" style="margin:12px 0 4px"><button class="mbtn" onclick="composeNotice()">＋ 공지 보내기</button></div>`:''}
-    ${mine.length? mine.map(n=>{
-      const unread=!readIds.includes(n.id);
-      const tgt = n.target==='all'?'전체':(n.target==='rsvp'?`${fmt(n.roundDate)} 참석자`:`${fmt(n.roundDate)} 게임선택자`);
-      return `<div class="ntc${unread?' unread':''}">
-        <div class="nh"><b>${n.title}</b>${unread?'<span class="nu">NEW</span>':''}</div>
-        <div class="nb2">${n.body.replace(/\n/g,'<br>')}</div>
-        <div class="nm2">${tgt} · ${noticeWhen(n.at)}${isAdmin()?` · <span style="color:var(--red-lite);cursor:pointer" onclick="delNotice('${n.id}')">삭제</span>`:''}</div>
-      </div>`;
-    }).join('') : `<div class="empty" style="padding:30px">아직 온 공지가 없어요.</div>`}
-    <button class="mclose" onclick="markAllRead();closeM()">닫기</button>`;
-  document.getElementById('ov').style.display='flex';
-}
-async function markAllRead(){
-  const ids=[...new Set([...readIds, ...myNotices().map(n=>n.id)])];
-  readIds=ids; renderBell();
-  if(acc){ try{ await API.setRead(acc.uid, ids); }catch(e){} }
-}
-
-/* ── 공지 보내기 (관리자) ── */
-function composeNotice(){
-  const opts = upcoming.map(r=>`<option value="${r.d}">${fmt(r.d)} (${r.dow}) ${r.place}</option>`).join('');
-  document.getElementById('modal').innerHTML=`
-    <h2>공지 보내기</h2>
-    <div class="fld"><label>받는 사람</label>
-      <select id="ncTarget" onchange="ncTargetChange()" style="width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:11px 12px;font-size:13.5px">
-        <option value="all">전체 회원</option>
-        <option value="rsvp">특정 회차 — 참석한다고 한 사람</option>
-        <option value="picks">특정 회차 — 게임 고른 사람</option>
-      </select></div>
-    <div class="fld" id="ncRoundWrap" style="display:none"><label>회차</label>
-      <select id="ncRound" onchange="ncUpdateCount()" style="width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:11px 12px;font-size:13.5px">${opts}</select>
-      <div id="ncCount" style="font-size:11.5px;color:var(--sub);margin-top:6px"></div></div>
-    <div class="fld"><label>제목</label><input id="ncTitle" placeholder="예: 8/15 장소 안내"></div>
-    <div class="fld"><label>내용</label><textarea id="ncBody" placeholder="공지 내용을 적어주세요"></textarea></div>
-    <div id="joinErr" style="display:none;color:var(--red-lite);font-size:12px;margin-top:9px"></div>
-    <div class="mbtns"><button class="mbtn" id="authBtn" onclick="sendNotice()">보내기</button></div>
-    <button class="mclose" onclick="openNotices()">← 공지 목록</button>`;
-  document.getElementById('ov').style.display='flex';
-}
-function ncTargetChange(){
-  const v=document.getElementById('ncTarget').value;
-  document.getElementById('ncRoundWrap').style.display = v==='all'?'none':'';
-  ncUpdateCount();
-}
-async function ncUpdateCount(){
-  const el=document.getElementById('ncCount'); if(!el) return;
-  const v=document.getElementById('ncTarget').value;
-  if(v==='all'){ el.textContent=''; return; }
-  const d=document.getElementById('ncRound').value;
-  el.textContent = '세는 중…';
-  try{   // 관리자만 여는 화면이라 전체 조회 가능 (일반 회원은 서버가 안 줌)
-    const n = v==='rsvp'
-      ? (await API.allRsvp(d)).filter(x=>x.v==='yes').length
-      : (await API.allPicks(d)).length;
-    el.textContent = `이 조건에 해당하는 회원 ${n}명`;
-  }catch(e){ el.textContent=''; }
-}
-async function sendNotice(){
-  const v=id=>document.getElementById(id).value;
-  const target=v('ncTarget'), title=v('ncTitle').trim(), body=v('ncBody').trim();
-  if(!title) return joinErr('제목을 적어주세요.');
-  if(!body) return joinErr('내용을 적어주세요.');
-  const roundDate = target==='all'? '' : v('ncRound');
-  busy('보내는 중');
-  try{
-    await API.noticeCreate({ title, body, target, roundDate, by:acc.uid });
-    NOTICES = await API.noticeList();
-    closeM(); openNotices();
-  }catch(e){ joinErr(e.message); }
-}
-async function delNotice(id){
-  if(!confirm('이 공지를 지울까요?')) return;
-  try{ await API.noticeDelete(id); NOTICES=NOTICES.filter(n=>n.id!==id); }catch(e){}
-  openNotices();
-}
+/* 공지·알림함은 2026-08-25부터 투넬 허브(메인)에서만 관리한다 — 첫밤 앱에는 진입점이 없다 */
 
 /* ══ 카카오 로그인 (Supabase Auth) ══
    버튼 → 카카오 인가 → Supabase가 세션 처리 후 여기로 복귀 →
