@@ -43,10 +43,10 @@ var ROUNDS = [
     mapq:'시디즈 더 프로그레시브 송파', cap:12, fee:'',
     note:'', after:'홈즈앤루팡 송파방이점' },
 
-  { r:null, d:'2026-09-26', dow:'토', s:'12:00', e:'17:00', h:5, st:'soon',
-    place:'서울갤러리 회의실1', addr:'서울 중구 세종대로 110',
-    mapq:'서울시청 시민청 서울갤러리', cap:null, fee:'',
-    note:'', after:null },
+  { r:null, d:'2026-09-26', dow:'토', s:'11:00', e:'17:00', h:6, st:'soon',
+    place:'서울갤러리 동그라미방', addr:'서울 중구 세종대로 110',
+    mapq:'서울 중구 세종대로 110', cap:18, fee:'',
+    note:'6시간 회차', after:null },
 
   { r:null, d:'2026-10-24', dow:'토', s:'13:00', e:'18:00', h:5, st:'soon',
     place:'서울갤러리 회의실1', addr:'서울 중구 세종대로 110',
