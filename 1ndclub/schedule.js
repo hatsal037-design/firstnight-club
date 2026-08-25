@@ -46,24 +46,11 @@ var ROUNDS = [
   { r:null, d:'2026-09-26', dow:'토', s:'12:00', e:'17:00', h:5, st:'soon',
     place:'서울갤러리 회의실1', addr:'서울 중구 세종대로 110',
     mapq:'서울시청 시민청 서울갤러리', cap:null, fee:'',
-    note:'다음날 9/27도 있어요', after:null },
+    note:'', after:null },
 
-  { r:null, d:'2026-09-27', dow:'일', s:'14:00', e:'19:00', h:5, st:'soon',
-    place:'시디즈 합정 커뮤니티룸', addr:'',
-    mapq:'시디즈 합정', cap:10, fee:'', note:'', after:null },
-
-  { r:null, d:'2026-10-17', dow:'토', s:'14:00', e:'19:00', h:5, st:'soon',
-    place:'시디즈 성수 커뮤니티룸', addr:'',
-    mapq:'시디즈 성수', cap:12, fee:'', note:'', after:null },
-
-  { r:null, d:'2026-10-25', dow:'일', s:'11:00', e:'15:00', h:4, st:'soon',
-    place:'시디즈 합정 커뮤니티룸', addr:'',
-    mapq:'시디즈 합정', cap:10, fee:'', note:'', after:null },
-
-  { r:null, d:'2026-10-31', dow:'토', s:'14:00', e:'19:00', h:5, st:'soon',
-    place:'시디즈 성수 커뮤니티룸', addr:'',
-    mapq:'시디즈 성수', cap:12, fee:'',
-    note:'🎃 핼러윈 당일! 특별 회차로 준비해볼게요', after:null },
+  { r:null, d:'2026-10-24', dow:'토', s:'13:00', e:'18:00', h:5, st:'soon',
+    place:'서울갤러리 회의실1', addr:'서울 중구 세종대로 110',
+    mapq:'서울시청 시민청 서울갤러리', cap:12, fee:'', note:'', after:null },
 
   { r:null, d:'2026-11-07', dow:'토', s:'14:00', e:'19:00', h:5, st:'soon',
     place:'시디즈 송파 커뮤니티룸', addr:'서울 송파구 오금로 235 젬스빌딩 1층',
