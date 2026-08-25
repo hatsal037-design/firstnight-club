@@ -1068,7 +1068,26 @@ div.btk .stub{cursor:pointer}
       return;
     }
 
-    /* 신청 + 결제 안내 */
+    /* 아직 신청 안 한 사람에겐 먼저 한 번 묻는다 — 모르고 눌러서 자리가 잡히는 일이 있었다 (2026-08-25) */
+    if(!my){
+      body.innerHTML = `<p class="big">이 회차에 신청할까요?</p>${meetingRows(m)}
+        ${m.fee ? `<p class="fee">${esc(m.fee)}</p>` : ''}
+        <p class="cap2" style="margin-top:14px">신청하면 자리가 잡히고 참가비 안내로 넘어가요.<br>입금 전에는 언제든 취소할 수 있어요.</p>
+        <div class="act">
+          <button class="go" id="tnlYes">네, 신청할게요</button>
+          <button class="ghost" id="tnlNo" style="flex:0 0 92px">아니요</button>
+        </div>`;
+      document.getElementById('tnlNo').onclick = close;
+      document.getElementById('tnlYes').onclick = async () => {
+        const { error } = await sb().from('signups').upsert(
+          { meeting_id: mid, member_id: me.id, status:'applied' }, { onConflict:'meeting_id,member_id' });
+        if(error){ alert('신청 실패: '+error.message); return; }
+        mine[mid] = 'applied'; openSign(mid);
+      };
+      return;
+    }
+
+    /* 신청 + 결제 안내 (여기 오는 건 이미 applied 인 사람) */
     await qrLib();
     const pl = await feeLink(m);
     body.innerHTML = `${meetingRows(m)}
@@ -1078,22 +1097,15 @@ div.btk .stub{cursor:pointer}
       <div class="warn">보낼 때 <b>메시지에 닉네임(${esc(me.nick)})</b>을 꼭 적어주세요.<br>운영진이 입금을 대조하는 데 써요.</div>
       <div class="act">
         <button class="go" id="tnlPaid">입금했어요</button>
-        <button class="ghost" id="tnlCancel" style="flex:0 0 92px">${my==='applied'?'신청 취소':'닫기'}</button>
+        <button class="ghost" id="tnlCancel" style="flex:0 0 92px">신청 취소</button>
       </div>`;
-    /* 팝업을 연 순간 자리 선점 (applied) */
-    if(!my){
-      const { error } = await sb().from('signups').upsert(
-        { meeting_id: mid, member_id: me.id, status:'applied' }, { onConflict:'meeting_id,member_id' });
-      if(!error) mine[mid] = 'applied';
-    }
     document.getElementById('tnlPaid').onclick = async () => {
       const { error } = await sb().from('signups').update({ status:'paid' })
         .eq('meeting_id', mid).eq('member_id', me.id);
       if(error){ alert('실패: '+error.message); return; }
       mine[mid] = 'paid'; openSign(mid);
     };
-    if(my==='applied') hookCancel(mid);
-    else document.getElementById('tnlCancel').onclick = close;
+    hookCancel(mid);
   }
   function hookCancel(mid){
     const b = document.getElementById('tnlCancel'); if(!b) return;
