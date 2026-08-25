@@ -131,6 +131,10 @@ main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:8px 16px 30px}
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .inbox .msg.open .b2{display:block;-webkit-line-clamp:unset;overflow:visible}
 .inbox .w{font-size:10px;color:#77716A;margin-top:6px;font-family:'Nanum Gothic Coding',monospace}
+.inbox .msg .del{position:absolute;top:8px;right:8px;width:24px;height:24px;border:0;background:none;
+  color:#6B6560;font-size:15px;line-height:1;cursor:pointer;border-radius:5px;padding:0}
+.inbox .msg .del:hover{background:#2A262E;color:#E8908F}
+.inbox .msg .m{padding-right:20px}
 .inbox .ask{display:block;text-align:center;border:1px dashed #4A453E;border-radius:9px;
   padding:11px 0;font-size:12px;color:#A79E8F;margin-top:12px;cursor:pointer}
 .inbox .ask b{color:#E8C36B}
@@ -1048,7 +1052,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   document.addEventListener('keydown', e => { if(e.key==='Escape' && mdl.classList.contains('on')) close(); });
   btn.onclick = open;
 
-  let me=null, msgs=[], reads=new Set(), lines=[], memNick={};
+  let me=null, msgs=[], reads=new Set(), hides=new Set(), lines=[], memNick={};
   const isStaffMe = () => me && (me.is_admin || me.role === 'staff');
   /* 서버 시각은 UTC 로 온다. 지난 시간은 절대값이라 그냥 빼면 되고,
      날짜로 떨어질 땐 서울 기준으로 찍는다 (보는 사람이 어디에 있든 같은 값) */
@@ -1107,8 +1111,12 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     if(!me){ dot.style.display='none'; return; }
     const { data: m } = await sbI.from('messages').select('*').order('created_at',{ascending:false}).limit(100);
     msgs = m || [];
-    const { data: r } = await sbI.from('message_reads').select('message_id').eq('member_id', me.id);
+    const [{ data: r }, { data: h }] = await Promise.all([
+      sbI.from('message_reads').select('message_id').eq('member_id', me.id),
+      sbI.from('message_hides').select('message_id').eq('member_id', me.id),
+    ]);
     reads = new Set((r||[]).map(x=>x.message_id));
+    hides = new Set((h||[]).map(x=>x.message_id));
     if(isStaffMe()){
       const { data: mm } = await sbI.from('members').select('id,nick');
       (mm||[]).forEach(x=>memNick[x.id]=x.nick);
@@ -1118,8 +1126,23 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
   function myMsgs(){
     /* 운영진은 회원 문의(남의 쪽지 스레드)도 받아본다 */
     /* 공지는 받는 사람이 비어 있을 때만 전체 공개 — 대상이 정해진 공지는 그 사람에게만 */
-    return msgs.filter(x => (x.kind==='notice' && !x.to_member) || x.to_member === me.id
-      || (isStaffMe() && x.kind==='dm'));
+    /* 내가 지운 것(hides)은 빼고 본다 — 전체 공지는 한 줄을 다 같이 보므로 실제 삭제 대신 나만 숨긴다 */
+    return msgs.filter(x => ((x.kind==='notice' && !x.to_member) || x.to_member === me.id
+      || (isStaffMe() && x.kind==='dm')) && !hides.has(x.id));
+  }
+
+  /* 알림 지우기 — 내 알림함에서만 사라진다. 쪽지 스레드는 그 스레드 전체를 숨긴다 */
+  async function hideMsgs(ids){
+    const fresh = ids.filter(id => !hides.has(id));
+    if(!fresh.length || !me) return;
+    fresh.forEach(id => hides.add(id));
+    updateDot(); renderList();
+    try{
+      const { error } = await sbI.from('message_hides').upsert(
+        fresh.map(id=>({message_id:id, member_id:me.id})),
+        { onConflict:'message_id,member_id', ignoreDuplicates:true });
+      if(error){ console.warn('알림 지우기 저장 실패', error); }
+    }catch(e){ console.warn('알림 지우기 저장 실패', e); }
   }
   function updateDot(){
     const n = me ? myMsgs().filter(x=>!reads.has(x.id)).length : 0;
@@ -1192,7 +1215,9 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
           ${x.title?`<div class="t">${esc(x.title)}</div>`:''}
           <div class="b2">${esc(x.body)}</div>
           <div class="w">${esc(from)} · ${fmtW(x.created_at)}</div>
-        </div></div>`;
+        </div>
+        <button class="del" data-del="${x.id}" title="이 알림 지우기" aria-label="이 알림 지우기">×</button>
+        </div>`;
     }).join('') : '<p class="bnote" style="text-align:center;padding:18px 0">아직 알림이 없어요</p>')
     + (isStaffMe()
         ? `<a class="ask" id="noticeBtn">📢 <b>공지 쓰기</b> ›</a>`
@@ -1204,11 +1229,26 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
     const rb = document.getElementById('rulesBtn');
     if(rb) rb.onclick = renderRules;
     body.querySelectorAll('.msg:not(.rules)').forEach(el=>{
-      el.onclick = () => {
+      el.onclick = (ev) => {
+        if(ev.target.closest('[data-del]')) return;   /* 지우기 버튼은 따로 처리 */
         if(el.dataset.thread) renderThread(el.dataset.thread);
         else{
           markRead([el.dataset.id]); el.classList.remove('unread');
           el.classList.toggle('open');   /* 긴 공지는 눌러서 전문 보기 */
+        }
+      };
+    });
+    body.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.onclick = async (ev) => {
+        ev.stopPropagation();
+        const el = btn.closest('.msg');
+        const th = el.dataset.thread;
+        if(th){
+          if(!confirm('이 쪽지 대화를 알림함에서 지울까요?\n(상대에게는 그대로 남아요)')) return;
+          await hideMsgs(msgs.filter(x=>x.kind==='dm' && x.to_member===th).map(x=>x.id));
+        }else{
+          if(!confirm('이 알림을 지울까요?\n(내 알림함에서만 사라져요)')) return;
+          await hideMsgs([btn.dataset.del]);
         }
       };
     });
@@ -1254,6 +1294,9 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
       const { data, error } = await sbI.from('messages').insert(row).select('*').single();
       if(error){ alert('전송 실패: '+error.message); return; }
       msgs.unshift(data); reads.add(data.id);
+      /* 지워둔 스레드에 다시 말을 걸면 알림함에 되살린다 */
+      const back = msgs.filter(x=>x.kind==='dm' && x.to_member===threadMember).map(x=>x.id).filter(id=>hides.has(id));
+      if(back.length){ back.forEach(id=>hides.delete(id)); sbI.from('message_hides').delete().eq('member_id',me.id).in('message_id',back).then(()=>{},()=>{}); }
       notifyPush(data.id);
       renderThread(threadMember);
     };
