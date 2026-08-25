@@ -55,10 +55,6 @@ header h1{font-family:'Do Hyeon',sans-serif;font-size:22px;letter-spacing:-.5px;
 header h1 .r{color:var(--red)}
 header .sub{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.6;font-family:'Pretendard',sans-serif}
 .me{flex:none;text-align:right;font-size:10.5px;color:var(--sub);line-height:1.5;cursor:pointer;padding-top:4px}
-.bell{position:relative;font-size:20px;cursor:pointer;line-height:1}
-.bell .dot{position:absolute;top:-3px;right:-4px;min-width:16px;height:16px;background:var(--red);
-  color:#fff;border-radius:999px;font-size:10px;font-weight:700;display:flex;align-items:center;
-  justify-content:center;padding:0 4px;font-family:'Pretendard',sans-serif}
 .ntc{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:13px 14px;margin-bottom:9px}
 .ntc.unread{border-color:var(--red)}
 .ntc .nh{font-size:14.5px;display:flex;align-items:center;gap:7px}
@@ -492,7 +488,6 @@ footer a{color:#7a8290}
     <img src="../v/plate_tunel.webp" alt="TÜNEL 중앙역" width="68" height="26">
   </a>
   <div class="hbar">
-    <div class="bell" id="bell" onclick="openNotices()" style="display:none">🔔<span class="dot" id="bellDot" style="display:none"></span></div>
     <div class="me" id="meBox" onclick="askNick()"></div>
   </div>
 </div>
