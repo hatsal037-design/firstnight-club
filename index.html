@@ -1249,7 +1249,7 @@ footer .ft{font-size:10.5px;color:#A79E8F;letter-spacing:1px;line-height:1.8}
         const el = btn.closest('.msg');
         const th = el.dataset.thread;
         if(th){
-          if(!confirm('이 쪽지 대화를 알림함에서 지울까요?\n(상대에게는 그대로 남아요)')) return;
+          if(!confirm('이 쪽지 대화를 지울까요?')) return;
           await hideMsgs(msgs.filter(x=>x.kind==='dm' && x.to_member===th).map(x=>x.id));
         }else{
           if(!confirm('이 알림을 지울까요?')) return;
