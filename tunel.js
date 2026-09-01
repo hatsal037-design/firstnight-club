@@ -1272,5 +1272,214 @@ div.btk .stub{cursor:pointer}
   };
 })();
 
+/* ── 지난 회차 기록 편집기 (운영진 전용) ─────────────────────────
+   첫밤에만 있던 «지난 정모 기록»을 노선 공용으로 뺐다.
+   노선마다 다시 만들면 티켓처럼 또 갈라진다 (개발/티켓_규칙.md 와 같은 이유, 2026-09-01).
+   화면은 TUNEL.recordEditor({line, meeting}) 한 줄만 부른다.
+   참석자를 회원(@)으로 넣어야 그 사람 마이페이지의 «N회 참석»에 잡힌다 — 손님 이름은 명단에만 남는다. */
+(function(){
+  let mdl = null, body = null, ppl = [], memsP = null, cur = null, onSaved = null;
+  const sb = () => TUNEL.sb();
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+  /* 회원 명단 — 한 번만 읽고 캐시 (닉네임만 쓴다) */
+  function members(){
+    if(!memsP) memsP = sb().from('members').select('id,nick,no').order('no')
+      .then(r => r.data || []).catch(() => []);
+    return memsP;
+  }
+  const DOW = ['일','월','화','수','목','금','토'];
+  /* 요일은 «달력 날짜»에서 뽑는다 — 보는 사람 시간대가 어디든 같아야 한다 */
+  function dowOf(d){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d || '')) return '';
+    const p = d.split('-').map(Number);
+    return DOW[new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay()] || '';
+  }
+
+  function ensureUI(){
+    if(mdl) return;
+    mdl = document.createElement('div');
+    mdl.className = 'tnlmdl'; mdl.id = 'tnlRecMdl';
+    mdl.setAttribute('role','dialog'); mdl.setAttribute('aria-modal','true'); mdl.setAttribute('aria-label','지난 회차 기록');
+    mdl.innerHTML = `<div class="bd" data-close></div>
+      <div class="sh">
+        <div class="hd"><b id="tnlRecTitle">지난 회차 기록</b><button class="x" data-close aria-label="닫기">✕</button></div>
+        <div class="bodyw" id="tnlRecBody"></div>
+      </div>`;
+    document.body.appendChild(mdl);
+    body = document.getElementById('tnlRecBody');
+    mdl.querySelectorAll('[data-close]').forEach(el => el.onclick = close);
+    if(!document.getElementById('tnl-rec-css')){
+      const st = document.createElement('style');
+      st.id = 'tnl-rec-css';
+      st.textContent = `
+.tnlrec .f{margin-bottom:12px}
+.tnlrec .f>label{display:block;font-size:11px;font-weight:700;color:#8F887B;margin-bottom:5px;letter-spacing:.04em}
+.tnlrec input,.tnlrec textarea{width:100%;box-sizing:border-box;background:#1C1A1F;border:1px solid #35313A;
+  color:#E9E2D2;border-radius:8px;padding:10px 11px;font-size:13.5px;font-family:inherit}
+.tnlrec textarea{min-height:64px;line-height:1.6;resize:vertical}
+.tnlrec .three{display:flex;gap:7px}
+.tnlrec .three input{text-align:center}
+.tnlrec .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px}
+.tnlrec .ch{display:inline-flex;align-items:center;gap:6px;background:#1C1A1F;border:1px solid #4A453E;
+  color:#CFC7B8;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:700}
+.tnlrec .ch.m{border-color:#E8C36B;color:#E8C36B}
+.tnlrec .ch b{cursor:pointer;color:#8F887B;font-weight:800}
+.tnlrec .sug{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#232125;
+  border:1px solid #4A453E;border-radius:8px;overflow:hidden;max-height:190px;overflow-y:auto}
+.tnlrec .si{display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:12.5px;color:#E2DBCE;cursor:pointer}
+.tnlrec .si+.si{border-top:1px solid rgba(244,235,217,.08)}
+.tnlrec .si span{margin-left:auto;color:#77716A;font-size:11px}
+.tnlrec .si.none{color:#8F887B;cursor:default}
+.tnlrec .hint{font-size:11.5px;color:#8F887B;line-height:1.7;margin-top:6px}`;
+      document.head.appendChild(st);
+    }
+  }
+  function close(){ mdl.classList.remove('on'); document.body.style.overflow=''; }
+
+  function renderPpl(){
+    const box = mdl.querySelector('#tnlRecChips'); if(!box) return;
+    box.innerHTML = ppl.map((x,i) => typeof x === 'string'
+      ? `<span class="ch">${esc(x)}<b data-del="${i}">✕</b></span>`
+      : `<span class="ch m">@${esc(x.nick)}<b data-del="${i}">✕</b></span>`).join('')
+      || '<span class="hint">아직 없어요 — 아래에 적어주세요</span>';
+    box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+      ppl.splice(+b.dataset.del, 1); renderPpl(); });
+  }
+  async function suggest(){
+    const inp = mdl.querySelector('#tnlRecIn'), sug = mdl.querySelector('#tnlRecSug');
+    const v = inp.value.trim();
+    if(!v.startsWith('@')){ sug.style.display='none'; return; }
+    const q = v.slice(1);
+    const taken = new Set(ppl.filter(x => typeof x === 'object').map(x => x.id));
+    const hits = (await members()).filter(m => !taken.has(m.id) && (!q || (m.nick||'').includes(q))).slice(0, 7);
+    sug.innerHTML = hits.length
+      ? hits.map(m => `<div class="si" data-id="${m.id}">@${esc(m.nick)}<span>${m.no ? String(m.no).padStart(4,'0') : ''}</span></div>`).join('')
+      : `<div class="si none">'${esc(q)}' 닉네임의 회원이 없어요 — @ 를 빼면 손님으로 적힙니다</div>`;
+    sug.style.display = 'block';
+    sug.querySelectorAll('[data-id]').forEach(el => el.onclick = async () => {
+      const m = (await members()).find(x => x.id === el.dataset.id); if(!m) return;
+      ppl.push({ id:m.id, nick:m.nick }); inp.value=''; sug.style.display='none'; renderPpl();
+    });
+  }
+  async function commit(){
+    const inp = mdl.querySelector('#tnlRecIn'), sug = mdl.querySelector('#tnlRecSug');
+    const v = inp.value.trim(); if(!v) return;
+    if(v.startsWith('@')){
+      const m = (await members()).find(x => x.nick === v.slice(1));
+      if(m && !ppl.some(p => p.id === m.id)) ppl.push({ id:m.id, nick:m.nick });
+      inp.value=''; sug.style.display='none'; renderPpl(); return;
+    }
+    if(!ppl.some(p => p === v)) ppl.push(v);
+    inp.value=''; sug.style.display='none'; renderPpl();
+  }
+
+  async function save(){
+    const val = id => { const el = mdl.querySelector('#' + id); return el ? el.value.trim() : ''; };
+    await commit();                                   // 적다 만 이름도 챙긴다
+    const d = val('tnlRecD');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ alert('날짜를 2026-08-17 형식으로 적어주세요'); return; }
+    const rn = val('tnlRecR');
+    const row = { line: cur.line, d, dow: dowOf(d) || null,
+      s: val('tnlRecS') || null, e: val('tnlRecE') || null,
+      r: rn ? +rn : null, name: val('tnlRecName') || null,
+      place: val('tnlRecPlace') || null, addr: val('tnlRecAddr') || null,
+      fee: val('tnlRecFee') || null, after: val('tnlRecAfter') || null,
+      memo: val('tnlRecMemo') || null, status: 'done' };
+    const btn = mdl.querySelector('#tnlRecSave'); if(btn){ btn.disabled = true; btn.textContent = '저장 중…'; }
+    try{
+      let id = cur.meeting && cur.meeting.id;
+      if(id && String(id).indexOf('local-') !== 0){
+        /* 이미 있는 회차는 고른 칸만 고친다 — 통째로 덮어쓰면 data(정원·주최 등)가 날아간다 */
+        const { error } = await sb().from('meetings').update(row).eq('id', id);
+        if(error) throw error;
+      }else{
+        const { data, error } = await sb().from('meetings')
+          .upsert(row, { onConflict:'line,d' }).select('id').single();
+        if(error) throw error;
+        id = data.id;
+      }
+      /* 참석자는 통째로 다시 쓴다 — 이 화면이 전체 명단을 들고 있다 */
+      const { error: eD } = await sb().from('attendance').delete().eq('meeting_id', id);
+      if(eD) throw eD;
+      const rows = ppl.map(p => typeof p === 'object'
+        ? { meeting_id:id, member_id:p.id } : { meeting_id:id, guest_name:String(p) })
+        .filter(r => r.member_id || (r.guest_name && r.guest_name.trim()));
+      if(rows.length){
+        const { error: eA } = await sb().from('attendance').insert(rows);
+        if(eA) throw eA;
+      }
+      close();
+      if(typeof onSaved === 'function') onSaved();
+    }catch(err){
+      alert('저장에 실패했어요 — ' + (err.message || err));
+      if(btn){ btn.disabled = false; btn.textContent = '저장'; }
+    }
+  }
+
+  /* 회차 하나의 참석자를 읽어 편집기에 올린다 */
+  async function loadPpl(mid){
+    if(!mid || String(mid).indexOf('local-') === 0) return [];
+    const [rowsR, memsR] = await Promise.all([
+      sb().from('attendance').select('member_id,guest_name').eq('meeting_id', mid),
+      members() ]);
+    const nick = {}; memsR.forEach(m => nick[m.id] = m.nick);
+    return (rowsR.data || []).map(a => a.member_id
+      ? { id:a.member_id, nick: nick[a.member_id] || '?' } : String(a.guest_name || ''));
+  }
+
+  /* 운영진인가 — 화면이 편집 단추를 띄울지 물어볼 때도 쓴다 */
+  TUNEL.isStaff = async function(){
+    const me = await TUNEL.me();
+    return !!(me && (me.is_admin || me.role === 'staff'));
+  };
+
+  TUNEL.recordEditor = async function(opt){
+    opt = opt || {};
+    if(!(await TUNEL.isStaff())){ alert('운영진만 기록을 고칠 수 있어요.'); return; }
+    ensureUI();
+    const m = opt.meeting || null;
+    cur = { line: opt.line || (m && m.line), meeting: m };
+    onSaved = opt.onSaved || null;
+    if(!cur.line){ alert('어느 노선인지 알 수 없어요.'); return; }
+    mdl.querySelector('#tnlRecTitle').textContent = m ? '기록 편집' : '지난 회차 추가';
+    body.innerHTML = '<p class="bnote">불러오는 중…</p>';
+    mdl.classList.add('on'); document.body.style.overflow = 'hidden';
+    ppl = await loadPpl(m && m.id);
+    const v = k => esc(m && m[k] != null ? m[k] : '');
+    body.innerHTML = `<div class="tnlrec">
+      <div class="f"><label>날짜</label><input id="tnlRecD" value="${v('d')}" placeholder="2026-08-17" inputmode="numeric"></div>
+      <div class="f"><label>시작 · 종료</label><div class="three">
+        <input id="tnlRecS" value="${v('s')}" placeholder="11:00"><input id="tnlRecE" value="${v('e')}" placeholder="14:00"></div>
+        <div class="hint">요일은 날짜에서 저절로 붙어요.</div></div>
+      <div class="f"><label>회차 이름</label><input id="tnlRecName" value="${v('name')}" placeholder="AI 나눔회 1회차 — 부제"></div>
+      <div class="f"><label>회차 번호 (아직 안 정했으면 비워두세요)</label><input id="tnlRecR" value="${v('r')}" placeholder="1" inputmode="numeric"></div>
+      <div class="f"><label>장소</label><input id="tnlRecPlace" value="${v('place')}" placeholder="시디즈 성수 커뮤니티룸"></div>
+      <div class="f"><label>주소</label><input id="tnlRecAddr" value="${v('addr')}" placeholder="서울 성동구 …"></div>
+      <div class="f"><label>참가비</label><input id="tnlRecFee" value="${v('fee')}" placeholder="10,000원"></div>
+      <div class="f"><label>참석자 — <b style="color:#E8C36B">@</b>를 붙이면 회원, 그냥 쓰면 손님</label>
+        <div class="chips" id="tnlRecChips"></div>
+        <div style="position:relative">
+          <input id="tnlRecIn" placeholder="@닉네임 또는 이름 적고 엔터" autocomplete="off">
+          <div class="sug" id="tnlRecSug" style="display:none"></div>
+        </div>
+        <div class="hint">회원으로 넣은 사람만 그 사람 마이페이지의 «N회 참석»에 잡혀요. 손님은 이 회차 명단에만 남습니다.</div></div>
+      <div class="f"><label>2차</label><input id="tnlRecAfter" value="${v('after')}" placeholder="없으면 비워두세요"></div>
+      <div class="f"><label>메모</label><textarea id="tnlRecMemo" placeholder="그날 어땠는지 한두 줄">${v('memo')}</textarea></div>
+      <div class="act"><button class="ghost" id="tnlRecCancel">닫기</button><button class="go" id="tnlRecSave">저장</button></div>
+    </div>`;
+    renderPpl();
+    const inp = mdl.querySelector('#tnlRecIn');
+    inp.addEventListener('input', suggest);
+    inp.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){ e.preventDefault(); commit(); }
+      else if(e.key === 'Backspace' && !inp.value && ppl.length){ ppl.pop(); renderPpl(); }
+    });
+    mdl.querySelector('#tnlRecSave').onclick = save;
+    mdl.querySelector('#tnlRecCancel').onclick = close;
+  };
+})();
+
 global.TUNEL = TUNEL;
 })(window);

@@ -87,6 +87,11 @@ h1 em{font-style:normal;background:linear-gradient(180deg,transparent 62%,var(--
 .lab{font-size:10px;letter-spacing:2.2px;font-weight:800;color:var(--sub);
   margin:26px 0 11px;display:flex;align-items:center;gap:9px}
 .lab::after{content:'';flex:1;height:1px;background:var(--line)}
+/* 운영진 전용 — 지난 회차 기록 편집 (편집기는 tunel.js 공용 한 벌) */
+.recbar{width:358px;max-width:calc(100% - 8px);margin:-6px auto 14px;display:flex;justify-content:flex-end}
+.recbar button{border:1px solid var(--line);background:none;color:var(--sub);border-radius:7px;
+  padding:7px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.recbar button:active{transform:scale(.97)}
 
 /* ── 명찰 티켓 ── */
 .badge{position:relative;background:#fff;border:1px solid var(--line);border-radius:9px;
@@ -220,7 +225,7 @@ footer a{color:#98A0A6}
 
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="../tunel.js?v=35"></script>
+<script src="../tunel.js?v=36"></script>
 <script>
 function setView(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on', x.id==='v-'+v));
@@ -240,14 +245,26 @@ setView((location.hash||'#sched').slice(1));
     TUNEL.autoPast(rows, paintSched);   /* 끝나는·마감되는 순간에 저절로 다시 그린다 */
     const up   = rows.filter(m => !TUNEL.isPast(m)).sort((a,b)=>a.d.localeCompare(b.d));
     const past = rows.filter(TUNEL.isPast);
+    /* 기록 편집은 운영진에게만 — 편집기 자체는 공용 한 벌(tunel.js) */
+    const staff = await TUNEL.isStaff();
+    const editBtn = m => staff
+      ? `<div class="recbar"><button data-edit="${m.id}">✏️ 기록 편집</button></div>` : '';
     let html = '';
     html += up.length ? up.map(m=>card(m,false)).join('')
                       : '<p class="note">다음 회차는 준비 중이에요. 잡히면 여기에 올라옵니다.</p>';
-    if(past.length){
+    if(past.length || staff){
       html += '<div class="lab" style="margin-top:26px">지난 모임</div>'
-            + past.map(m=>card(m,true)).join('');
+            + past.map(m=>card(m,true) + editBtn(m)).join('')
+            + (staff ? '<div class="recbar"><button data-add="1">＋ 지난 회차 추가</button></div>' : '');
     }
     el.innerHTML = html;
+    if(staff){
+      const byId = {}; rows.forEach(m => byId[m.id] = m);
+      el.querySelectorAll('[data-edit]').forEach(b => b.onclick = () =>
+        TUNEL.recordEditor({ line:'library', meeting: byId[b.dataset.edit], onSaved: paintSched }));
+      el.querySelectorAll('[data-add]').forEach(b => b.onclick = () =>
+        TUNEL.recordEditor({ line:'library', onSaved: paintSched }));
+    }
     try{ await TUNEL.signupInit(); }catch(e){}
   }catch(e){
     el.innerHTML = '<p class="note">일정을 못 불러왔어요.<br>' + (e.message||'') + '</p>';
